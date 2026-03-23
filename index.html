@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Pro - Scanner</title>
+    <title>Portaria Express - V2.0</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { color: var(--primary); margin-top: 0; text-align: center; font-size: 20px; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         
-        /* Camera e Scanner */
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 15px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; font-size: 16px; }
+        h2 { color: var(--primary); text-align: center; margin-top: 0; font-size: 22px; }
+        
+        /* Área da Câmera */
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 250px; border: 2px solid #ddd; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; transition: 0.2s; }
         .btn-scan { background: #6f42c1; color: white; }
         .btn-add { background: var(--success); color: white; }
-        .btn-print { background: #6c757d; color: white; margin-top: 20px; }
+        .btn-print { background: #6c757d; color: white; margin-top: 15px; }
+        .btn-clear { background: var(--danger); color: white; padding: 8px; font-size: 12px; margin-top: 5px; }
 
-        /* Campos de Entrada */
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 4px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .row { display: flex; gap: 8px; }
+        /* Formulário */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(26,115,232,0.2); }
+        .row { display: flex; gap: 10px; }
 
         /* Lista na Tela */
-        #lista-preview { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; font-size: 13px; }
-        .item-row { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        #lista-preview { margin-top: 25px; border-top: 2px solid #eee; padding-top: 15px; }
+        .item-row { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--primary); font-size: 14px; }
 
         /* Layout de Impressão */
         #area-impressao { display: none; }
@@ -34,66 +38,68 @@
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { position: absolute; left: 0; top: 0; width: 100%; display: block; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 11px; }
-            th { background: #f0f0f0 !important; }
-            .sign-cell { width: 180px; height: 35px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 12px; }
+            th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+            .sign-box { height: 50px; width: 200px; }
+            .no-print { display: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📦 Registro de Encomendas</h2>
+<div class="card no-print">
+    <h2>📦 Portaria Digital</h2>
 
     <div id="reader"></div>
-    <button class="btn btn-scan" onclick="iniciarScanner()">📷 BIPAR ETIQUETA</button>
+    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ABRIR CÂMERA / BIPAR</button>
 
     <div class="input-group">
         <label>Recebido por (Nome e Função):</label>
-        <input type="text" id="admInfo" placeholder="Ex: Marcos - Zelador">
+        <input type="text" id="admInfo" placeholder="Ex: João Silva - Porteiro">
     </div>
 
     <div class="input-group">
         <label>Destinatário:</label>
-        <input type="text" id="destinatario" placeholder="Nome do morador">
+        <input type="text" id="destinatario" placeholder="Nome do Morador">
     </div>
 
     <div class="row">
         <div class="input-group" style="flex:2">
-            <label>Apartamento/Casa:</label>
-            <input type="text" id="apto" placeholder="Nº">
+            <label>Apto/Casa:</label>
+            <input type="text" id="apto" placeholder="Ex: 102">
         </div>
         <div class="input-group" style="flex:1">
             <label>Bloco:</label>
-            <input type="text" id="bloco" placeholder="Bl">
+            <input type="text" id="bloco" placeholder="B">
         </div>
     </div>
 
     <div class="input-group">
-        <label>Código / Origem:</label>
-        <input type="text" id="rastreio" placeholder="Rastreio ou Loja">
+        <label>Rastreio / Origem:</label>
+        <input type="text" id="rastreio" placeholder="Número do código ou Loja">
     </div>
 
-    <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR NA LISTA</button>
-    <button class="btn btn-print" onclick="imprimirRelatorio()">🖨️ GERAR FOLHA DE RETIRADA</button>
+    <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR RELATÓRIO</button>
+    
+    <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Tudo</button>
 
     <div id="lista-preview">
-        <strong>Aguardando registros...</strong>
         <div id="itens-corpo"></div>
     </div>
 </div>
 
 <div id="area-impressao">
-    <h2 style="text-align:center">RELATÓRIO PARA ASSINATURA DE RETIRADA</h2>
-    <p style="font-size: 12px">Data: <span id="data-relatorio"></span></p>
+    <h2 style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px;">RELATÓRIO DE RETIRADA DE ENCOMENDAS</h2>
+    <p><strong>Data de Emissão:</strong> <span id="data-rel"></span></p>
     <table>
         <thead>
             <tr>
-                <th>Data Entrada</th>
+                <th>Data/Hora</th>
                 <th>Destinatário</th>
-                <th>Apto/Bl</th>
-                <th>Descrição/Origem</th>
+                <th>Local</th>
+                <th>Rastreio/Origem</th>
                 <th>Recebido por</th>
                 <th>Assinatura de Retirada</th>
             </tr>
@@ -105,62 +111,124 @@
 <script>
     let encomendas = [];
     const html5QrCode = new Html5Qrcode("reader");
+    let scannerAtivo = false;
 
-    function iniciarScanner() {
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                const cameraId = devices.length > 1 ? devices[1].id : devices[0].id;
-                html5QrCode.start(cameraId, { fps: 10, qrbox: 250 }, (text) => {
-                    document.getElementById('rastreio').value = text;
-                    // Auto-detectar Shopee/TikTok pelo código
-                    if(text.includes('BR')) document.getElementById('rastreio').value += " (SHOPEE)";
-                    html5QrCode.stop();
-                });
-            }
-        }).catch(err => alert("Erro na câmera: " + err));
+    // Função para ligar/desligar câmera
+    async function alternarScanner() {
+        if (scannerAtivo) {
+            await html5QrCode.stop();
+            scannerAtivo = false;
+            document.getElementById('btn-start').innerText = "📷 ABRIR CÂMERA / BIPAR";
+            return;
+        }
+
+        const config = { 
+            fps: 15, 
+            qrbox: { width: 250, height: 150 },
+            aspectRatio: 1.0 
+        };
+
+        // Tenta forçar a câmera traseira (environment)
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            (decodedText) => {
+                document.getElementById('rastreio').value = decodedText;
+                
+                // Detecção simples de Shopee
+                if(decodedText.startsWith("BR")) {
+                    document.getElementById('rastreio').value += " (SHOPEE)";
+                }
+                
+                // Beep visual ou sonoro pode ser adicionado aqui
+                vibrarCelular();
+                pararScanner();
+            },
+            (errorMessage) => { /* Silenciar erros de scan */ }
+        ).then(() => {
+            scannerAtivo = true;
+            document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA";
+        }).catch(err => {
+            alert("ERRO DE PERMISSÃO: Certifique-se de estar usando HTTPS e de ter permitido a câmera no cadeado da barra de endereços.");
+            console.error(err);
+        });
+    }
+
+    function pararScanner() {
+        html5QrCode.stop().then(() => {
+            scannerAtivo = false;
+            document.getElementById('btn-start').innerText = "📷 ABRIR CÂMERA / BIPAR";
+        });
+    }
+
+    function vibrarCelular() {
+        if (navigator.vibrate) navigator.vibrate(100);
     }
 
     function adicionarRegistro() {
+        const dest = document.getElementById('destinatario').value;
+        const adm = document.getElementById('admInfo').value;
+        
+        if (!dest || !adm) {
+            alert("Por favor, preencha o Destinatário e quem recebeu na ADM.");
+            return;
+        }
+
         const item = {
             data: new Date().toLocaleString('pt-BR'),
-            dest: document.getElementById('destinatario').value,
-            local: `${document.getElementById('apto').value} / ${document.getElementById('bloco').value}`,
-            info: document.getElementById('rastreio').value,
-            adm: document.getElementById('admInfo').value
+            dest: dest,
+            local: `Ap ${document.getElementById('apto').value} / Bl ${document.getElementById('bloco').value}`,
+            rastreio: document.getElementById('rastreio').value || "Não informado",
+            adm: adm
         };
 
-        if(!item.dest || !item.adm) return alert("Preencha o Destinatário e quem está recebendo!");
-
         encomendas.push(item);
-        atualizarInterface();
+        atualizarTabelas();
         
-        // Limpar apenas campos da encomenda
+        // Limpar campos de dados da encomenda apenas
         document.getElementById('destinatario').value = "";
         document.getElementById('apto').value = "";
         document.getElementById('bloco').value = "";
         document.getElementById('rastreio').value = "";
     }
 
-    function atualizarInterface() {
-        const itensCorpo = document.getElementById('itens-corpo');
+    function atualizarTabelas() {
+        const listaPreview = document.getElementById('itens-corpo');
         const tabelaCorpo = document.getElementById('tabela-corpo');
-        document.getElementById('data-relatorio').innerText = new Date().toLocaleDateString('pt-BR');
-
-        itensCorpo.innerHTML = "";
+        const dataRel = document.getElementById('data-rel');
+        
+        dataRel.innerText = new Date().toLocaleDateString('pt-BR');
+        listaPreview.innerHTML = "";
         tabelaCorpo.innerHTML = "";
 
         encomendas.forEach(i => {
-            itensCorpo.innerHTML += `<div class="item-row"><span>${i.dest} (${i.local})</span> <b>${i.info}</b></div>`;
-            tabelaCorpo.innerHTML += `<tr>
-                <td>${i.data}</td>
-                <td>${i.dest}</td>
-                <td>${i.local}</td>
-                <td>${i.info}</td>
-                <td>${i.adm}</td>
-                <td class="sign-cell"></td>
-            </tr>`;
+            // Preview no celular
+            listaPreview.innerHTML += `
+                <div class="item-row">
+                    <b>${i.dest}</b> (${i.local})<br>
+                    <small>${i.rastreio} | ${i.data}</small>
+                </div>`;
+            
+            // Tabela de Impressão
+            tabelaCorpo.innerHTML += `
+                <tr>
+                    <td>${i.data}</td>
+                    <td>${i.dest}</td>
+                    <td>${i.local}</td>
+                    <td>${i.rastreio}</td>
+                    <td>${i.adm}</td>
+                    <td class="sign-box"></td>
+                </tr>`;
         });
     }
 
-    function imprimirRelatorio() {
-        if(encomendas
+    function limparLista() {
+        if(confirm("Deseja apagar todos os registros desta sessão?")) {
+            encomendas = [];
+            atualizarTabelas();
+        }
+    }
+</script>
+
+</body>
+</html>
