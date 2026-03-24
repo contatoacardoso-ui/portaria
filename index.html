@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V4.2</title>
+    <title>Portaria Digital Pro - V4.3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -24,13 +24,13 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center;">📦 Portaria Digital <small style="font-size:10px">V4.2</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.3</small></h2>
     
-    <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px;"></div>
+    <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
-    <label>Seu Nome (Recebedor):</label>
-    <input type="text" id="recebidoPor" placeholder="Seu Nome">
+    <label>Quem recebeu (Seu Nome):</label>
+    <input type="text" id="recebidoPor" placeholder="Ex: João Silva">
 
     <label>Morador / Destinatário:</label>
     <input type="text" id="destinatario" placeholder="Nome do Morador">
@@ -40,7 +40,8 @@
         <input type="text" id="bloco" placeholder="Bloco" style="flex:1">
     </div>
 
-    <input type="text" id="rastreio" placeholder="Código de Rastreio">
+    <label>Código / Transportadora:</label>
+    <input type="text" id="rastreio" placeholder="Aguardando scanner...">
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
     <button class="btn btn-share" onclick="gerarECompartilhar()">📲 GERAR PROTOCOLO</button>
@@ -59,21 +60,49 @@
     async function alternarScanner() {
         if (scannerAtivo) { pararScanner(); return; }
         html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
-            document.getElementById('rastreio').value = text;
+            const loja = identificarLoja(text);
+            document.getElementById('rastreio').value = `${loja}: ${text}`;
             if (navigator.vibrate) navigator.vibrate(100);
             pararScanner();
-        }).then(() => { scannerAtivo = true; document.getElementById('btn-start').innerText = "❌ FECHAR"; });
+        }).then(() => { 
+            scannerAtivo = true; 
+            document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA"; 
+        }).catch(err => alert("Erro na câmera: " + err));
     }
 
-    function pararScanner() { html5QrCode.stop().then(() => { scannerAtivo = false; document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO"; }); }
+    function pararScanner() { 
+        html5QrCode.stop().then(() => { 
+            scannerAtivo = false; 
+            document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO"; 
+        }); 
+    }
+
+    function identificarLoja(codigo) {
+        const c = codigo.toUpperCase().trim();
+        if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI / MELHOR ENVIO";
+        if (c.startsWith("ORD-")) return "LOGGI EXPRESS";
+        if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
+        if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO LIVRE";
+        if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
+        if (c.startsWith("GSH") || c.startsWith("SK")) return "SHEIN";
+        if (c.startsWith("TT")) return "TIKTOK";
+        if (c.startsWith("NL") || c.startsWith("CN")) return "ALIEXPRESS";
+        if (c.startsWith("LOGG") || c.includes("LOGGI")) return "LOGGI";
+        if (c.startsWith("JAD") || (c.length === 14 && !isNaN(c))) return "JADLOG";
+        if (/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(c)) return "CORREIOS";
+        return "OUTROS";
+    }
 
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
         if (!dest || !quem) { alert("Preencha os campos obrigatórios!"); return; }
         
+        const agora = new Date();
+        const entradaF = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
+
         encomendas.push({ 
-            entrada: new Date().toLocaleString('pt-BR'), 
+            entrada: entradaF, 
             dest: dest, 
             local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`, 
             rastreio: document.getElementById('rastreio').value || "Manual", 
@@ -82,14 +111,15 @@
         
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
-        document.getElementById('destinatario').value = ""; document.getElementById('rastreio').value = "";
+        document.getElementById('destinatario').value = ""; 
+        document.getElementById('rastreio').value = "";
     }
 
     function atualizarTabelas() {
         const preview = document.getElementById('lista-preview');
         preview.innerHTML = "";
         encomendas.slice().reverse().forEach(i => {
-            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})</div>`;
+            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
         });
     }
 
@@ -99,28 +129,32 @@
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
-            const nomeArquivo = `Protocolo_${Date.now()}.pdf`;
+            const dataH = new Date().toLocaleString('pt-BR').replace(/[/ :]/g, '_');
+            const nomeArquivo = `Protocolo_${dataH}.pdf`;
 
+            doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
+
             doc.autoTable({
                 startY: 25,
-                head: [['Entrada', 'Morador / Local', 'Rastreio', 'Recebido por', 'Data Retirada', 'Assinatura']],
+                head: [['Entrada', 'Morador / Local', 'Rastreio / Loja', 'Recebido por', 'Data Retirada', 'Assinatura']],
                 body: encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "___/___/___", ""]),
-                theme: 'grid'
+                theme: 'grid',
+                headStyles: { fillColor: [26, 115, 232] }
             });
 
             const pdfBlob = doc.output('blob');
             const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
 
-            // TENTA COMPARTILHAR. SE DER "PERMISSION DENIED", ELE BAIXA O ARQUIVO AUTOMATICAMENTE
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: 'Protocolo' }).catch(() => {
+                await navigator.share({ files: [file], title: 'Protocolo de Encomendas' }).catch(() => {
                     doc.save(nomeArquivo);
-                    alert("O sistema negou o compartilhamento. O arquivo foi baixado na sua pasta de Downloads.");
                 });
             } else {
                 doc.save(nomeArquivo);
-                alert("PDF salvo nos Downloads!");
+                alert("O arquivo foi baixado na sua pasta de Downloads.");
             }
         } catch (erro) {
             alert("Erro ao gerar: " + erro.message);
