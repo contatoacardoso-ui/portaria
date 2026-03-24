@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V4.4</title>
+    <title>Portaria Digital Pro - V4.5</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -24,12 +24,12 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.4</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.5</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
-    <label>Seu Nome (Salvo automaticamente):</label>
+    <label>Seu Nome:</label>
     <input type="text" id="recebidoPor" placeholder="Ex: João Silva" oninput="salvarNome()">
 
     <label>Morador / Local:</label>
@@ -96,8 +96,14 @@
         const quem = document.getElementById('recebidoPor').value;
         if (!dest || !quem) { alert("Preencha Nome do Morador e Seu Nome!"); return; }
         
+        const agora = new Date();
+        // Ajuste: Data e Hora separadas por hífen no registro
+        const dataF = agora.toLocaleDateString('pt-BR');
+        const horaF = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        const entradaF = `${dataF} - ${horaF}`;
+
         encomendas.push({ 
-            entrada: new Date().toLocaleString('pt-BR'), 
+            entrada: entradaF, 
             dest: dest, 
             local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`, 
             rastreio: document.getElementById('rastreio').value || "Manual", 
@@ -123,24 +129,36 @@
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
-            const dataNome = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            
+            const agora = new Date();
+            const dataG = agora.toLocaleDateString('pt-BR');
+            const horaG = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
             
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.setFontSize(10);
-            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
+            // Ajuste: Gerado em com separação por hífen
+            doc.text(`Gerado em: ${dataG} - ${horaG}`, 14, 22);
 
             doc.autoTable({
                 startY: 25,
-                head: [['Entrada', 'Morador / Local', 'Rastreio / Loja', 'Recebido por', 'Data Retirada', 'Assinatura']],
+                head: [['Entrada', 'Morador / Local', 'RASTREIO', 'Recebido por', 'Data Retirada', 'Assinatura']],
                 body: encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "___/___/___", ""]),
                 theme: 'grid',
-                headStyles: { fillColor: [26, 115, 232] }
+                headStyles: { fillColor: [26, 115, 232] },
+                // Ajuste de colunas para dar mais espaço na Assinatura (última coluna)
+                columnStyles: {
+                    0: { cellWidth: 35 }, // Entrada
+                    1: { cellWidth: 50 }, // Morador
+                    2: { cellWidth: 50 }, // Rastreio
+                    3: { cellWidth: 35 }, // Recebido por
+                    4: { cellWidth: 30 }, // Data Retirada
+                    5: { cellWidth: 'auto' } // Assinatura pega o resto do espaço
+                },
+                styles: { minCellHeight: 12, verticalAlign: 'middle' }
             });
 
-            // MÉTODO DE SALVAMENTO MAIS COMPATÍVEL COM CELULAR
-            doc.save(`Protocolo_${dataNome}.pdf`);
-            alert("PDF enviado para a pasta de DOWNLOADS do seu celular!");
+            doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
 
         } catch (erro) {
             alert("Erro crítico: " + erro.message);
