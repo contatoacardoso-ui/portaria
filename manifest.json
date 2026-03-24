@@ -1,7 +1,7 @@
 {
-  "name": "Portaria Digital",
+  "name": "Controle Portaria",
   "short_name": "Portaria",
-  "description": "Sistema estável de encomendas",
+  "description": "Sistema de recebimento de encomendas",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
