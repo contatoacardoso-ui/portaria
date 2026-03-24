@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Pro</title>
 
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Portaria Digital","short_name":"Portaria","start_url":".","display":"standalone","background_color":"#f0f2f5","theme_color":"#1a73e8","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2312/2312560.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Portaria Digital","short_name":"Portaria","start_url":"index.html","display":"standalone","background_color":"#f0f2f5","theme_color":"#1a73e8","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2312/2312560.png","sizes":"512x512","type":"image/png"}]}'>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -16,15 +16,14 @@
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; display: block; text-align: center; text-decoration: none; box-sizing: border-box; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
         .btn-pdf { background: var(--pdf-btn); margin-top: 15px; border-bottom: 4px solid #003d7a; }
         .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; margin-top: 20px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; outline: none; }
-        input:focus { border-color: var(--primary); }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
         label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
         .item-row { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--primary); font-size: 13px; }
     </style>
@@ -32,7 +31,7 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.0</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.1</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -58,12 +57,12 @@
 </div>
 
 <script>
-    // Registro de Service Worker para funcionar em qualquer navegador offline
+    // Service Worker para modo offline no GitHub
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
-                const cacheName = 'portaria-v5';
-                self.addEventListener('install', (e) => e.waitUntil(caches.open(cacheName).then((c) => c.addAll(['./']))));
+                const cacheName = 'portaria-v5-1';
+                self.addEventListener('install', (e) => e.waitUntil(caches.open(cacheName).then((c) => c.addAll(['./', 'index.html']))));
                 self.addEventListener('fetch', (e) => e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request))));
             `));
         });
@@ -88,7 +87,7 @@
         }).then(() => { 
             scannerAtivo = true; 
             document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA"; 
-        }).catch(err => alert("Ligue a câmera ou dê permissão."));
+        }).catch(err => alert("Erro na câmera."));
     }
 
     function pararScanner() { 
