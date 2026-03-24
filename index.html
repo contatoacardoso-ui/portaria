@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json?v=2">
+    <link rel="manifest" href="manifest.json?v=3">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -37,17 +37,17 @@
 </div>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.4</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.5</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
-    <label>Seu Nome:</label>
-    <input type="text" id="recebidoPor" placeholder="Quem está recebendo?" oninput="salvarNome()">
+    <label>Funcionário:</label>
+    <input type="text" id="recebidoPor" placeholder="Seu nome" oninput="salvarNome()">
 
-    <label>Morador / Local:</label>
+    <label>Morador:</label>
     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-        <input type="text" id="destinatario" placeholder="Nome" style="flex:2; margin-bottom:0;">
+        <input type="text" id="destinatario" placeholder="Nome do Morador" style="flex:2; margin-bottom:0;">
         <input type="text" id="apto" placeholder="Apto" style="flex:1; margin-bottom:0;">
         <input type="text" id="bloco" placeholder="Bl" style="flex:0.6; margin-bottom:0;">
     </div>
@@ -80,7 +80,7 @@
     });
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=2');
+        navigator.serviceWorker.register('sw.js?v=3');
     }
 
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
@@ -154,19 +154,23 @@
             const agora = new Date();
             const dataG = agora.toLocaleDateString('pt-BR');
             const horaG = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.setFontSize(10);
             doc.text(`Gerado em: ${dataG} - ${horaG}`, 14, 22);
+
+            // Tabela com cabeçalhos em MAIÚSCULO e coluna DESTINATÁRIO
             doc.autoTable({
                 startY: 25,
-                head: [['Entrada', 'Morador / Local', 'RASTREIO', 'Recebido por', 'Data Retirada', 'Assinatura']],
-                body: encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "", ""]),
+                head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RECEBIDO POR', 'DATA RETIRADA', 'ASSINATURA']],
+                body: encomendas.map(i => [i.entrada, `${i.dest.toUpperCase()}\n${i.local.toUpperCase()}`, i.rastreio.toUpperCase(), i.quem.toUpperCase(), "", ""]),
                 theme: 'grid',
-                headStyles: { fillColor: [26, 115, 232] },
+                headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255], fontStyle: 'bold' },
                 columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 50 }, 2: { cellWidth: 50 }, 3: { cellWidth: 35 }, 4: { cellWidth: 30 }, 5: { cellWidth: 'auto' } },
-                styles: { minCellHeight: 12, verticalAlign: 'middle' }
+                styles: { minCellHeight: 12, verticalAlign: 'middle', fontSize: 9 }
             });
+
             doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
         } catch (erro) { alert("Erro ao gerar PDF."); }
     }
