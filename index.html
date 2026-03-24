@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-    <title>Portaria Pro - Scanner Total</title>
+    <title>Portaria Pro - Controle Total</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
@@ -28,15 +28,18 @@
         #lista-preview { margin-top: 25px; border-top: 2px solid #eee; padding-top: 15px; }
         .item-row { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--primary); font-size: 14px; }
 
+        /* Layout de Impressão Otimizado */
         #area-impressao { display: none; }
         @media print {
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { position: absolute; left: 0; top: 0; width: 100%; display: block; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 11px; }
-            th { background: #f2f2f2 !important; }
-            .sign-box { height: 45px; width: 180px; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 10px; word-break: break-all; }
+            th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+            .col-data { width: 80px; }
+            .col-sign { width: 150px; }
+            .col-date-out { width: 100px; }
         }
     </style>
 </head>
@@ -46,7 +49,7 @@
     <h2>📦 Portaria Digital Pro</h2>
 
     <div id="reader"></div>
-    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ABRIR CÂMERA / BIPAR</button>
+    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ABRIR SCANNER / BIPAR</button>
 
     <div class="input-group">
         <label>Recebido por (ADM):</label>
@@ -84,21 +87,22 @@
 </div>
 
 <div id="area-impressao">
-    <h2 style="text-align:center">RELATÓRIO DE RECEBIMENTO DE ENCOMENDAS</h2>
-    <p>Data: <span id="data-rel"></span></p>
+    <h2 style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px;">PROTOCOLO DE RETIRADA DE ENCOMENDAS</h2>
+    <p><strong>Relatório Gerado em:</strong> <span id="data-rel"></span></p>
     <table>
         <thead>
             <tr>
-                <th>Data/Hora</th>
-                <th>Destinatário</th>
-                <th>Local</th>
-                <th>Rastreio/Origem</th>
-                <th>Recebido por</th>
-                <th>Assinatura de Retirada</th>
+                <th class="col-data">Entrada (Data/Hora)</th>
+                <th>Morador / Local</th>
+                <th>Loja / Rastreio</th>
+                <th>Recebido ADM</th>
+                <th class="col-date-out">Data da Retirada</th>
+                <th class="col-sign">Assinatura de Quem Retirou</th>
             </tr>
         </thead>
         <tbody id="tabela-corpo"></tbody>
     </table>
+    <p style="font-size: 10px; margin-top: 20px; text-align: center;">Documento para controle interno de entrega de correspondências e volumes.</p>
 </div>
 
 <script>
@@ -106,11 +110,9 @@
     const html5QrCode = new Html5Qrcode("reader");
     let scannerAtivo = false;
 
-    // --- NOVA LÓGICA DE DETECÇÃO AMPLIADA ---
+    // Inteligência de Detecção Ampliada
     function identificarLoja(codigo) {
         const c = codigo.toUpperCase().trim();
-        
-        // E-commerces
         if (c.startsWith("BR") || c.includes("SPX") || c.includes("SHOPEE")) return "SHOPEE";
         if (c.startsWith("MLB") || c.startsWith("MELI") || (c.length >= 20 && c.startsWith("1"))) return "MERCADO LIVRE";
         if (c.startsWith("TBA") || c.startsWith("DBC") || c.includes("AMZN")) return "AMAZON";
@@ -118,35 +120,32 @@
         if (c.startsWith("TT") || c.includes("TIKTOK")) return "TIKTOK";
         if (c.startsWith("NL") || c.startsWith("CN") || c.includes("ALIE")) return "ALIEXPRESS";
         if (c.includes("MAGALU") || c.startsWith("MG")) return "MAGALU";
-
-        // Transportadoras Específicas
         if (c.startsWith("LOGG") || c.includes("LOGGI")) return "LOGGI";
-        if (c.startsWith("JAD") || c.length === 14 && !isNaN(c)) return "JADLOG";
+        if (c.startsWith("JAD") || c.length === 14) return "JADLOG";
         if (c.startsWith("TEX") || c.includes("TOTAL")) return "TOTAL EXPRESS";
-        if (c.startsWith("AZU") || c.includes("AZUL")) return "AZUL CARGO";
-        if (c.startsWith("SQ") || c.includes("SEQUOIA")) return "SEQUOIA";
-        if (c.startsWith("QM") || c.includes("QUICKO")) return "QUICKO";
-        
-        // Padrão Correios (2 letras + 9 números + 2 letras)
+        if (c.startsWith("AZU")) return "AZUL CARGO";
+        if (c.startsWith("SQ")) return "SEQUOIA";
         const padraoCorreios = /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/;
         if (padraoCorreios.test(c)) return "CORREIOS";
-
         return "OUTROS";
     }
 
     async function alternarScanner() {
         if (scannerAtivo) { pararScanner(); return; }
-        
         html5QrCode.start(
             { facingMode: "environment" }, 
             { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 },
-            (decodedText) => {
-                const loja = identificarLoja(decodedText);
-                document.getElementById('rastreio').value = `${loja}: ${decodedText}`;
+            (text) => {
+                const loja = identificarLoja(text);
+                document.getElementById('rastreio').value = `${loja}: ${text}`;
                 if (navigator.vibrate) navigator.vibrate(100);
                 pararScanner();
             }
-        ).catch(() => alert("Erro ao abrir câmera."));
+        ).then(() => {
+            scannerAtivo = true;
+            document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA";
+            document.getElementById('btn-start').style.background = "#dc3545";
+        });
     }
 
     function pararScanner() {
@@ -175,7 +174,6 @@
         encomendas.push(item);
         atualizarTabelas();
         
-        // Limpa campos mas mantém o nome de quem recebeu (ADM)
         document.getElementById('destinatario').value = "";
         document.getElementById('apto').value = "";
         document.getElementById('bloco').value = "";
@@ -185,31 +183,33 @@
     function atualizarTabelas() {
         const listaPreview = document.getElementById('itens-corpo');
         const tabelaCorpo = document.getElementById('tabela-corpo');
-        document.getElementById('data-rel').innerText = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('data-rel').innerText = new Date().toLocaleString('pt-BR');
 
         listaPreview.innerHTML = "";
         tabelaCorpo.innerHTML = "";
 
         encomendas.forEach(i => {
+            // Preview no celular
             listaPreview.innerHTML += `
                 <div class="item-row">
                     <b>${i.dest}</b> (${i.local})<br>
                     <small>${i.rastreio} | ${i.data}</small>
                 </div>`;
             
+            // Tabela oficial para impressão com colunas de saída
             tabelaCorpo.innerHTML += `<tr>
                 <td>${i.data}</td>
-                <td>${i.dest}</td>
-                <td>${i.local}</td>
+                <td><b>${i.dest}</b><br>${i.local}</td>
                 <td>${i.rastreio}</td>
                 <td>${i.adm}</td>
-                <td class="sign-box"></td>
+                <td style="border: 1px solid #000;">____/____/____</td>
+                <td style="border: 1px solid #000; height: 40px;"></td>
             </tr>`;
         });
     }
 
     function limparLista() {
-        if(confirm("Deseja apagar tudo?")) {
+        if(confirm("Deseja apagar todos os registros da tela?")) {
             encomendas = [];
             atualizarTabelas();
         }
