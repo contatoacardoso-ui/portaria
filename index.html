@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Pro</title>
 
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Portaria Digital","short_name":"Portaria","start_url":"index.html","display":"standalone","background_color":"#f0f2f5","theme_color":"#1a73e8","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2312/2312560.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href="manifest.json">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -18,10 +18,7 @@
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        
-        /* Botão de Instalação Especial */
         #install-banner { display: none; background: #e8f0fe; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px solid #1a73e8; }
-        
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; display: block; text-align: center; text-decoration: none; box-sizing: border-box; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
@@ -35,12 +32,12 @@
 <body>
 
 <div id="install-banner">
-    <p style="margin:0 0 10px 0; font-weight:bold; color:#1a73e8;">Usar como Aplicativo?</p>
-    <button class="btn btn-scan" id="btn-install-now" style="margin-bottom:0; padding:10px;">📲 INSTALAR NO CELULAR</button>
+    <p style="margin:0 0 10px 0; font-weight:bold; color:#1a73e8;">Deseja instalar o App?</p>
+    <button class="btn btn-scan" id="btn-install-now" style="margin-bottom:0; padding:10px;">📲 INSTALAR AGORA</button>
 </div>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.2</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.3</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -66,7 +63,6 @@
 </div>
 
 <script>
-    // --- LÓGICA DE INSTALAÇÃO FORÇADA ---
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -83,18 +79,20 @@
         }
     });
 
-    // Service Worker
+    // SERVICE WORKER COM LIMPEZA DE CACHE
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
-                const cacheName = 'portaria-v5-2';
-                self.addEventListener('install', (e) => e.waitUntil(caches.open(cacheName).then((c) => c.addAll(['./', 'index.html']))));
-                self.addEventListener('fetch', (e) => e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request))));
-            `));
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        location.reload(); // Recarrega para ativar a nova versão
+                    }
+                };
+            };
         });
     }
 
-    // --- RESTANTE DAS FUNÇÕES ---
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
     document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
     const html5QrCode = new Html5Qrcode("reader");
@@ -137,16 +135,13 @@
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
         if (!dest || !quem) { alert("Preencha os dados!"); return; }
-        
         const agora = new Date();
         const entradaF = `${agora.toLocaleDateString('pt-BR')} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-
         encomendas.push({ 
             entrada: entradaF, dest: dest, 
             local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`, 
             rastreio: document.getElementById('rastreio').value || "Manual", quem: quem 
         });
-        
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
         document.getElementById('destinatario').value = ""; document.getElementById('apto').value = ""; 
