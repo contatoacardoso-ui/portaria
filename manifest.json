@@ -1,7 +1,7 @@
 {
-  "name": "Controle Portaria",
+  "name": "Portaria Digital Pro",
   "short_name": "Portaria",
-  "description": "Sistema de recebimento de encomendas",
+  "description": "Sistema V5.7 com Administração",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
