@@ -3,59 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V4.3</title>
+    <title>Portaria Digital Pro - V4.4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --share: #007bff; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 550px; margin: auto; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; color: white; text-align: center; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
-        .btn-share { background: var(--share); margin-top: 15px; border-bottom: 4px solid #0056b3; }
-        .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; background: #fafafa; margin-bottom: 10px; }
-        label { font-size: 12px; font-weight: 600; color: #666; }
-        .item-row { background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-left: 5px solid var(--primary); }
+        .btn-pdf { background: #e74c3c; margin-top: 15px; border-bottom: 4px solid #c0392b; }
+        .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; margin-top: 20px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; background: #fff; }
+        label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
+        .item-row { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--primary); font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.3</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.4</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
-    <label>Quem recebeu (Seu Nome):</label>
-    <input type="text" id="recebidoPor" placeholder="Ex: João Silva">
+    <label>Seu Nome (Salvo automaticamente):</label>
+    <input type="text" id="recebidoPor" placeholder="Ex: João Silva" oninput="salvarNome()">
 
-    <label>Morador / Destinatário:</label>
-    <input type="text" id="destinatario" placeholder="Nome do Morador">
-
-    <div style="display: flex; gap: 8px;">
-        <input type="text" id="apto" placeholder="Apto" style="flex:2">
-        <input type="text" id="bloco" placeholder="Bloco" style="flex:1">
+    <label>Morador / Local:</label>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <input type="text" id="destinatario" placeholder="Nome" style="flex:2; margin-bottom:0;">
+        <input type="text" id="apto" placeholder="Apto" style="flex:1; margin-bottom:0;">
+        <input type="text" id="bloco" placeholder="Bl" style="flex:0.6; margin-bottom:0;">
     </div>
 
-    <label>Código / Transportadora:</label>
+    <label>Código / Loja:</label>
     <input type="text" id="rastreio" placeholder="Aguardando scanner...">
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
-    <button class="btn btn-share" onclick="gerarECompartilhar()">📲 GERAR PROTOCOLO</button>
-    <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Tudo</button>
+    <button class="btn btn-pdf" onclick="baixarPDF()">📄 GERAR PROTOCOLO (PDF)</button>
     
     <div id="lista-preview"></div>
+    <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Tudo</button>
 </div>
 
 <script>
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
+    document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
+    
     const html5QrCode = new Html5Qrcode("reader");
     let scannerAtivo = false;
 
     window.onload = atualizarTabelas;
+
+    function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
 
     async function alternarScanner() {
         if (scannerAtivo) { pararScanner(); return; }
@@ -67,7 +70,7 @@
         }).then(() => { 
             scannerAtivo = true; 
             document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA"; 
-        }).catch(err => alert("Erro na câmera: " + err));
+        }).catch(err => alert("Erro: " + err));
     }
 
     function pararScanner() { 
@@ -79,16 +82,11 @@
 
     function identificarLoja(codigo) {
         const c = codigo.toUpperCase().trim();
-        if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI / MELHOR ENVIO";
-        if (c.startsWith("ORD-")) return "LOGGI EXPRESS";
+        if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI";
         if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO LIVRE";
         if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
         if (c.startsWith("GSH") || c.startsWith("SK")) return "SHEIN";
-        if (c.startsWith("TT")) return "TIKTOK";
-        if (c.startsWith("NL") || c.startsWith("CN")) return "ALIEXPRESS";
-        if (c.startsWith("LOGG") || c.includes("LOGGI")) return "LOGGI";
-        if (c.startsWith("JAD") || (c.length === 14 && !isNaN(c))) return "JADLOG";
         if (/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(c)) return "CORREIOS";
         return "OUTROS";
     }
@@ -96,13 +94,10 @@
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
-        if (!dest || !quem) { alert("Preencha os campos obrigatórios!"); return; }
+        if (!dest || !quem) { alert("Preencha Nome do Morador e Seu Nome!"); return; }
         
-        const agora = new Date();
-        const entradaF = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-
         encomendas.push({ 
-            entrada: entradaF, 
+            entrada: new Date().toLocaleString('pt-BR'), 
             dest: dest, 
             local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`, 
             rastreio: document.getElementById('rastreio').value || "Manual", 
@@ -111,27 +106,25 @@
         
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
-        document.getElementById('destinatario').value = ""; 
-        document.getElementById('rastreio').value = "";
+        document.getElementById('destinatario').value = ""; document.getElementById('rastreio').value = "";
     }
 
     function atualizarTabelas() {
         const preview = document.getElementById('lista-preview');
         preview.innerHTML = "";
         encomendas.slice().reverse().forEach(i => {
-            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
+            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br>${i.rastreio}</div>`;
         });
     }
 
-    async function gerarECompartilhar() {
+    function baixarPDF() {
         if (encomendas.length === 0) { alert("Lista vazia!"); return; }
         
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
-            const dataH = new Date().toLocaleString('pt-BR').replace(/[/ :]/g, '_');
-            const nomeArquivo = `Protocolo_${dataH}.pdf`;
-
+            const dataNome = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.setFontSize(10);
@@ -145,19 +138,12 @@
                 headStyles: { fillColor: [26, 115, 232] }
             });
 
-            const pdfBlob = doc.output('blob');
-            const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
+            // MÉTODO DE SALVAMENTO MAIS COMPATÍVEL COM CELULAR
+            doc.save(`Protocolo_${dataNome}.pdf`);
+            alert("PDF enviado para a pasta de DOWNLOADS do seu celular!");
 
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: 'Protocolo de Encomendas' }).catch(() => {
-                    doc.save(nomeArquivo);
-                });
-            } else {
-                doc.save(nomeArquivo);
-                alert("O arquivo foi baixado na sua pasta de Downloads.");
-            }
         } catch (erro) {
-            alert("Erro ao gerar: " + erro.message);
+            alert("Erro crítico: " + erro.message);
         }
     }
 
