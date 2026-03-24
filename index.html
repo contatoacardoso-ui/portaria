@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V3.5</title>
+    <title>Portaria Digital Pro - V3.7</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf: #e74c3c; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --share: #007bff; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 550px; margin: auto; }
         .header-container { text-align: center; margin-bottom: 15px; }
@@ -21,7 +21,7 @@
         .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; }
         .btn-scan { background: #6f42c1; color: white; }
         .btn-add { background: var(--success); color: white; }
-        .btn-pdf { background: var(--pdf); color: white; margin-top: 15px; border: 2px solid #c0392b; }
+        .btn-share { background: var(--share); color: white; margin-top: 15px; border: 2px solid #0056b3; }
         .btn-clear { background: var(--danger); color: white; padding: 8px; font-size: 12px; margin-top: 5px; opacity: 0.8; }
 
         .input-group { margin-bottom: 12px; }
@@ -35,7 +35,7 @@
 
 <div class="card">
     <div class="header-container">
-        <h2>📦 Portaria Digital <span class="version-badge">V3.5</span></h2>
+        <h2>📦 Portaria Digital <span class="version-badge">V3.7</span></h2>
     </div>
 
     <div id="reader"></div>
@@ -63,7 +63,7 @@
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
     
-    <button class="btn btn-pdf" onclick="gerarPDFFinal()">📄 CRIAR E ENVIAR PDF</button>
+    <button class="btn btn-share" onclick="compartilharNativo()">📲 COMPARTILHAR PROTOCOLO</button>
     
     <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Lista</button>
     
@@ -139,8 +139,8 @@
         });
     }
 
-    // --- FUNÇÃO QUE GERA O PDF AUTOMÁTICO ---
-    function gerarPDFFinal() {
+    // --- FUNÇÃO DE COMPARTILHAMENTO NATIVO ---
+    async function compartilharNativo() {
         if (encomendas.length === 0) { alert("Lista vazia!"); return; }
 
         const { jsPDF } = window.jspdf;
@@ -152,46 +152,41 @@
         const horaF = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(/:/g, 'h');
         const nomeArquivo = `RECEBIMENTO DE ENCOMENDAS (${nomeRecebeu} - ${dataF} - ${horaF}).pdf`;
 
-        // Título do PDF
+        // Título e Cabeçalho
         doc.setFontSize(18);
         doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
         doc.setFontSize(10);
-        doc.text(`GERADO EM: ${new Date().toLocaleString('pt-BR')} | CONTROLE INTERNO`, 14, 22);
+        doc.text(`GERADO EM: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
 
-        // Mapear dados para a tabela
-        const body = encomendas.map(i => [
-            i.entrada, 
-            `${i.dest}\n${i.local}`, 
-            i.rastreio, 
-            i.quem, 
-            "___/___/___", 
-            ""
-        ]);
+        const body = encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "___/___/___", ""]);
 
         doc.autoTable({
             startY: 25,
             head: [['Entrada', 'Morador / Local', 'Loja / Rastreio', 'Recebido por', 'Data Retirada', 'Assinatura']],
             body: body,
-            styles: { fontSize: 9, cellPadding: 3, textColor: 0 },
-            headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
-            columnStyles: {
-                2: { cellWidth: 60 },
-                5: { cellWidth: 40 }
-            },
+            styles: { fontSize: 9, textColor: 0 },
+            headStyles: { fillColor: [26, 115, 232], textColor: 255 },
             theme: 'grid'
         });
 
-        // Tenta usar a API de compartilhamento do celular, se não, faz download
-        const pdfOutput = doc.output('blob');
-        const file = new File([pdfOutput], nomeArquivo, { type: 'application/pdf' });
+        const pdfBlob = doc.output('blob');
+        const arquivo = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
 
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-                files: [file],
-                title: 'Relatório de Encomendas',
-                text: 'Segue relatório de encomendas gerado pela Portaria Digital.'
-            }).catch(console.error);
+        // Verifica se o celular suporta o compartilhamento de arquivos
+        if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+            try {
+                await navigator.share({
+                    files: [arquivo],
+                    title: 'Protocolo de Recebimento',
+                    text: 'Relatório de encomendas gerado pela Portaria Digital.'
+                });
+            } catch (error) {
+                // Caso o usuário cancele ou dê erro, tenta o download tradicional
+                doc.save(nomeArquivo);
+            }
         } else {
+            // Se o navegador não suportar share de arquivo, faz o download
+            alert("Seu navegador não suporta compartilhamento direto. O arquivo será baixado.");
             doc.save(nomeArquivo);
         }
     }
