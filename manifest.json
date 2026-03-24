@@ -1,15 +1,18 @@
 {
-  "name": "Controle de Encomendas ADM",
-  "short_name": "Encomendas",
+  "name": "Portaria Digital Pro",
+  "short_name": "Portaria",
+  "description": "Sistema de controle de encomendas para portaria",
   "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#28a745",
+  "theme_color": "#1a73e8",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/13514/13514601.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
