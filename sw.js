@@ -1,13 +1,11 @@
-const CACHE_NAME = 'portaria-pro-v5-9';
-
+const CACHE_NAME = 'portaria-estavel-v5-5';
 const assetsToCache = [
   './',
   './index.html',
   './manifest.json',
   'https://unpkg.com/html5-qrcode/html5-qrcode.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js',
-  'https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js'
 ];
 
 self.addEventListener('install', (event) => {
