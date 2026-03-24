@@ -6,13 +6,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Pro</title>
+    <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=2">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
@@ -32,12 +32,12 @@
 <body>
 
 <div id="install-banner">
-    <p style="margin:0 0 10px 0; font-weight:bold; color:#1a73e8;">Deseja instalar o App?</p>
+    <p style="margin:0 0 10px 0; font-weight:bold; color:#1a73e8;">Deseja instalar o App de Encomendas?</p>
     <button class="btn btn-scan" id="btn-install-now" style="margin-bottom:0; padding:10px;">📲 INSTALAR AGORA</button>
 </div>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.3</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.4</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -74,23 +74,13 @@
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') document.getElementById('install-banner').style.display = 'none';
             deferredPrompt = null;
+            document.getElementById('install-banner').style.display = 'none';
         }
     });
 
-    // SERVICE WORKER COM LIMPEZA DE CACHE
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        location.reload(); // Recarrega para ativar a nova versão
-                    }
-                };
-            };
-        });
+        navigator.serviceWorker.register('sw.js?v=2');
     }
 
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
