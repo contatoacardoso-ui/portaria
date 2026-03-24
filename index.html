@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json?v=5">
+    <link rel="manifest" href="manifest.json?v=3">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -40,8 +40,7 @@
     <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.5</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
-    
-    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO BARRAS</button>
+    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
     <label>Funcionário:</label>
     <input type="text" id="recebidoPor" placeholder="Seu nome" oninput="salvarNome()">
@@ -64,7 +63,6 @@
 </div>
 
 <script>
-    // Gerenciamento de Instalação (PWA)
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -76,33 +74,46 @@
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            document.getElementById('install-banner').style.display = 'none';
             deferredPrompt = null;
+            document.getElementById('install-banner').style.display = 'none';
         }
     });
 
-    // Registro do Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=5');
+        navigator.serviceWorker.register('sw.js?v=3');
     }
 
-    // Lógica do Sistema
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
     document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
-    
     const html5QrCode = new Html5Qrcode("reader");
     let scannerAtivo = false;
 
     window.onload = atualizarTabelas;
+    function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
 
-    function salvarNome() {
-        localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value);
+    async function alternarScanner() {
+        if (scannerAtivo) { pararScanner(); return; }
+        html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
+            const loja = identificarLoja(text);
+            document.getElementById('rastreio').value = `${loja}: ${text}`;
+            if (navigator.vibrate) navigator.vibrate(100);
+            pararScanner();
+        }).then(() => { 
+            scannerAtivo = true; 
+            document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA"; 
+        }).catch(err => alert("Erro na câmera."));
+    }
+
+    function pararScanner() { 
+        html5QrCode.stop().then(() => { 
+            scannerAtivo = false; 
+            document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO"; 
+        }); 
     }
 
     function identificarLoja(codigo) {
         const c = codigo.toUpperCase().replace(/\s/g, '');
         if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
-        if (c.startsWith("999") || c.length === 15) return "J&T EXPRESS";
         if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI";
         if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO LIVRE";
@@ -110,115 +121,61 @@
         return "LOJA";
     }
 
-    async function alternarScanner() {
-        if (scannerAtive) { pararScanner(); return; }
-        
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            { fps: 20, qrbox: 250 },
-            (text) => {
-                const loja = identificarLoja(text);
-                document.getElementById('rastreio').value = `${loja}: ${text}`;
-                if (navigator.vibrate) navigator.vibrate(100);
-                pararScanner();
-            }
-        ).then(() => {
-            scannerAtive = true;
-            document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA";
-        }).catch(err => alert("Erro ao acessar câmera."));
-    }
-
-    function pararScanner() {
-        html5QrCode.stop().then(() => {
-            scannerAtive = false;
-            document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO BARRAS";
-        });
-    }
-
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
-        if (!dest || !quem) { alert("Preencha o Nome e quem recebeu!"); return; }
-
+        if (!dest || !quem) { alert("Preencha os dados!"); return; }
         const agora = new Date();
         const entradaF = `${agora.toLocaleDateString('pt-BR')} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-
-        encomendas.push({
-            entrada: entradaF,
-            dest: dest,
-            local: `APTO ${document.getElementById('apto').value} BL ${document.getElementById('bloco').value}`,
-            rastreio: document.getElementById('rastreio').value || "MANUAL",
-            quem: quem
+        encomendas.push({ 
+            entrada: entradaF, dest: dest, 
+            local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`, 
+            rastreio: document.getElementById('rastreio').value || "Manual", quem: quem 
         });
-
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
-        
-        // Limpar campos
-        document.getElementById('destinatario').value = "";
-        document.getElementById('apto').value = "";
-        document.getElementById('bloco').value = "";
-        document.getElementById('rastreio').value = "";
+        document.getElementById('destinatario').value = ""; document.getElementById('apto').value = ""; 
+        document.getElementById('bloco').value = ""; document.getElementById('rastreio').value = "";
     }
 
     function atualizarTabelas() {
         const preview = document.getElementById('lista-preview');
         preview.innerHTML = "";
         encomendas.slice().reverse().forEach(i => {
-            preview.innerHTML += `<div class="item-row"><b>${i.dest.toUpperCase()}</b> (${i.local.toUpperCase()})<br>${i.rastreio.toUpperCase()}</div>`;
+            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br>${i.rastreio}</div>`;
         });
     }
 
     function baixarPDF() {
-        if (encomendas.length === 0) { alert("A lista está vazia!"); return; }
-        
+        if (encomendas.length === 0) { alert("Lista vazia!"); return; }
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
-            const dataG = new Date().toLocaleDateString('pt-BR');
-            const horaG = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-
+            const agora = new Date();
+            const dataG = agora.toLocaleDateString('pt-BR');
+            const horaG = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.setFontSize(10);
             doc.text(`Gerado em: ${dataG} - ${horaG}`, 14, 22);
 
+            // Tabela com cabeçalhos em MAIÚSCULO e coluna DESTINATÁRIO
             doc.autoTable({
                 startY: 25,
                 head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RECEBIDO POR', 'DATA RETIRADA', 'ASSINATURA']],
-                body: encomendas.map(i => [
-                    i.entrada, 
-                    `${i.dest.toUpperCase()}\n${i.local.toUpperCase()}`, 
-                    i.rastreio.toUpperCase(), 
-                    i.quem.toUpperCase(), 
-                    "", ""
-                ]),
+                body: encomendas.map(i => [i.entrada, `${i.dest.toUpperCase()}\n${i.local.toUpperCase()}`, i.rastreio.toUpperCase(), i.quem.toUpperCase(), "", ""]),
                 theme: 'grid',
                 headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255], fontStyle: 'bold' },
-                columnStyles: {
-                    0: { cellWidth: 35 },
-                    1: { cellWidth: 50 },
-                    2: { cellWidth: 50 },
-                    3: { cellWidth: 35 },
-                    4: { cellWidth: 30 },
-                    5: { cellWidth: 'auto' }
-                },
+                columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 50 }, 2: { cellWidth: 50 }, 3: { cellWidth: 35 }, 4: { cellWidth: 30 }, 5: { cellWidth: 'auto' } },
                 styles: { minCellHeight: 12, verticalAlign: 'middle', fontSize: 9 }
             });
 
             doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
-        } catch (erro) {
-            alert("Erro ao gerar PDF. Verifique se a biblioteca carregou.");
-        }
+        } catch (erro) { alert("Erro ao gerar PDF."); }
     }
 
-    function limparLista() {
-        if (confirm("Deseja apagar todos os registros da lista atual?")) {
-            encomendas = [];
-            localStorage.removeItem('encomendas_v4');
-            atualizarTabelas();
-        }
-    }
+    function limparLista() { if(confirm("Apagar tudo?")) { encomendas = []; localStorage.removeItem('encomendas_v4'); atualizarTabelas(); } }
 </script>
 </body>
 </html>
