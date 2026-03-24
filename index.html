@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V2.7</title>
+    <title>Portaria Digital Pro - V2.8</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
@@ -27,29 +27,18 @@
         #lista-preview { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .item-row { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-left: 5px solid var(--primary); font-size: 13px; }
 
-        /* --- AJUSTES DE IMPRESSÃO DEFINITIVOS --- */
+        /* --- AJUSTES DE IMPRESSÃO --- */
         #area-impressao { display: none; }
         
         @media print {
-            /* Remove cabeçalhos e rodapés do navegador (URL, data, etc) */
             @page { size: landscape; margin: 0.5cm; }
-            
-            html, body { 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                height: auto !important;
-                overflow: visible !important;
-                background: #fff !important;
-            }
-
+            html, body { margin: 0; padding: 0; background: #fff; height: auto; overflow: hidden; }
             .no-print { display: none !important; }
             
             #area-impressao { 
                 display: block !important; 
-                position: relative;
                 width: 100%; 
                 visibility: visible !important;
-                page-break-after: avoid; /* Evita quebra após o elemento */
             }
             
             #area-impressao * { visibility: visible !important; color: #000 !important; }
@@ -60,10 +49,7 @@
                 table-layout: fixed; 
                 margin-top: 5px; 
                 border: 2px solid #000;
-                page-break-inside: auto;
             }
-            
-            tr { page-break-inside: avoid; page-break-after: auto; }
             
             th, td { border: 1px solid #000; padding: 5px; font-size: 11px; vertical-align: middle; }
             th { background: #fff !important; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #000; }
@@ -71,11 +57,11 @@
             .col-entrada { width: 14%; text-align: center; }
             .col-morador { width: 22%; }
             .col-rastreio { width: 24%; font-family: 'Courier New', monospace; font-size: 9px; }
-            .col-adm { width: 12%; }
-            .col-data-saida { width: 12%; text-align: center; }
+            .col-recebido { width: 12%; }
+            .col-data-retirada { width: 12%; text-align: center; }
             .col-assinatura { width: 16%; }
 
-            h2.print-title { font-size: 18px; margin: 0 0 5px 0; border-bottom: 2px solid #000; padding-bottom: 5px; }
+            h2.print-title { font-size: 18px; margin: 0 0 5px 0; border-bottom: 2px solid #000; padding-bottom: 5px; text-align: center; }
         }
     </style>
 </head>
@@ -85,30 +71,36 @@
     <h2>📦 Portaria Digital</h2>
     <div id="reader"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
+    
     <div class="input-group">
-        <label>Responsável ADM:</label>
-        <input type="text" id="admInfo" placeholder="Ex: Porteiro João">
+        <label>Quem recebeu a encomenda (Nome):</label>
+        <input type="text" id="recebidoPor" placeholder="Ex: João Silva">
     </div>
+
     <div class="input-group">
-        <label>Nome do Morador:</label>
+        <label>Nome do Morador (Destinatário):</label>
         <input type="text" id="destinatario" placeholder="Ex: Viviane Amorim">
     </div>
+
     <div class="row">
         <div class="input-group" style="flex:2"><label>Apto/Casa:</label><input type="text" id="apto" placeholder="210"></div>
         <div class="input-group" style="flex:1"><label>Bloco:</label><input type="text" id="bloco" placeholder="4"></div>
     </div>
+
     <div class="input-group">
         <label>Código Identificado:</label>
         <input type="text" id="rastreio" placeholder="Resultado do scanner">
     </div>
+
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
     <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR PROTOCOLO</button>
     <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Lista</button>
+    
     <div id="lista-preview"><div id="itens-corpo"></div></div>
 </div>
 
 <div id="area-impressao">
-    <h2 class="print-title" style="text-align:center">PROTOCOLO DE ENTREGA DE ENCOMENDAS</h2>
+    <h2 class="print-title">PROTOCOLO DE ENTREGA DE ENCOMENDAS</h2>
     <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 2px;">
         <span>GERADO EM: <span id="data-rel"></span></span>
         <span>CONTROLE INTERNO DE PORTARIA</span>
@@ -119,8 +111,8 @@
                 <th class="col-entrada">Entrada</th>
                 <th class="col-morador">Morador / Local</th>
                 <th class="col-rastreio">Loja / Rastreio</th>
-                <th class="col-adm">Adm</th>
-                <th class="col-data-saida">Data Saída</th>
+                <th class="col-recebido">Recebido por</th>
+                <th class="col-data-retirada">Data Retirada</th>
                 <th class="col-assinatura">Assinatura</th>
             </tr>
         </thead>
@@ -172,25 +164,23 @@
 
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
-        const adm = document.getElementById('admInfo').value;
+        const quemRecebeu = document.getElementById('recebidoPor').value;
         const rast = document.getElementById('rastreio').value;
-        if (!dest || !adm) { alert("Preencha o Morador e ADM!"); return; }
+        if (!dest || !quemRecebeu) { alert("Preencha o Morador e o nome de quem recebeu!"); return; }
         
-        // Formato solicitado: Data - Hora
         const agora = new Date();
-        const dataStr = agora.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-        const horaStr = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-        const entradaFormatada = `${dataStr} - ${horaStr}`;
+        const entradaFormatada = `${agora.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
 
         const item = {
             entrada: entradaFormatada,
             dest: dest,
             local: `Ap ${document.getElementById('apto').value} / Bl ${document.getElementById('bloco').value}`,
             rastreio: rast,
-            adm: adm
+            quem: quemRecebeu
         };
         encomendas.push(item);
         atualizarTabelas();
+        
         document.getElementById('destinatario').value = "";
         document.getElementById('apto').value = "";
         document.getElementById('bloco').value = "";
@@ -205,7 +195,7 @@
         tabelaCorpo.innerHTML = "";
         encomendas.forEach(i => {
             listaPreview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
-            tabelaCorpo.innerHTML += `<tr><td class="col-entrada">${i.entrada}</td><td><b>${i.dest}</b><br>${i.local}</td><td class="col-rastreio">${i.rastreio}</td><td>${i.adm}</td><td style="text-align:center; color:#ccc">___/___/___</td><td style="height:35px"></td></tr>`;
+            tabelaCorpo.innerHTML += `<tr><td class="col-entrada">${i.entrada}</td><td><b>${i.dest}</b><br>${i.local}</td><td class="col-rastreio">${i.rastreio}</td><td>${i.quem}</td><td style="text-align:center; color:#ccc">___/___/___</td><td style="height:35px"></td></tr>`;
         });
     }
 
