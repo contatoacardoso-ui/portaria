@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V2.5</title>
+    <title>Portaria Digital Pro - V2.6</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
@@ -13,7 +13,7 @@
         
         #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 250px; border: 2px solid #ddd; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; transition: 0.2s; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; }
         .btn-scan { background: #6f42c1; color: white; }
         .btn-add { background: var(--success); color: white; }
         .btn-print { background: #6c757d; color: white; margin-top: 15px; }
@@ -27,27 +27,30 @@
         #lista-preview { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .item-row { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-left: 5px solid var(--primary); font-size: 13px; }
 
-        /* --- ESTILOS DE IMPRESSÃO PROFISSIONAL --- */
+        /* --- AJUSTES DE IMPRESSÃO (SEM PÁGINA EM BRANCO E CABEÇALHO CLARO) --- */
         #area-impressao { display: none; }
         @media print {
-            @page { size: landscape; margin: 1cm; }
+            @page { size: landscape; margin: 0.5cm; }
+            html, body { height: 99%; overflow: hidden; background: #fff; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { position: absolute; left: 0; top: 0; width: 100%; display: block; color: #000; }
             
-            table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 15px; }
-            th, td { border: 1px solid #000; padding: 8px 5px; font-size: 11px; word-wrap: break-word; vertical-align: middle; }
-            th { background: #f0f0f0 !important; font-weight: bold; text-transform: uppercase; -webkit-print-color-adjust: exact; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; border: 2px solid #000; }
+            th, td { border: 1px solid #000; padding: 6px 4px; font-size: 11px; vertical-align: middle; }
             
-            /* Colunas Padronizadas */
-            .col-entrada { width: 12%; }
-            .col-morador { width: 20%; }
-            .col-rastreio { width: 25%; font-family: 'Courier New', monospace; font-size: 10px; }
+            /* Cabeçalho mais claro e legível */
+            th { background: #ffffff !important; color: #000 !important; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; }
+            
+            .col-entrada { width: 10%; }
+            .col-morador { width: 22%; }
+            .col-rastreio { width: 24%; font-family: 'Courier New', monospace; font-size: 10px; }
             .col-adm { width: 12%; }
-            .col-data-saida { width: 13%; text-align: center; }
-            .col-assinatura { width: 18%; }
+            .col-data-saida { width: 12%; text-align: center; }
+            .col-assinatura { width: 20%; }
 
-            h2.print-title { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; }
+            h2.print-title { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 5px; font-size: 18px; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -55,66 +58,49 @@
 
 <div class="card no-print">
     <h2>📦 Portaria Digital</h2>
-
     <div id="reader"></div>
-    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO (BIPAR)</button>
-
+    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     <div class="input-group">
-        <label>Responsável ADM (Quem recebeu):</label>
+        <label>Responsável ADM:</label>
         <input type="text" id="admInfo" placeholder="Ex: Porteiro João">
     </div>
-
     <div class="input-group">
-        <label>Nome do Morador (Destinatário):</label>
+        <label>Nome do Morador:</label>
         <input type="text" id="destinatario" placeholder="Ex: Viviane Amorim">
     </div>
-
     <div class="row">
-        <div class="input-group" style="flex:2">
-            <label>Apto/Casa:</label>
-            <input type="text" id="apto" placeholder="210">
-        </div>
-        <div class="input-group" style="flex:1">
-            <label>Bloco:</label>
-            <input type="text" id="bloco" placeholder="4">
-        </div>
+        <div class="input-group" style="flex:2"><label>Apto/Casa:</label><input type="text" id="apto" placeholder="210"></div>
+        <div class="input-group" style="flex:1"><label>Bloco:</label><input type="text" id="bloco" placeholder="4"></div>
     </div>
-
     <div class="input-group">
         <label>Código Identificado:</label>
         <input type="text" id="rastreio" placeholder="Resultado do scanner">
     </div>
-
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
-    <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR FOLHA DE RETIRADA</button>
-    <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Tudo</button>
-
-    <div id="lista-preview">
-        <div id="itens-corpo"></div>
-    </div>
+    <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR PROTOCOLO</button>
+    <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Lista</button>
+    <div id="lista-preview"><div id="itens-corpo"></div></div>
 </div>
 
 <div id="area-impressao">
     <h2 class="print-title" style="text-align:center">PROTOCOLO DE ENTREGA DE ENCOMENDAS</h2>
-    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
-        <span><b>Data do Relatório:</b> <span id="data-rel"></span></span>
-        <span><b>Controle Interno de Portaria</b></span>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; font-weight: bold;">
+        <span>DATA DO RELATÓRIO: <span id="data-rel"></span></span>
+        <span>CONTROLE INTERNO DE PORTARIA</span>
     </div>
-    
     <table>
         <thead>
             <tr>
                 <th class="col-entrada">Entrada</th>
                 <th class="col-morador">Morador / Local</th>
-                <th class="col-rastreio">Loja / Código Rastreio</th>
-                <th class="col-adm">Adm</th>
-                <th class="col-data-saida">Data Retirada</th>
+                <th class="col-rastreio">Loja / Rastreio</th>
+                <th class="col-adm">Recebido por</th>
+                <th class="col-data-saida">Data Saída</th>
                 <th class="col-assinatura">Assinatura Morador</th>
             </tr>
         </thead>
         <tbody id="tabela-corpo"></tbody>
     </table>
-    <p style="font-size: 10px; text-align: center; margin-top: 15px;">Ao assinar, o morador confirma o recebimento do volume em perfeitas condições externas.</p>
 </div>
 
 <script>
@@ -122,49 +108,33 @@
     const html5QrCode = new Html5Qrcode("reader");
     let scannerAtivo = false;
 
-    // Lógica de Detecção com base na sua foto (Loggi/Melhor Envio) e outros
     function identificarLoja(codigo) {
         const c = codigo.toUpperCase().trim();
-        
-        // --- DETECÇÃO DA SUA FOTO ---
         if (c.startsWith("ME") && c.endsWith("BR")) return "MELHOR ENVIO / LOGGI";
         if (c.startsWith("ORD-")) return "LOGGI EXPRESS";
-
-        // --- OUTRAS PLATAFORMAS ---
-        if (c.startsWith("BR") || c.includes("SHOPEE") || c.includes("SPX")) return "SHOPEE";
-        if (c.startsWith("MLB") || c.startsWith("MELI") || (c.length >= 20 && c.startsWith("1"))) return "MERCADO LIVRE";
-        if (c.startsWith("TBA") || c.startsWith("DBC") || c.includes("AMZN")) return "AMAZON";
-        if (c.startsWith("GSH") || c.startsWith("SK") || c.includes("SHEIN")) return "SHEIN";
-        if (c.startsWith("TT") || c.includes("TIKTOK")) return "TIKTOK";
-        if (c.startsWith("NL") || c.startsWith("CN") || c.includes("ALIE")) return "ALIEXPRESS";
-        if (c.includes("MAGALU") || c.startsWith("MG")) return "MAGALU";
+        if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
+        if (c.startsWith("MLB") || c.startsWith("1") && c.length >= 15) return "MERCADO LIVRE";
+        if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
+        if (c.startsWith("GSH") || c.startsWith("SK")) return "SHEIN";
+        if (c.startsWith("TT")) return "TIKTOK";
+        if (c.startsWith("NL") || c.startsWith("CN")) return "ALIEXPRESS";
         if (c.startsWith("LOGG") || c.includes("LOGGI")) return "LOGGI";
         if (c.startsWith("JAD") || (c.length === 14 && !isNaN(c))) return "JADLOG";
-        if (c.startsWith("TEX") || c.includes("TOTAL")) return "TOTAL EXPRESS";
-        if (c.startsWith("AZU")) return "AZUL CARGO";
-        if (c.startsWith("SQ") || c.includes("SEQUOIA")) return "SEQUOIA";
-        
         const padraoCorreios = /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/;
         if (padraoCorreios.test(c)) return "CORREIOS";
-
         return "OUTROS";
     }
 
     async function alternarScanner() {
         if (scannerAtivo) { pararScanner(); return; }
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            { fps: 20, qrbox: { width: 260, height: 160 } },
-            (text) => {
-                const loja = identificarLoja(text);
-                document.getElementById('rastreio').value = `${loja}: ${text}`;
-                if (navigator.vibrate) navigator.vibrate(100);
-                pararScanner();
-            }
-        ).then(() => {
+        html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 260, height: 160 } }, (text) => {
+            const loja = identificarLoja(text);
+            document.getElementById('rastreio').value = `${loja}: ${text}`;
+            if (navigator.vibrate) navigator.vibrate(100);
+            pararScanner();
+        }).then(() => {
             scannerAtivo = true;
             document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA";
-            document.getElementById('btn-start').style.background = "#dc3545";
         });
     }
 
@@ -172,7 +142,6 @@
         html5QrCode.stop().then(() => {
             scannerAtivo = false;
             document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO";
-            document.getElementById('btn-start').style.background = "#6f42c1";
         });
     }
 
@@ -180,9 +149,7 @@
         const dest = document.getElementById('destinatario').value;
         const adm = document.getElementById('admInfo').value;
         const rast = document.getElementById('rastreio').value;
-        
-        if (!dest || !adm) { alert("Preencha o Morador e quem recebeu na ADM!"); return; }
-
+        if (!dest || !adm) { alert("Preencha o Morador e ADM!"); return; }
         const item = {
             data: new Date().toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}),
             dest: dest,
@@ -190,11 +157,8 @@
             rastreio: rast,
             adm: adm
         };
-
         encomendas.push(item);
         atualizarTabelas();
-        
-        // Limpa campos para o próximo
         document.getElementById('destinatario').value = "";
         document.getElementById('apto').value = "";
         document.getElementById('bloco').value = "";
@@ -204,35 +168,16 @@
     function atualizarTabelas() {
         const listaPreview = document.getElementById('itens-corpo');
         const tabelaCorpo = document.getElementById('tabela-corpo');
-        document.getElementById('data-rel').innerText = new Date().toLocaleString('pt-BR');
-
+        document.getElementById('data-rel').innerText = new Date().toLocaleDateString('pt-BR');
         listaPreview.innerHTML = "";
         tabelaCorpo.innerHTML = "";
-
         encomendas.forEach(i => {
-            listaPreview.innerHTML += `
-                <div class="item-row">
-                    <b>${i.dest}</b> (${i.local})<br>
-                    <small>${i.rastreio}</small>
-                </div>`;
-            
-            tabelaCorpo.innerHTML += `<tr>
-                <td>${i.data}</td>
-                <td><b>${i.dest}</b><br>${i.local}</td>
-                <td class="col-rastreio">${i.rastreio}</td>
-                <td>${i.adm}</td>
-                <td style="text-align: center; color: #aaa;">___/___/___</td>
-                <td style="height: 40px;"></td>
-            </tr>`;
+            listaPreview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
+            tabelaCorpo.innerHTML += `<tr><td>${i.data}</td><td><b>${i.dest}</b><br>${i.local}</td><td class="col-rastreio">${i.rastreio}</td><td>${i.adm}</td><td style="text-align:center; color:#ccc">___/___/___</td><td style="height:35px"></td></tr>`;
         });
     }
 
-    function limparLista() {
-        if(confirm("Deseja apagar todos os registros da lista?")) {
-            encomendas = [];
-            atualizarTabelas();
-        }
-    }
+    function limparLista() { if(confirm("Apagar tudo?")) { encomendas = []; atualizarTabelas(); } }
 </script>
 </body>
 </html>
