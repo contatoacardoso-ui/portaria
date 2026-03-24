@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Pro</title>
 
@@ -14,14 +16,15 @@
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; transition: 0.2; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; display: block; text-align: center; text-decoration: none; box-sizing: border-box; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
         .btn-pdf { background: var(--pdf-btn); margin-top: 15px; border-bottom: 4px solid #003d7a; }
         .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; margin-top: 20px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; outline: none; }
+        input:focus { border-color: var(--primary); }
         label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
         .item-row { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--primary); font-size: 13px; }
     </style>
@@ -29,13 +32,13 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.8</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.0</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
     <label>Seu Nome:</label>
-    <input type="text" id="recebidoPor" placeholder="Ex: João Silva" oninput="salvarNome()">
+    <input type="text" id="recebidoPor" placeholder="Quem está recebendo?" oninput="salvarNome()">
 
     <label>Morador / Local:</label>
     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
@@ -44,7 +47,7 @@
         <input type="text" id="bloco" placeholder="Bl" style="flex:0.6; margin-bottom:0;">
     </div>
 
-    <label>Código / Loja:</label>
+    <label>Rastreio:</label>
     <input type="text" id="rastreio" placeholder="Aguardando scanner...">
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
@@ -55,12 +58,15 @@
 </div>
 
 <script>
-    // --- LÓGICA DE INSTALAÇÃO E OFFLINE ---
+    // Registro de Service Worker para funcionar em qualquer navegador offline
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
-            self.addEventListener('install', (e) => e.waitUntil(caches.open('pwa').then((c) => c.addAll(['./']))));
-            self.addEventListener('fetch', (e) => e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request))));
-        `));
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+                const cacheName = 'portaria-v5';
+                self.addEventListener('install', (e) => e.waitUntil(caches.open(cacheName).then((c) => c.addAll(['./']))));
+                self.addEventListener('fetch', (e) => e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request))));
+            `));
+        });
     }
 
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
@@ -70,7 +76,6 @@
     let scannerAtivo = false;
 
     window.onload = atualizarTabelas;
-
     function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
 
     async function alternarScanner() {
@@ -83,7 +88,7 @@
         }).then(() => { 
             scannerAtivo = true; 
             document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA"; 
-        }).catch(err => alert("Erro: " + err));
+        }).catch(err => alert("Ligue a câmera ou dê permissão."));
     }
 
     function pararScanner() { 
@@ -100,13 +105,13 @@
         if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO LIVRE";
         if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
-        return "OUTROS";
+        return "LOJA";
     }
 
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
-        if (!dest || !quem) { alert("Preencha Nome do Morador e Seu Nome!"); return; }
+        if (!dest || !quem) { alert("Preencha Nome e Quem Recebeu!"); return; }
         
         const agora = new Date();
         const entradaF = `${agora.toLocaleDateString('pt-BR')} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
@@ -121,7 +126,6 @@
         
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
-        // Limpa campos para a próxima entrega
         document.getElementById('destinatario').value = ""; 
         document.getElementById('apto').value = ""; 
         document.getElementById('bloco').value = ""; 
@@ -161,10 +165,10 @@
             });
 
             doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
-        } catch (erro) { alert("Erro: " + erro.message); }
+        } catch (erro) { alert("Erro ao gerar PDF."); }
     }
 
-    function limparLista() { if(confirm("Limpar todos os registros?")) { encomendas = []; localStorage.removeItem('encomendas_v4'); atualizarTabelas(); } }
+    function limparLista() { if(confirm("Apagar tudo?")) { encomendas = []; localStorage.removeItem('encomendas_v4'); atualizarTabelas(); } }
 </script>
 </body>
 </html>
