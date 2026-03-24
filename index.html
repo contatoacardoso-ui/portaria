@@ -3,59 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V3.2</title>
+    <title>Portaria Digital Pro - V3.5</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --share: #007bff; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf: #e74c3c; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 550px; margin: auto; }
-        
         .header-container { text-align: center; margin-bottom: 15px; }
         h2 { color: var(--primary); margin: 0; font-size: 24px; }
-        .version-badge { font-size: 12px; color: #666; background: #e8f0fe; padding: 2px 8px; border-radius: 10px; font-weight: bold; vertical-align: middle; }
+        .version-badge { font-size: 12px; color: #666; background: #e8f0fe; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
         
         #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 250px; border: 2px solid #ddd; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; transition: 0.2s; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; }
         .btn-scan { background: #6f42c1; color: white; }
         .btn-add { background: var(--success); color: white; }
-        .btn-print { background: var(--share); color: white; margin-top: 15px; }
+        .btn-pdf { background: var(--pdf); color: white; margin-top: 15px; border: 2px solid #c0392b; }
         .btn-clear { background: var(--danger); color: white; padding: 8px; font-size: 12px; margin-top: 5px; opacity: 0.8; }
-        .btn:active { transform: scale(0.98); }
 
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; outline: none; }
         
-        #lista-preview { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .item-row { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-left: 5px solid var(--primary); font-size: 13px; }
-
-        /* --- ESTILOS DE IMPRESSÃO --- */
-        #area-impressao { display: none; }
-        @media print {
-            @page { size: landscape; margin: 0.5cm; }
-            html, body { margin: 0; padding: 0; background: #fff; height: auto; overflow: hidden; }
-            .no-print { display: none !important; }
-            #area-impressao { display: block !important; width: 100%; visibility: visible !important; }
-            #area-impressao * { visibility: visible !important; color: #000 !important; font-family: 'Segoe UI', sans-serif !important; }
-            table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 5px; border: 2px solid #000; }
-            th, td { border: 1px solid #000; padding: 5px; font-size: 11px; vertical-align: middle; word-wrap: break-word; }
-            th { background: #fff !important; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #000; }
-            .col-entrada { width: 14%; text-align: center; }
-            .col-morador { width: 22%; }
-            .col-rastreio { width: 24%; font-size: 10px; }
-            .col-recebido { width: 12%; }
-            .col-data-retirada { width: 12%; text-align: center; }
-            .col-assinatura { width: 16%; }
-            h2.print-title { font-size: 18px; margin: 0 0 5px 0; border-bottom: 2px solid #000; padding-bottom: 5px; text-align: center; }
-        }
     </style>
 </head>
 <body>
 
-<div class="card no-print">
+<div class="card">
     <div class="header-container">
-        <h2>📦 Portaria Digital <span class="version-badge">V3.2</span></h2>
+        <h2>📦 Portaria Digital <span class="version-badge">V3.5</span></h2>
     </div>
 
     <div id="reader"></div>
@@ -67,7 +47,7 @@
     </div>
 
     <div class="input-group">
-        <label>Nome do Morador (Destinatário):</label>
+        <label>Nome do Morador:</label>
         <input type="text" id="destinatario" placeholder="Ex: Viviane Amorim">
     </div>
 
@@ -83,32 +63,11 @@
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
     
-    <button class="btn btn-print" onclick="gerarEPredizer()">📂 GERAR RELATÓRIO PARA ENVIO</button>
+    <button class="btn btn-pdf" onclick="gerarPDFFinal()">📄 CRIAR E ENVIAR PDF</button>
     
     <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Lista</button>
     
-    <div id="lista-preview"><div id="itens-corpo"></div></div>
-</div>
-
-<div id="area-impressao">
-    <h2 class="print-title">PROTOCOLO DE ENTREGA DE ENCOMENDAS</h2>
-    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 2px;">
-        <span>GERADO EM: <span id="data-rel"></span></span>
-        <span>CONTROLE INTERNO DE PORTARIA</span>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th class="col-entrada">Entrada</th>
-                <th class="col-morador">Morador / Local</th>
-                <th class="col-rastreio">Loja / Rastreio</th>
-                <th class="col-recebido">Recebido por</th>
-                <th class="col-data-retirada">Data Retirada</th>
-                <th class="col-assinatura">Assinatura</th>
-            </tr>
-        </thead>
-        <tbody id="tabela-corpo"></tbody>
-    </table>
+    <div id="lista-preview"></div>
 </div>
 
 <script>
@@ -117,22 +76,6 @@
     let scannerAtivo = false;
 
     window.onload = atualizarTabelas;
-
-    function identificarLoja(codigo) {
-        const c = codigo.toUpperCase().trim();
-        if (c.startsWith("ME") && c.endsWith("BR")) return "MELHOR ENVIO / LOGGI";
-        if (c.startsWith("ORD-")) return "LOGGI EXPRESS";
-        if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
-        if (c.startsWith("MLB") || c.startsWith("1") && c.length >= 15) return "MERCADO LIVRE";
-        if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
-        if (c.startsWith("GSH") || c.startsWith("SK")) return "SHEIN";
-        if (c.startsWith("TT")) return "TIKTOK";
-        if (c.startsWith("NL") || c.startsWith("CN")) return "ALIEXPRESS";
-        if (c.startsWith("LOGG") || c.includes("LOGGI")) return "LOGGI";
-        if (c.startsWith("JAD") || (c.length === 14 && !isNaN(c))) return "JADLOG";
-        if (/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(c)) return "CORREIOS";
-        return "OUTROS";
-    }
 
     async function alternarScanner() {
         if (scannerAtivo) { pararScanner(); return; }
@@ -154,6 +97,22 @@
         });
     }
 
+    function identificarLoja(codigo) {
+        const c = codigo.toUpperCase().trim();
+        if (c.startsWith("ME") && c.endsWith("BR")) return "MELHOR ENVIO / LOGGI";
+        if (c.startsWith("ORD-")) return "LOGGI EXPRESS";
+        if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
+        if (c.startsWith("MLB") || c.startsWith("1") && c.length >= 15) return "MERCADO LIVRE";
+        if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
+        if (c.startsWith("GSH") || c.startsWith("SK")) return "SHEIN";
+        if (c.startsWith("TT")) return "TIKTOK";
+        if (c.startsWith("NL") || c.startsWith("CN")) return "ALIEXPRESS";
+        if (c.startsWith("LOGG") || c.includes("LOGGI")) return "LOGGI";
+        if (c.startsWith("JAD") || (c.length === 14 && !isNaN(c))) return "JADLOG";
+        if (/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(c)) return "CORREIOS";
+        return "OUTROS";
+    }
+
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quemRecebeu = document.getElementById('recebidoPor').value;
@@ -161,10 +120,11 @@
         if (!dest || !quemRecebeu) { alert("Preencha o Morador e o nome de quem recebeu!"); return; }
         const agora = new Date();
         const entradaFormatada = `${agora.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-        const item = { entrada: entradaFormatada, dest: dest, local: `Ap ${document.getElementById('apto').value} / Bl ${document.getElementById('bloco').value}`, rastreio: rast, quem: quemRecebeu };
-        encomendas.push(item);
+        
+        encomendas.push({ entrada: entradaFormatada, dest: dest, local: `Ap ${document.getElementById('apto').value} / Bl ${document.getElementById('bloco').value}`, rastreio: rast, quem: quemRecebeu });
         localStorage.setItem('encomendas_v3', JSON.stringify(encomendas));
         atualizarTabelas();
+        
         document.getElementById('destinatario').value = "";
         document.getElementById('apto').value = "";
         document.getElementById('bloco').value = "";
@@ -172,34 +132,68 @@
     }
 
     function atualizarTabelas() {
-        const listaPreview = document.getElementById('itens-corpo');
-        const tabelaCorpo = document.getElementById('tabela-corpo');
-        document.getElementById('data-rel').innerText = new Date().toLocaleString('pt-BR');
-        listaPreview.innerHTML = "";
-        tabelaCorpo.innerHTML = "";
+        const preview = document.getElementById('lista-preview');
+        preview.innerHTML = "";
         encomendas.forEach(i => {
-            listaPreview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
-            tabelaCorpo.innerHTML += `<tr><td class="col-entrada">${i.entrada}</td><td><b>${i.dest}</b><br>${i.local}</td><td class="col-rastreio">${i.rastreio}</td><td>${i.quem}</td><td style="text-align:center; color:#ccc">___/___/___</td><td style="height:35px"></td></tr>`;
+            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
         });
     }
 
-    // --- PROCEDIMENTO PARA ENVIO DE ARQUIVO ---
-    function gerarEPredizer() {
-        if (encomendas.length === 0) { alert("A lista está vazia!"); return; }
-        
+    // --- FUNÇÃO QUE GERA O PDF AUTOMÁTICO ---
+    function gerarPDFFinal() {
+        if (encomendas.length === 0) { alert("Lista vazia!"); return; }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "landscape" });
+
         const nomeRecebeu = document.getElementById('recebidoPor').value || "GERAL";
         const agora = new Date();
-        const dataFormatada = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
-        const horaFormatada = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}).replace(/:/g, 'h');
-        
-        const nomeArquivo = `RECEBIMENTO DE ENCOMENDAS (${nomeRecebeu} - ${dataFormatada} - ${horaFormatada})`;
-        
-        // Define o título que o navegador usa para o PDF
-        document.title = nomeArquivo;
+        const dataF = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const horaF = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}).replace(/:/g, 'h');
+        const nomeArquivo = `RECEBIMENTO DE ENCOMENDAS (${nomeRecebeu} - ${dataF} - ${horaF}).pdf`;
 
-        alert("INSTRUÇÕES:\n1. A tela de impressão vai abrir.\n2. Escolha 'Salvar como PDF'.\n3. Após salvar, abra o seu WhatsApp e envie o arquivo que acabou de ser gerado.");
-        
-        window.print();
+        // Título do PDF
+        doc.setFontSize(18);
+        doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
+        doc.setFontSize(10);
+        doc.text(`GERADO EM: ${new Date().toLocaleString('pt-BR')} | CONTROLE INTERNO`, 14, 22);
+
+        // Mapear dados para a tabela
+        const body = encomendas.map(i => [
+            i.entrada, 
+            `${i.dest}\n${i.local}`, 
+            i.rastreio, 
+            i.quem, 
+            "___/___/___", 
+            ""
+        ]);
+
+        doc.autoTable({
+            startY: 25,
+            head: [['Entrada', 'Morador / Local', 'Loja / Rastreio', 'Recebido por', 'Data Retirada', 'Assinatura']],
+            body: body,
+            styles: { fontSize: 9, cellPadding: 3, textColor: 0 },
+            headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+            columnStyles: {
+                2: { cellWidth: 60 },
+                5: { cellWidth: 40 }
+            },
+            theme: 'grid'
+        });
+
+        // Tenta usar a API de compartilhamento do celular, se não, faz download
+        const pdfOutput = doc.output('blob');
+        const file = new File([pdfOutput], nomeArquivo, { type: 'application/pdf' });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+                files: [file],
+                title: 'Relatório de Encomendas',
+                text: 'Segue relatório de encomendas gerado pela Portaria Digital.'
+            }).catch(console.error);
+        } else {
+            doc.save(nomeArquivo);
+        }
     }
 
     function limparLista() { if(confirm("Apagar tudo?")) { encomendas = []; localStorage.removeItem('encomendas_v3'); atualizarTabelas(); } }
