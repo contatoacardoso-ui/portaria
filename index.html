@@ -99,14 +99,14 @@
             if (navigator.vibrate) navigator.vibrate(100);
             pararScanner();
         }).then(() => { 
-            scannerAtivo = true; 
+            scannerAtivo = true; // <--- Aqui estava "Ative"
             document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA"; 
         }).catch(err => alert("Erro na câmera."));
     }
 
     function pararScanner() { 
         html5QrCode.stop().then(() => { 
-            scannerAtivo = false; 
+            scannerAtivo = false; // <--- Aqui estava "Ative"
             document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO"; 
         }); 
     }
