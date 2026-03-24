@@ -1,13 +1,13 @@
 {
-  "name": "Portaria Digital",
-  "short_name": "Portaria",
-  "start_url": "index.html",
+  "name": "Controle de Encomendas ADM",
+  "short_name": "Encomendas",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1a73e8",
+  "theme_color": "#28a745",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2322/2322561.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/13514/13514601.png",
       "sizes": "512x512",
       "type": "image/png"
     }
