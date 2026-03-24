@@ -8,25 +8,29 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json?v=3">
+    <link rel="manifest" href="manifest.json?v=4">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; --ocr: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         #install-banner { display: none; background: #e8f0fe; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px solid #1a73e8; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; display: block; text-align: center; text-decoration: none; box-sizing: border-box; }
         .btn-scan { background: #6f42c1; }
+        .btn-ocr { background: var(--ocr); border-bottom: 4px solid #e68a00; }
         .btn-add { background: var(--success); }
         .btn-pdf { background: var(--pdf-btn); margin-top: 15px; border-bottom: 4px solid #003d7a; }
         .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; margin-top: 20px; }
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
         label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
         .item-row { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--primary); font-size: 13px; }
+        .loading { display: none; color: var(--ocr); font-weight: bold; text-align: center; margin: 10px 0; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -37,10 +41,14 @@
 </div>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.5</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.6</small></h2>
     
+    <button class="btn btn-ocr" onclick="document.getElementById('foto-etiqueta').click()">🔍 LER ETIQUETA POR FOTO</button>
+    <input type="file" id="foto-etiqueta" accept="image/*" capture="camera" style="display:none" onchange="processarFoto(this)">
+    <div id="status-ocr" class="loading">⏳ Lendo etiqueta... aguarde...</div>
+
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
-    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
+    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO BARRAS</button>
     
     <label>Funcionário:</label>
     <input type="text" id="recebidoPor" placeholder="Seu nome" oninput="salvarNome()">
@@ -63,6 +71,47 @@
 </div>
 
 <script>
+    // --- LÓGICA DE INTELIGÊNCIA OCR ---
+    async function processarFoto(input) {
+        if (!input.files || !input.files[0]) return;
+        const status = document.getElementById('status-ocr');
+        status.style.display = 'block';
+        
+        try {
+            const image = input.files[0];
+            const result = await Tesseract.recognize(image, 'por');
+            const texto = result.data.text;
+            const linhas = texto.split('\n');
+            
+            let nomeAchado = "";
+            let rastreioAchado = "";
+
+            linhas.forEach((linha, i) => {
+                const l = linha.toUpperCase();
+                // Procura o nome do morador (geralmente na linha seguinte à palavra Destinatário)
+                if (l.includes("DESTINAT") && linhas[i+1]) {
+                    nomeAchado = linhas[i+1].trim().split(',')[0]; // Pega o nome antes de qualquer vírgula
+                }
+                // Busca sequências de números longos para rastreio
+                const numeros = linha.replace(/\s/g, '').match(/\d{10,}/);
+                if (numeros && !rastreioAchado) rastreioAchado = numeros[0];
+            });
+
+            if(nomeAchado) document.getElementById('destinatario').value = nomeAchado.toUpperCase();
+            if(rastreioAchado) {
+                const loja = identificarLoja(rastreioAchado);
+                document.getElementById('rastreio').value = `${loja}: ${rastreioAchado}`;
+            }
+            
+            if(!nomeAchado && !rastreioAchado) alert("Não foi possível ler os dados. Tente uma foto mais próxima e nítida.");
+        } catch (e) {
+            alert("Erro no processamento da imagem.");
+        } finally {
+            status.style.display = 'none';
+        }
+    }
+
+    // --- LÓGICA V5.5 ORIGINAL ---
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -74,14 +123,12 @@
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
             document.getElementById('install-banner').style.display = 'none';
+            deferredPrompt = null;
         }
     });
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=3');
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=4'); }
 
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
     document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
@@ -107,13 +154,14 @@
     function pararScanner() { 
         html5QrCode.stop().then(() => { 
             scannerAtivo = false; 
-            document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO"; 
+            document.getElementById('btn-start').innerText = "📷 ESCANEAR CÓDIGO BARRAS"; 
         }); 
     }
 
     function identificarLoja(codigo) {
         const c = codigo.toUpperCase().replace(/\s/g, '');
         if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
+        if (c.startsWith("999") || c.length === 15) return "J&T EXPRESS";
         if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI";
         if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO LIVRE";
@@ -142,7 +190,7 @@
         const preview = document.getElementById('lista-preview');
         preview.innerHTML = "";
         encomendas.slice().reverse().forEach(i => {
-            preview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br>${i.rastreio}</div>`;
+            preview.innerHTML += `<div class="item-row"><b>${i.dest.toUpperCase()}</b> (${i.local.toUpperCase()})<br>${i.rastreio.toUpperCase()}</div>`;
         });
     }
 
@@ -151,16 +199,12 @@
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
-            const agora = new Date();
-            const dataG = agora.toLocaleDateString('pt-BR');
-            const horaG = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-            
+            const dataG = new Date().toLocaleDateString('pt-BR');
+            const horaG = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.setFontSize(10);
             doc.text(`Gerado em: ${dataG} - ${horaG}`, 14, 22);
-
-            // Tabela com cabeçalhos em MAIÚSCULO e coluna DESTINATÁRIO
             doc.autoTable({
                 startY: 25,
                 head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RECEBIDO POR', 'DATA RETIRADA', 'ASSINATURA']],
@@ -170,7 +214,6 @@
                 columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 50 }, 2: { cellWidth: 50 }, 3: { cellWidth: 35 }, 4: { cellWidth: 30 }, 5: { cellWidth: 'auto' } },
                 styles: { minCellHeight: 12, verticalAlign: 'middle', fontSize: 9 }
             });
-
             doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
         } catch (erro) { alert("Erro ao gerar PDF."); }
     }
