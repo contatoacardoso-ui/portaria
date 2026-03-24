@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V4.0</title>
+    <title>Portaria Digital Pro - V4.1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf: #e74c3c; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --share: #007bff; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 550px; margin: auto; }
         .header-container { text-align: center; margin-bottom: 15px; }
@@ -17,12 +17,12 @@
         
         #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 250px; border: 2px solid #ddd; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; transition: 0.2s; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; display: block; transition: 0.2s; text-align: center; text-decoration: none; }
         .btn-scan { background: #6f42c1; color: white; }
         .btn-add { background: var(--success); color: white; }
-        .btn-pdf { background: var(--pdf); color: white; margin-top: 15px; box-shadow: 0 4px 0 #c0392b; }
+        .btn-share { background: var(--share); color: white; margin-top: 15px; border-bottom: 4px solid #0056b3; }
         .btn-clear { background: var(--danger); color: white; padding: 8px; font-size: 12px; margin-top: 5px; opacity: 0.8; }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn:active { transform: translateY(2px); border-bottom-width: 2px; }
 
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
@@ -35,20 +35,20 @@
 
 <div class="card">
     <div class="header-container">
-        <h2>📦 Portaria Digital <span style="font-size:12px; color:#999">V4.0</span></h2>
+        <h2>📦 Portaria Digital <span style="font-size:12px; color:#999">V4.1</span></h2>
     </div>
 
     <div id="reader"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
     <div class="input-group">
-        <label>Quem recebeu a encomenda (Seu Nome):</label>
+        <label>Quem recebeu (Seu Nome):</label>
         <input type="text" id="recebidoPor" placeholder="Ex: João Silva">
     </div>
 
     <div class="input-group">
-        <label>Nome do Morador (Destinatário):</label>
-        <input type="text" id="destinatario" placeholder="Ex: Nome do morador">
+        <label>Nome do Morador:</label>
+        <input type="text" id="destinatario" placeholder="Ex: Maria Souza">
     </div>
 
     <div style="display: flex; gap: 8px;">
@@ -63,7 +63,7 @@
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
     
-    <button class="btn btn-pdf" onclick="baixarPDF()">📄 GERAR ARQUIVO PDF</button>
+    <button class="btn btn-share" onclick="gerarECompartilhar()">📲 GERAR PROTOCOLO</button>
     
     <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Lista</button>
     
@@ -83,10 +83,7 @@
             document.getElementById('rastreio').value = text;
             if (navigator.vibrate) navigator.vibrate(100);
             pararScanner();
-        }).then(() => {
-            scannerAtivo = true;
-            document.getElementById('btn-start').innerText = "❌ FECHAR CÂMERA";
-        }).catch(err => alert("Erro ao abrir câmera: " + err));
+        }).catch(err => alert("Erro na câmera: " + err));
     }
 
     function pararScanner() {
@@ -129,7 +126,7 @@
         });
     }
 
-    function baixarPDF() {
+    async function gerarECompartilhar() {
         if (encomendas.length === 0) { alert("Adicione registros primeiro!"); return; }
         
         try {
@@ -138,53 +135,50 @@
 
             const nomeResponsavel = document.getElementById('recebidoPor').value || "PORTARIA";
             const dataH = new Date().toLocaleString('pt-BR');
-            const nomeArquivo = `Protocolo_Encomendas_${dataH.replace(/[/ :]/g, '_')}.pdf`;
+            const nomeArquivo = `Protocolo_${dataH.replace(/[/ :]/g, '_')}.pdf`;
 
-            // Configuração visual do PDF
             doc.setFont("helvetica", "bold");
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
-            
             doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
             doc.text(`Responsável: ${nomeResponsavel} | Gerado em: ${dataH}`, 14, 22);
 
             const colunas = ["Entrada", "Morador / Local", "Rastreio", "Recebido por", "Data Retirada", "Assinatura"];
-            const linhas = encomendas.map(i => [
-                i.entrada, 
-                `${i.dest}\n${i.local}`, 
-                i.rastreio, 
-                i.quem, 
-                "___/___/___", 
-                ""
-            ]);
+            const linhas = encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "___/___/___", ""]);
 
             doc.autoTable({
                 startY: 28,
                 head: [colunas],
                 body: linhas,
                 theme: 'grid',
-                headStyles: { fillColor: [26, 115, 232], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 9, cellPadding: 3, textColor: 0, overflow: 'linebreak' },
-                columnStyles: {
-                    1: { cellWidth: 50 },
-                    2: { cellWidth: 50 },
-                    5: { cellWidth: 40 }
-                }
+                headStyles: { fillColor: [26, 115, 232] },
+                styles: { fontSize: 9 }
             });
 
-            // Comando direto de download
-            doc.save(nomeArquivo);
-            alert("PDF criado com sucesso! Verifique sua pasta de Downloads.");
+            // GERA O BLOB (O arquivo em memória)
+            const pdfOutput = doc.output('blob');
+            const file = new File([pdfOutput], nomeArquivo, { type: 'application/pdf' });
+
+            // TENTA ABRIR O COMPARTILHAMENTO DO CELULAR
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Protocolo de Encomendas',
+                    text: 'Segue o protocolo gerado.'
+                });
+            } else {
+                // SE O CELULAR NÃO SUPORTAR O SHARE DE ARQUIVO, ELE APENAS BAIXA
+                doc.save(nomeArquivo);
+                alert("Protocolo gerado e salvo nos downloads!");
+            }
 
         } catch (erro) {
-            alert("Erro crítico ao gerar PDF: " + erro.message);
-            console.error(erro);
+            alert("Erro: " + erro.message);
         }
     }
 
     function limparLista() { 
-        if(confirm("Deseja apagar todos os registros da tela?")) { 
+        if(confirm("Limpar registros da tela?")) { 
             encomendas = []; 
             localStorage.removeItem('encomendas_v4'); 
             atualizarTabelas(); 
