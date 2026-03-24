@@ -37,7 +37,7 @@
 </div>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.6</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.6.1</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -115,28 +115,28 @@
     function identificarTransportadora(codigo) {
         const c = codigo.toUpperCase().replace(/\s/g, '');
         
-        // CORREIOS: 2 letras + 9 números + BR
+        // CORREIOS
         if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
         
-        // J&T EXPRESS: Geralmente começa com 888, 999 ou tem 15 dígitos numéricos
+        // SHOPEE / SPX (Conforme solicitado)
+        if (c.startsWith("BR") || c.includes("SPX") || c.startsWith("LP")) return "SHOPEE";
+        
+        // J&T EXPRESS
         if (c.startsWith("999") || c.startsWith("888") || /^[0-9]{15}$/.test(c)) return "J&T EXPRESS";
         
-        // LOGGI: Padrão ME...BR ou códigos com letras e números específicos
-        if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI";
-        
-        // JADLOG: Geralmente sequências numéricas de 10 ou 14 dígitos
-        if (/^[0-9]{10}$/.test(c) || /^[0-9]{14}$/.test(c)) return "JADLOG";
-        
-        // TOTAL EXPRESS: Sequências numéricas longas
-        if (c.startsWith("TEX") || (c.length === 11 && c.startsWith("2"))) return "TOTAL EXPRESS";
-
-        // SEQUOIA: Inicia geralmente com SF ou códigos numéricos longos
-        if (c.startsWith("SF") || c.startsWith("BR")) return "SEQUOIA / SPX";
-
-        // MERCADO LIVRE (Envios próprios)
+        // MERCADO LIVRE
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO ENVIOS";
 
-        // AMAZON (Logística Própria)
+        // MAGALU
+        if (c.startsWith("MGL") || c.startsWith("LUZ")) return "MAGALU";
+
+        // JADLOG
+        if (/^[0-9]{10}$/.test(c) || /^[0-9]{14}$/.test(c)) return "JADLOG";
+
+        // LOGGI
+        if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI";
+
+        // AMAZON
         if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON LOG";
 
         return "TRANSPORTADORA";
