@@ -8,12 +8,12 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital Pro</title>
 
-    <link rel="manifest" href="manifest.json?v=6">
+    <link rel="manifest" href="manifest.json?v=7">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --ocr: #ff9800; }
@@ -34,9 +34,9 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.8</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.9</small></h2>
     
-    <div id="status-ocr">⏳ CARREGANDO SISTEMA...</div>
+    <div id="status-ocr">⏳ PROCESSANDO...</div>
 
     <button class="btn btn-ocr" onclick="document.getElementById('foto-etiqueta').click()">🔍 LER ETIQUETA POR FOTO</button>
     <input type="file" id="foto-etiqueta" accept="image/*" capture="camera" style="display:none" onchange="processarFoto(this)">
@@ -65,61 +65,61 @@
 </div>
 
 <script>
-    // Configuração do Motor de Leitura (OCR)
-    const worker = Tesseract.createWorker({
-        logger: m => {
-            if(m.status === 'recognizing text') {
-                document.getElementById('status-ocr').innerText = `⏳ LENDO ETIQUETA: ${Math.round(m.progress * 100)}%`;
-            }
-        }
-    });
-
-    async function prepararOCR() {
-        try {
-            const statusDiv = document.getElementById('status-ocr');
-            statusDiv.style.display = 'block';
-            await (await worker).load();
-            await (await worker).loadLanguage('por');
-            await (await worker).initialize('por');
-            statusDiv.innerText = "✅ SISTEMA PRONTO";
-            setTimeout(() => { statusDiv.style.display = 'none'; }, 2000);
-        } catch (e) { console.error(e); }
-    }
-    prepararOCR();
-
+    // Função simplificada de OCR para garantir execução no Mobile
     async function processarFoto(input) {
         if (!input.files || !input.files[0]) return;
         const statusDiv = document.getElementById('status-ocr');
         statusDiv.style.display = 'block';
-        
+        statusDiv.innerText = "⏳ LENDO TEXTO... AGUARDE";
+
         try {
-            const { data: { text } } = await (await worker).recognize(input.files[0]);
-            const linhas = text.split('\n');
+            const image = input.files[0];
+            // Usa o método direto que é mais compatível com celulares antigos/Samsung
+            const result = await Tesseract.recognize(image, 'por');
+            const texto = result.text;
+            const linhas = texto.split('\n');
+            
             let nomeAchado = "";
             let rastreioAchado = "";
 
             linhas.forEach((linha, i) => {
                 const l = linha.toUpperCase();
-                if (l.includes("DESTINAT")) {
-                    nomeAchado = linhas[i+1] ? linhas[i+1].trim() : linha.split(/DESTINATÁRIO/i)[1];
+                // Tenta achar o nome: Se a linha tem "DESTINAT", pega a próxima. 
+                // Se não, procura por palavras em maiúsculo com mais de 3 letras.
+                if (l.includes("DESTINAT") && linhas[i+1]) {
+                    nomeAchado = linhas[i+1].trim();
+                } else if (l.includes("PARA:") && linhas[i+1]) {
+                    nomeAchado = linhas[i+1].trim();
                 }
-                const num = linha.replace(/\D/g, '');
-                if (num.length >= 10 && num.length <= 20) rastreioAchado = num;
+
+                // Busca por qualquer sequência numérica de 10 a 20 dígitos (Rastreio)
+                const numMatch = linha.replace(/\s/g, '').match(/\d{10,20}/);
+                if (numMatch && !rastreioAchado) rastreioAchado = numMatch[0];
             });
+
+            // Fallback: Se não achou "Destinatário", pega a primeira linha com texto grande
+            if (!nomeAchado) {
+                nomeAchado = linhas.find(lin => lin.trim().length > 4 && !lin.includes(':'));
+            }
 
             if(nomeAchado) document.getElementById('destinatario').value = nomeAchado.split(',')[0].trim().toUpperCase();
             if(rastreioAchado) {
-                document.getElementById('rastreio').value = identificarLoja(rastreioAchado) + ": " + rastreioAchado;
+                const loja = identificarLoja(rastreioAchado);
+                document.getElementById('rastreio').value = `${loja}: ${rastreioAchado}`;
             }
-        } catch (e) { alert("Erro ao ler imagem."); }
-        finally { 
-            statusDiv.style.display = 'none'; 
-            statusDiv.innerText = "⏳ PROCESSANDO IMAGEM...";
+
+            if(!nomeAchado && !rastreioAchado) alert("Não foi possível extrair dados. Tente uma foto mais nítida.");
+
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao processar imagem. Verifique sua conexão.");
+        } finally {
+            statusDiv.style.display = 'none';
         }
     }
 
-    // Funções de Sistema (QR, LocalStorage e PDF)
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=6'); }
+    // --- MANUTENÇÃO DAS FUNÇÕES V5.5 ---
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=7'); }
 
     let encomendas = JSON.parse(localStorage.getItem('encomendas_v4')) || [];
     document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
@@ -176,15 +176,13 @@
     function baixarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: "landscape" });
-        doc.setFontSize(18);
-        doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
+        doc.text("PROTOCOLO DE ENTREGA", 14, 15);
         doc.autoTable({
             startY: 25,
             head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RECEBIDO POR', 'DATA RETIRADA', 'ASSINATURA']],
             body: encomendas.map(i => [i.entrada, `${i.dest.toUpperCase()}\n${i.local}`, i.rastreio.toUpperCase(), i.quem.toUpperCase(), "", ""]),
             theme: 'grid',
-            headStyles: { fillColor: [26, 115, 232], fontStyle: 'bold' },
-            styles: { fontSize: 9, verticalAlign: 'middle' }
+            headStyles: { fillColor: [26, 115, 232] }
         });
         doc.save(`Protocolo.pdf`);
     }
