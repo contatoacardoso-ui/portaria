@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V2.8</title>
+    <title>Portaria Digital Pro - V2.9</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
@@ -35,28 +35,16 @@
             html, body { margin: 0; padding: 0; background: #fff; height: auto; overflow: hidden; }
             .no-print { display: none !important; }
             
-            #area-impressao { 
-                display: block !important; 
-                width: 100%; 
-                visibility: visible !important;
-            }
-            
-            #area-impressao * { visibility: visible !important; color: #000 !important; }
+            #area-impressao { display: block !important; width: 100%; visibility: visible !important; }
+            #area-impressao * { visibility: visible !important; color: #000 !important; font-family: 'Segoe UI', Tahoma, sans-serif !important; }
 
-            table { 
-                width: 100%; 
-                border-collapse: collapse; 
-                table-layout: fixed; 
-                margin-top: 5px; 
-                border: 2px solid #000;
-            }
-            
-            th, td { border: 1px solid #000; padding: 5px; font-size: 11px; vertical-align: middle; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 5px; border: 2px solid #000; }
+            th, td { border: 1px solid #000; padding: 5px; font-size: 11px; vertical-align: middle; word-wrap: break-word; }
             th { background: #fff !important; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #000; }
             
             .col-entrada { width: 14%; text-align: center; }
             .col-morador { width: 22%; }
-            .col-rastreio { width: 24%; font-family: 'Courier New', monospace; font-size: 9px; }
+            .col-rastreio { width: 24%; font-size: 10px; } /* Padronizado igual aos outros */
             .col-recebido { width: 12%; }
             .col-data-retirada { width: 12%; text-align: center; }
             .col-assinatura { width: 16%; }
@@ -93,7 +81,7 @@
     </div>
 
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
-    <button class="btn btn-print" onclick="window.print()">🖨️ IMPRIMIR PROTOCOLO</button>
+    <button class="btn btn-print" onclick="prepararEImprimir()">🖨️ IMPRIMIR PROTOCOLO</button>
     <button class="btn btn-clear" onclick="limparLista()">⚠️ Limpar Lista</button>
     
     <div id="lista-preview"><div id="itens-corpo"></div></div>
@@ -190,13 +178,28 @@
     function atualizarTabelas() {
         const listaPreview = document.getElementById('itens-corpo');
         const tabelaCorpo = document.getElementById('tabela-corpo');
-        document.getElementById('data-rel').innerText = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('data-rel').innerText = new Date().toLocaleString('pt-BR');
         listaPreview.innerHTML = "";
         tabelaCorpo.innerHTML = "";
         encomendas.forEach(i => {
             listaPreview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
             tabelaCorpo.innerHTML += `<tr><td class="col-entrada">${i.entrada}</td><td><b>${i.dest}</b><br>${i.local}</td><td class="col-rastreio">${i.rastreio}</td><td>${i.quem}</td><td style="text-align:center; color:#ccc">___/___/___</td><td style="height:35px"></td></tr>`;
         });
+    }
+
+    function prepararEImprimir() {
+        const nomeRecebeu = document.getElementById('recebidoPor').value || "GERAL";
+        const agora = new Date();
+        const dataFormatada = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const horaFormatada = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}).replace(/:/g, 'h');
+        
+        // Define o nome do arquivo/página para o PDF
+        document.title = `RECEBIMENTO DE ENCOMENDAS (${nomeRecebeu} - ${dataFormatada} - ${horaFormatada})`;
+        
+        window.print();
+        
+        // Restaura o título original após imprimir
+        setTimeout(() => { document.title = "Portaria Digital Pro - V2.9"; }, 1000);
     }
 
     function limparLista() { if(confirm("Apagar tudo?")) { encomendas = []; atualizarTabelas(); } }
