@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V4.6</title>
+    <title>Portaria Digital Pro - V4.7</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -14,11 +14,9 @@
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; transition: 0.2s; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
-        /* Cor alterada para não confundir com o botão de limpar */
         .btn-pdf { background: var(--pdf-btn); margin-top: 15px; border-bottom: 4px solid #003d7a; }
         .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; margin-top: 20px; }
         .btn:active { transform: translateY(2px); border-bottom-width: 2px; }
-        
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; background: #fff; }
         label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
         .item-row { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--primary); font-size: 13px; }
@@ -27,7 +25,7 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.6</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.7</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -84,13 +82,17 @@
     }
 
     function identificarLoja(codigo) {
-        const c = codigo.toUpperCase().trim();
+        const c = codigo.toUpperCase().replace(/\s/g, ''); // Remove espaços que podem vir no scan
+        
+        // Padrão CORREIOS (Ex: AN 633 398 241 BR)
+        if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
+        
         if (c.startsWith("ME") && c.endsWith("BR")) return "LOGGI";
         if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO LIVRE";
         if (c.startsWith("TBA") || c.startsWith("DBC")) return "AMAZON";
         if (c.startsWith("GSH") || c.startsWith("SK")) return "SHEIN";
-        if (/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(c)) return "CORREIOS";
+        
         return "OUTROS";
     }
 
@@ -112,7 +114,10 @@
         
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
-        document.getElementById('destinatario').value = ""; document.getElementById('rastreio').value = "";
+        document.getElementById('destinatario').value = ""; 
+        document.getElementById('apto').value = ""; 
+        document.getElementById('bloco').value = ""; 
+        document.getElementById('rastreio').value = "";
     }
 
     function atualizarTabelas() {
@@ -125,11 +130,9 @@
 
     function baixarPDF() {
         if (encomendas.length === 0) { alert("Lista vazia!"); return; }
-        
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
-            
             const agora = new Date();
             const dataG = agora.toLocaleDateString('pt-BR');
             const horaG = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
@@ -142,7 +145,6 @@
             doc.autoTable({
                 startY: 25,
                 head: [['Entrada', 'Morador / Local', 'RASTREIO', 'Recebido por', 'Data Retirada', 'Assinatura']],
-                // Campo 'Data Retirada' (index 4) agora está vazio conforme solicitado
                 body: encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "", ""]),
                 theme: 'grid',
                 headStyles: { fillColor: [26, 115, 232] },
@@ -151,14 +153,13 @@
                     1: { cellWidth: 50 },
                     2: { cellWidth: 50 },
                     3: { cellWidth: 35 },
-                    4: { cellWidth: 30 }, // Data Retirada em branco
-                    5: { cellWidth: 'auto' } // Assinatura com maior espaço
+                    4: { cellWidth: 30 },
+                    5: { cellWidth: 'auto' }
                 },
                 styles: { minCellHeight: 12, verticalAlign: 'middle' }
             });
 
             doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
-
         } catch (erro) {
             alert("Erro crítico: " + erro.message);
         }
