@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portaria-FINAL-v5'; // Mudar o nome aqui mata o cache antigo
+const CACHE_NAME = 'portaria-v6-estavel'; 
 const assetsToCache = [
   './',
   './index.html',
@@ -15,19 +15,15 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// A mágica acontece aqui: apaga TODOS os caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Limpando cache antigo...');
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) => Promise.all(
+      keys.map((key) => { 
+        if (key !== CACHE_NAME) {
+          return caches.delete(key); 
+        }
+      })
+    ))
   );
   return self.clients.claim();
 });
