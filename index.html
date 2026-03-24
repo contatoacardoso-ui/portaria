@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Digital Pro - V4.5</title>
+    <title>Portaria Digital Pro - V4.6</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; transition: 0.2s; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
-        .btn-pdf { background: #e74c3c; margin-top: 15px; border-bottom: 4px solid #c0392b; }
+        /* Cor alterada para não confundir com o botão de limpar */
+        .btn-pdf { background: var(--pdf-btn); margin-top: 15px; border-bottom: 4px solid #003d7a; }
         .btn-clear { background: var(--danger); padding: 8px; font-size: 12px; opacity: 0.8; margin-top: 20px; }
+        .btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+        
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; background: #fff; }
         label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
         .item-row { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--primary); font-size: 13px; }
@@ -24,7 +27,7 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.5</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V4.6</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -97,10 +100,7 @@
         if (!dest || !quem) { alert("Preencha Nome do Morador e Seu Nome!"); return; }
         
         const agora = new Date();
-        // Ajuste: Data e Hora separadas por hífen no registro
-        const dataF = agora.toLocaleDateString('pt-BR');
-        const horaF = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-        const entradaF = `${dataF} - ${horaF}`;
+        const entradaF = `${agora.toLocaleDateString('pt-BR')} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
 
         encomendas.push({ 
             entrada: entradaF, 
@@ -137,23 +137,22 @@
             doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.setFontSize(10);
-            // Ajuste: Gerado em com separação por hífen
             doc.text(`Gerado em: ${dataG} - ${horaG}`, 14, 22);
 
             doc.autoTable({
                 startY: 25,
                 head: [['Entrada', 'Morador / Local', 'RASTREIO', 'Recebido por', 'Data Retirada', 'Assinatura']],
-                body: encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "___/___/___", ""]),
+                // Campo 'Data Retirada' (index 4) agora está vazio conforme solicitado
+                body: encomendas.map(i => [i.entrada, `${i.dest}\n${i.local}`, i.rastreio, i.quem, "", ""]),
                 theme: 'grid',
                 headStyles: { fillColor: [26, 115, 232] },
-                // Ajuste de colunas para dar mais espaço na Assinatura (última coluna)
                 columnStyles: {
-                    0: { cellWidth: 35 }, // Entrada
-                    1: { cellWidth: 50 }, // Morador
-                    2: { cellWidth: 50 }, // Rastreio
-                    3: { cellWidth: 35 }, // Recebido por
-                    4: { cellWidth: 30 }, // Data Retirada
-                    5: { cellWidth: 'auto' } // Assinatura pega o resto do espaço
+                    0: { cellWidth: 35 },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 35 },
+                    4: { cellWidth: 30 }, // Data Retirada em branco
+                    5: { cellWidth: 'auto' } // Assinatura com maior espaço
                 },
                 styles: { minCellHeight: 12, verticalAlign: 'middle' }
             });
@@ -165,7 +164,7 @@
         }
     }
 
-    function limparLista() { if(confirm("Limpar registros?")) { encomendas = []; localStorage.removeItem('encomendas_v4'); atualizarTabelas(); } }
+    function limparLista() { if(confirm("Limpar todos os registros registrados?")) { encomendas = []; localStorage.removeItem('encomendas_v4'); atualizarTabelas(); } }
 </script>
 </body>
 </html>
