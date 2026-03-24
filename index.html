@@ -4,82 +4,253 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-    <title>Portaria Pro Offline</title>
+    <title>Recebimento de Encomendas</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; }
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 250px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; }
-        .btn-scan { background: #6f42c1; color: white; }
-        .btn-add { background: var(--success); color: white; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        @media print { .no-print { display: none; } #area-print { display: block !important; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; } }
-        #area-print { display: none; }
+        /* Estilos da Primeira Versão (Limpo e Profissional) */
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #f4f4f4; }
+        .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        /* Área do Scanner */
+        #reader { width: 100%; border: 2px dashed #ccc; border-radius: 8px; margin-top: 10px; overflow: hidden; background-color: #fafafa; }
+        
+        /* Botões */
+        .btn-group { margin-top: 20px; display: flex; gap: 10px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background 0.3s; }
+        .btn-scan { background-color: #6f42c1; color: white; } /* Roxo para Scanner */
+        .btn-add { background-color: #28a745; color: white; } /* Verde para Salvar */
+        .btn-print { background-color: #17a2b8; color: white; margin-top: 10px; width: 100%;} /* Azul para Imprimir */
+        
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Lista de Preview */
+        #preview-lista { margin-top: 30px; border-top: 2px solid #eee; padding-top: 15px; }
+        .item-encomenda { background: #fff; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+
+        /* Emblemas de Origem */
+        .badge { display: inline-block; padding: 3px 7px; font-size: 11px; font-weight: bold; border-radius: 10px; color: white; margin-left: 5px; }
+        .bg-shopee { background-color: #ee4d2d; }
+        .bg-shein { background-color: #222; }
+        .bg-tiktok { background-color: #000; }
+        .bg-generic { background-color: #6c757d; }
+
+        /* Estilos de Impressão */
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao, #area-impressao * { visibility: visible; }
+            #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid black; padding: 10px; text-align: left; font-size: 12px; }
+            th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+            .no-print { display: none; }
+        }
+        #area-impressao { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card no-print">
-    <h2>📦 Portaria Offline</h2>
+<div class="container no-print">
+    <h2>Registro de Encomenda</h2>
+    
+    <button class="btn-scan" id="btn-camera" onclick="alternarScanner()">📷 ABRIR SCANNER / BIPAR</button>
+    
     <div id="reader"></div>
-    <button class="btn btn-scan" onclick="alternarScanner()">📷 ABRIR SCANNER</button>
-    <input type="text" id="admInfo" placeholder="Nome/Cargo Adm">
-    <input type="text" id="destinatario" placeholder="Morador">
-    <input type="text" id="local" placeholder="Apto/Bloco">
-    <input type="text" id="rastreio" placeholder="Código/Loja">
-    <button class="btn btn-add" onclick="adicionar()">➕ REGISTRAR</button>
-    <button class="btn" style="background:#6c757d; color:white;" onclick="window.print()">🖨️ IMPRIMIR LISTA</button>
-    <div id="lista-tela"></div>
+
+    <label>Recebido por (Nome e Função):</label>
+    <input type="text" id="recebedor" placeholder="Ex: Marcos - Zelador">
+
+    <label>Descrição / Código de Barras:</label>
+    <input type="text" id="descricao" placeholder="Bipe o código ou digite a descrição">
+
+    <label>Empresa/Origem Identificada:</label>
+    <select id="origem">
+        <option value="Generic">Selecione ou aguarde o bip</option>
+        <option value="Shopee">Shopee</option>
+        <option value="Shein">Shein</option>
+        <option value="TikTok">TikTok</option>
+        <option value="Correios">Correios/Outros</option>
+    </select>
+
+    <div class="btn-group">
+        <button class="btn-add" onclick="adicionarEncomenda()">➕ SALVAR ENTRADA</button>
+    </div>
+    
+    <button class="btn-print" onclick="window.print()">🖨️ GERAR FOLHA DE RETIRADA (IMPRIMIR)</button>
+
+    <div id="preview-lista">
+        <strong>Itens registrados nesta sessão:</strong>
+        <div id="itens-preview"></div>
+    </div>
 </div>
 
-<div id="area-print">
-    <h2 style="text-align:center">CONTROLE DE ENTREGAS</h2>
+<div id="area-impressao">
+    <h2 style="text-align: center;">PROTOCOLO DE RETIRADA DE ENCOMENDAS</h2>
+    <p><strong>Data:</strong> <span id="data-relatorio"></span></p>
     <table>
-        <thead><tr><th>Data</th><th>Morador</th><th>Local</th><th>Info</th><th>Assinatura</th></tr></thead>
-        <tbody id="tabela-corpo"></tbody>
+        <thead>
+            <tr>
+                <th>Data/Hora Entrada</th>
+                <th>Descrição / Código</th>
+                <th>Origem</th>
+                <th>Recebido por (Adm)</th>
+                <th>Assinatura de Quem Retirou</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-corpo">
+            </tbody>
     </table>
 </div>
 
 <script>
-    // REGISTRO DO SERVICE WORKER (PARA FUNCIONAR SEM INTERNET)
+    // --- LÓGICA OFFLINE (SERVICE WORKER) ---
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log("Offline Pronto!"));
+        navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log("Sistema pronto para uso offline!"))
+        .catch((err) => console.error("Erro ao configurar offline:", err));
     }
 
-    let encomendas = [];
+    // --- VARIÁVEIS GLOBAIS ---
+    let encomendasDoDia = [];
     const html5QrCode = new Html5Qrcode("reader");
     let scannerAtivo = false;
 
+    // --- LÓGICA DO SCANNER INTELIGENTE ---
     async function alternarScanner() {
-        if (scannerAtivo) { await html5QrCode.stop(); scannerAtivo = false; return; }
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            document.getElementById('rastreio').value = text;
-            html5QrCode.stop(); scannerAtivo = false;
-        }).then(() => scannerAtivo = true);
-    }
+        const btnCamera = document.getElementById('btn-camera');
+        
+        if (scannerAtivo) {
+            await html5QrCode.stop();
+            scannerAtivo = false;
+            btnCamera.innerText = "📷 ABRIR SCANNER / BIPAR";
+            btnCamera.style.backgroundColor = "#6f42c1"; // Roxo
+            return;
+        }
 
-    function adicionar() {
-        const item = {
-            data: new Date().toLocaleString('pt-BR'),
-            dest: document.getElementById('destinatario').value,
-            local: document.getElementById('local').value,
-            rastreio: document.getElementById('rastreio').value,
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 150 }, // Área de foco
+            aspectRatio: 1.0 // Quadrado para focar melhor em códigos
         };
-        encomendas.push(item);
-        atualizar();
+
+        // Inicia a câmera traseira ("environment")
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            (decodedText) => {
+                // SUCESSO AO LER
+                processarLeitura(decodedText);
+                desligarScanner();
+            },
+            (errorMessage) => { /* Silenciar erros de leitura enquanto busca */ }
+        ).then(() => {
+            scannerAtivo = true;
+            btnCamera.innerText = "❌ FECHAR CÂMERA";
+            btnCamera.style.backgroundColor = "#dc3545"; // Vermelho
+        }).catch(err => {
+            alert("ERRO: Verifique se permitiu o acesso à câmera no cadeado da barra de endereços.");
+            console.error(err);
+        });
     }
 
-    function atualizar() {
-        const tela = document.getElementById('lista-tela');
+    function desligarScanner() {
+        html5QrCode.stop().then(() => {
+            scannerAtivo = false;
+            const btnCamera = document.getElementById('btn-camera');
+            btnCamera.innerText = "📷 ABRIR SCANNER / BIPAR";
+            btnCamera.style.backgroundColor = "#6f42c1";
+        });
+    }
+
+    // --- INTELIGÊNCIA DE IDENTIFICAÇÃO DE EMPRESA ---
+    function processarLeitura(texto) {
+        document.getElementById('descricao').value = texto;
+        const selectOrigem = document.getElementById('origem');
+        
+        // Converte para maiúsculo para facilitar a comparação
+        const t = texto.toUpperCase();
+
+        // Regras de identificação (Heurística básica)
+        if (t.startsWith("BR") || t.includes("SHOPEE")) {
+            selectOrigem.value = "Shopee";
+        } 
+        else if (t.startsWith("GSH") || t.startsWith("SK") || t.includes("SHEIN")) {
+            selectOrigem.value = "Shein";
+        }
+        else if (t.startsWith("TT") || t.includes("TIKTOK")) {
+            selectOrigem.value = "TikTok";
+        }
+        else {
+            selectOrigem.value = "Correios"; // Padrão se não reconhecer
+        }
+        
+        // Feedback visual/sonoro (opcional)
+        if (navigator.vibrate) navigator.vibrate(100); 
+    }
+
+    // --- LÓGICA DE SALVAMENTO E INTERFACE ---
+    function adicionarEncomenda() {
+        const desc = document.getElementById('descricao').value;
+        const rec = document.getElementById('recebedor').value;
+        const orig = document.getElementById('origem').value;
+        const data = new Date().toLocaleString('pt-BR');
+
+        if(!desc || !rec) {
+            alert("Por favor, preencha a descrição e quem recebeu na ADM.");
+            return;
+        }
+
+        // Cria o objeto da encomenda
+        const novaEncomenda = { desc, rec, orig, data };
+        
+        // Adiciona na lista (memória)
+        encomendasDoDia.push(novaEncomenda);
+        
+        // Atualiza a tela e a tabela oculta de impressão
+        atualizarInterface();
+        
+        // Limpa campos para o próximo bip
+        document.getElementById('descricao').value = "";
+        // Mantém o nome do recebedor para não ter que digitar sempre
+    }
+
+    function atualizarInterface() {
+        const preview = document.getElementById('itens-preview');
         const tabela = document.getElementById('tabela-corpo');
-        tela.innerHTML = ""; tabela.innerHTML = "";
-        encomendas.forEach(i => {
-            tela.innerHTML += `<div style="border-bottom:1px solid #eee; padding:5px">${i.dest} - ${i.local}</div>`;
-            tabela.innerHTML += `<tr><td>${i.data}</td><td>${i.dest}</td><td>${i.local}</td><td>${i.rastreio}</td><td style="width:150px"></td></tr>`;
+        document.getElementById('data-relatorio').innerText = new Date().toLocaleDateString('pt-BR');
+
+        preview.innerHTML = "";
+        tabela.innerHTML = "";
+
+        encomendasDoDia.forEach((item) => {
+            // Define o emblema colorido
+            let badgeClass = "bg-generic";
+            if(item.orig === "Shopee") badgeClass = "bg-shopee";
+            if(item.orig === "Shein") badgeClass = "bg-shein";
+            if(item.orig === "TikTok") badgeClass = "bg-tiktok";
+
+            // Preview na tela do celular
+            preview.innerHTML += `
+                <div class="item-encomenda">
+                    <b>${item.desc}</b> 
+                    <span class="badge ${badgeClass}">${item.orig}</span>
+                    <br><small>${item.data}</small>
+                </div>`;
+            
+            // Tabela oculta para impressão
+            tabela.innerHTML += `
+                <tr>
+                    <td>${item.data}</td>
+                    <td>${item.desc}</td>
+                    <td>${item.orig}</td>
+                    <td>${item.rec}</td>
+                    <td style="width: 180px; height: 40px;"></td> </tr>
+            `;
         });
     }
 </script>
+
 </body>
 </html>
