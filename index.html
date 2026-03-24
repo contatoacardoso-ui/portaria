@@ -179,4 +179,37 @@
         // Formato solicitado: Data - Hora
         const agora = new Date();
         const dataStr = agora.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-        const horaStr = agora.toLocaleTimeString
+        const horaStr = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        const entradaFormatada = `${dataStr} - ${horaStr}`;
+
+        const item = {
+            entrada: entradaFormatada,
+            dest: dest,
+            local: `Ap ${document.getElementById('apto').value} / Bl ${document.getElementById('bloco').value}`,
+            rastreio: rast,
+            adm: adm
+        };
+        encomendas.push(item);
+        atualizarTabelas();
+        document.getElementById('destinatario').value = "";
+        document.getElementById('apto').value = "";
+        document.getElementById('bloco').value = "";
+        document.getElementById('rastreio').value = "";
+    }
+
+    function atualizarTabelas() {
+        const listaPreview = document.getElementById('itens-corpo');
+        const tabelaCorpo = document.getElementById('tabela-corpo');
+        document.getElementById('data-rel').innerText = new Date().toLocaleDateString('pt-BR');
+        listaPreview.innerHTML = "";
+        tabelaCorpo.innerHTML = "";
+        encomendas.forEach(i => {
+            listaPreview.innerHTML += `<div class="item-row"><b>${i.dest}</b> (${i.local})<br><small>${i.rastreio}</small></div>`;
+            tabelaCorpo.innerHTML += `<tr><td class="col-entrada">${i.entrada}</td><td><b>${i.dest}</b><br>${i.local}</td><td class="col-rastreio">${i.rastreio}</td><td>${i.adm}</td><td style="text-align:center; color:#ccc">___/___/___</td><td style="height:35px"></td></tr>`;
+        });
+    }
+
+    function limparLista() { if(confirm("Apagar tudo?")) { encomendas = []; atualizarTabelas(); } }
+</script>
+</body>
+</html>
