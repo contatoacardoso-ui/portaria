@@ -1,24 +1,21 @@
 {
   "name": "Protocolo Digital Pro",
   "short_name": "Protocolo",
-  "description": "Sistema de Protocolo com Assinatura Digital v6.0",
+  "description": "Sistema de Protocolo Digital com Assinatura v11",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
-  "version": "6.0",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }
