@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital Pro</title>
 
-    <link rel="manifest" href="manifest.json?v=11">
+    <link rel="manifest" href="manifest.json?v=12">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -16,81 +16,98 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --pdf-btn: #0056b3; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
-        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #333; padding-bottom: 70px; }
+        
+        /* Navegação por Abas */
+        .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; color: #666; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; text-align: center; box-sizing: border-box; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
-        .btn-entregar { background: #ffc107; color: #000; padding: 10px; font-size: 12px; margin-top: 8px; border-radius: 6px; border: none; font-weight: bold; width: 100%; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
-        label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
-        .item-row { background: #f9f9f9; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid #ccc; position: relative; }
-        .item-row.pendente { border-left-color: var(--danger); }
-        .item-row.entregue { border-left-color: var(--success); background: #f0fff4; }
-        .status-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; float: right; text-transform: uppercase; }
+        .btn-entregar { background: var(--warning); color: #000; padding: 10px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-top: 10px; }
+        
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
+        .search-box { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 2px solid var(--primary); }
+        
+        .item-row { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-row.entregue { border-left-color: var(--success); opacity: 0.8; }
+        
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
         canvas { border: 2px solid #ddd; background: #fff; width: 100%; height: 200px; touch-action: none; border-radius: 8px; margin: 10px 0; }
-        .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--primary); border: 1px solid #d0e3ff; }
-        .admin-check input { width: auto; margin-bottom: 0; transform: scale(1.4); }
+        
+        .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; font-weight: bold; color: var(--primary); }
+        .admin-check input { width: auto; margin-bottom: 0; }
+        
+        .badge { background: var(--danger); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: 5px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📋 Protocolo Digital <small style="font-size:10px">V6.0.1</small></h2>
-    
-    <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
-    <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-    
-    <label>Funcionário:</label>
-    <input type="text" id="recebidoPor" placeholder="Quem está recebendo" oninput="salvarNome()">
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('registro')">📥 ENTRADA</button>
+    <button class="tab-btn" onclick="switchTab('pendentes')">📤 SAÍDA <span id="count-badge" class="badge">0</span></button>
+</div>
 
-    <label class="admin-check">
-        <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
-    </label>
+<div id="aba-registro" class="container">
+    <div class="card">
+        <h3 style="margin-top:0">Nova Encomenda</h3>
+        <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
+        <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
+        
+        <label>Funcionário:</label>
+        <input type="text" id="recebidoPor" placeholder="Quem está recebendo" oninput="salvarNome()">
 
-    <label>Destinatário:</label>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-        <input type="text" id="destinatario" placeholder="Nome destinatário" style="flex:2; margin-bottom:0;">
-        <div id="campos-local" style="display: flex; gap: 5px; flex: 1.6;">
-            <input type="text" id="apto" placeholder="Apto" style="flex:1; margin-bottom:0;">
-            <input type="text" id="bloco" placeholder="Bl" style="flex:0.7; margin-bottom:0;">
+        <label class="admin-check">
+            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Administração
+        </label>
+
+        <label>Destinatário:</label>
+        <div style="display: flex; gap: 5px;">
+            <input type="text" id="destinatario" placeholder="Nome destinatário" style="flex:2">
+            <div id="campos-local" style="display: flex; gap: 5px; flex: 1.5;">
+                <input type="text" id="apto" placeholder="Apto" style="flex:1">
+                <input type="text" id="bloco" placeholder="Bl" style="flex:0.7">
+            </div>
         </div>
-    </div>
 
-    <input type="text" id="rastreio" placeholder="Rastreio ou transportadora...">
-    <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
-    
-    <hr>
-    <div id="lista-preview"></div>
-    <button class="btn" style="background:#000; font-size:12px; margin-top:20px;" onclick="baixarPDF()">📄 EXPORTAR PROTOCOLO (PDF)</button>
+        <input type="text" id="rastreio" placeholder="Rastreio ou transportadora...">
+        <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
+    </div>
+</div>
+
+<div id="aba-pendentes" class="container" style="display:none">
+    <div class="search-box">
+        <input type="text" id="busca" placeholder="🔍 Buscar por Apto, Bloco, Nome ou Rastreio..." oninput="filtrarPendentes()">
+    </div>
+    <div id="lista-pendentes"></div>
+    <button class="btn" style="background:#333; margin-top:20px" onclick="baixarPDF()">📄 GERAR RELATÓRIO PDF</button>
 </div>
 
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h3 style="margin-top:0;">Assinatura Digital</h3>
-        <p style="font-size:12px; color:#666;">O destinatário deve assinar abaixo:</p>
+        <h3>Assinatura Digital</h3>
         <canvas id="signature-pad"></canvas>
         <div style="display: flex; gap: 10px;">
-            <button class="btn" style="background:var(--danger); flex:1;" onclick="cancelarAssinatura()">CANCELAR</button>
-            <button class="btn" style="background:var(--success); flex:1;" onclick="salvarEntrega()">CONFIRMAR</button>
+            <button class="btn" style="background:var(--danger); flex:1" onclick="cancelarAssinatura()">CANCELAR</button>
+            <button class="btn" style="background:var(--success); flex:1" onclick="salvarEntrega()">CONFIRMAR</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Registro SW v11 com Alerta de Atualização
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=11').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=12').then(reg => {
             reg.onupdatefound = () => {
                 const worker = reg.installing;
                 worker.onstatechange = () => {
-                    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                        alert("Nova versão disponível! Atualizando...");
-                        window.location.reload(true);
-                    }
+                    if (worker.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
                 };
             };
         });
@@ -101,26 +118,29 @@
     let signaturePad;
 
     window.onload = () => {
-        limpezaAutomatica();
-        atualizarTabelas();
         const canvas = document.getElementById('signature-pad');
         signaturePad = new SignaturePad(canvas);
         document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
+        atualizarTabelas();
     };
 
-    function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
-
-    function toggleAdmin() {
-        const isAdmin = document.getElementById('isAdmin').checked;
-        document.getElementById('campos-local').style.visibility = isAdmin ? 'hidden' : 'visible';
+    function switchTab(tab) {
+        document.getElementById('aba-registro').style.display = tab === 'registro' ? 'block' : 'none';
+        document.getElementById('aba-pendentes').style.display = tab === 'pendentes' ? 'block' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        if(tab === 'pendentes') filtrarPendentes();
     }
+
+    function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
+    function toggleAdmin() { document.getElementById('campos-local').style.visibility = document.getElementById('isAdmin').checked ? 'hidden' : 'visible'; }
 
     function identificarTransportadora(codigo) {
         const c = codigo.toUpperCase().replace(/\s/g, '');
         if (c.startsWith("3320") || c.startsWith("UP19")) return "IMILE DELIVERY";
-        if (c.startsWith("999") || c.startsWith("888") || /^[0-9]{15}$/.test(c)) return "J&T EXPRESS";
+        if (c.startsWith("999") || c.startsWith("888")) return "J&T EXPRESS";
         if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
-        if (c.startsWith("BR") || c.includes("SPX") || c.startsWith("LP")) return "SHOPEE";
+        if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
         return "TRANSPORTADORA";
     }
 
@@ -129,46 +149,57 @@
         html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
             document.getElementById('rastreio').value = `${identificarTransportadora(text)}: ${text}`;
             html5QrCode.stop();
-        }).catch(err => alert("Câmera não disponível."));
+        });
     }
 
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
-        const isAdmin = document.getElementById('isAdmin').checked;
-        if (!dest || !quem) { alert("Preencha o nome e quem está recebendo!"); return; }
+        if (!dest || !quem) { alert("Preencha os campos!"); return; }
 
         encomendas.push({
             id: Date.now(),
             dataEntrada: new Date().toISOString(),
             dest: dest,
-            local: isAdmin ? "ADMINISTRAÇÃO" : `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
+            local: document.getElementById('isAdmin').checked ? "ADMINISTRAÇÃO" : `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
             rastreio: document.getElementById('rastreio').value || "MANUAL",
             recebidoPor: quem,
             status: "PENDENTE",
-            assinatura: null,
-            dataRetirada: null
+            assinatura: null
         });
 
         localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
-        atualizarTabelas();
+        alert("Registrado com sucesso!");
         document.getElementById('destinatario').value = "";
         document.getElementById('rastreio').value = "";
+        atualizarTabelas();
+    }
+
+    function filtrarPendentes() {
+        const termo = document.getElementById('busca').value.toLowerCase();
+        const lista = document.getElementById('lista-pendentes');
+        lista.innerHTML = "";
+
+        const pendentes = encomendas.filter(i => i.status === "PENDENTE");
+        
+        pendentes.filter(i => 
+            i.dest.toLowerCase().includes(termo) || 
+            i.local.toLowerCase().includes(termo) || 
+            i.rastreio.toLowerCase().includes(termo)
+        ).reverse().forEach(i => {
+            lista.innerHTML += `
+                <div class="item-row">
+                    <b style="font-size:16px">${i.dest.toUpperCase()}</b><br>
+                    <span style="color:var(--primary); font-weight:bold">${i.local}</span><br>
+                    <small>Rastreio: ${i.rastreio}</small><br>
+                    <button class="btn-entregar" onclick="abrirAssinatura(${i.id})">✍️ COLETAR ASSINATURA</button>
+                </div>`;
+        });
     }
 
     function atualizarTabelas() {
-        const lista = document.getElementById('lista-preview');
-        lista.innerHTML = "";
-        encomendas.slice().reverse().forEach(i => {
-            const isEntregue = i.status === "ENTREGUE";
-            lista.innerHTML += `
-                <div class="item-row ${i.status.toLowerCase()}">
-                    <span class="status-tag" style="background:${isEntregue?'#28a745':'#dc3545'}; color:white">${i.status}</span>
-                    <b>${i.dest.toUpperCase()}</b> (${i.local})<br>
-                    <small>Rastreio: ${i.rastreio}</small><br>
-                    ${!isEntregue ? `<button class="btn-entregar" onclick="abrirAssinatura(${i.id})">✍️ COLETAR ASSINATURA</button>` : `<small style="color:#28a745"><b>Entregue em:</b> ${new Date(i.dataRetirada).toLocaleString('pt-BR')}</small>`}
-                </div>`;
-        });
+        const pCount = encomendas.filter(i => i.status === "PENDENTE").length;
+        document.getElementById('count-badge').innerText = pCount;
     }
 
     function abrirAssinatura(id) {
@@ -180,49 +211,40 @@
     function cancelarAssinatura() { document.getElementById('modal-assinatura').style.display = 'none'; }
 
     function salvarEntrega() {
-        if (signaturePad.isEmpty()) { alert("Assinatura obrigatória!"); return; }
-        const index = encomendas.findIndex(i => i.id === idParaEntregar);
-        encomendas[index].status = "ENTREGUE";
-        encomendas[index].dataRetirada = new Date().toISOString();
-        encomendas[index].assinatura = signaturePad.toDataURL();
+        if (signaturePad.isEmpty()) { alert("Assinatura necessária!"); return; }
+        const idx = encomendas.findIndex(i => i.id === idParaEntregar);
+        encomendas[idx].status = "ENTREGUE";
+        encomendas[idx].dataRetirada = new Date().toISOString();
+        encomendas[idx].assinatura = signaturePad.toDataURL();
         localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
         cancelarAssinatura();
         atualizarTabelas();
-    }
-
-    function limpezaAutomatica() {
-        const agora = new Date();
-        encomendas = encomendas.filter(i => {
-            const diff = agora - new Date(i.dataEntrada);
-            return i.status === "ENTREGUE" ? diff < 15552000000 : diff < 31536000000;
-        });
-        localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
+        filtrarPendentes();
     }
 
     async function baixarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: "l" });
-        doc.text("PROTOCOLO DIGITAL - HISTÓRICO", 14, 15);
+        doc.text("LIVRO DE PROTOCOLO DIGITAL", 14, 15);
         const rows = encomendas.map(i => [
             new Date(i.dataEntrada).toLocaleDateString('pt-BR'),
             `${i.dest}\n(${i.local})`,
             i.rastreio,
-            i.recebidoPor,
-            i.dataRetirada ? new Date(i.dataRetirada).toLocaleDateString('pt-BR') : "---",
+            i.dataRetirada ? new Date(i.dataRetirada).toLocaleDateString('pt-BR') : "PENDENTE",
             { content: '', styles: { minCellHeight: 15 } }
         ]);
         doc.autoTable({
             startY: 25,
-            head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'FUNC.', 'RETIRADA', 'ASSINATURA']],
+            head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RETIRADA', 'ASSINATURA']],
             body: rows,
             didDrawCell: (data) => {
-                if (data.column.index === 5 && data.cell.section === 'body') {
+                if (data.column.index === 4 && data.cell.section === 'body') {
                     const img = encomendas[data.row.index].assinatura;
                     if (img) doc.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 1, 25, 12);
                 }
             }
         });
-        doc.save("Protocolo_Digital.pdf");
+        doc.save("Protocolo_Geral.pdf");
     }
 </script>
 </body>
