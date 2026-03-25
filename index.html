@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital Pro</title>
 
-    <link rel="manifest" href="manifest.json?v=12">
+    <link rel="manifest" href="manifest.json?v=13">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -16,12 +16,12 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #333; padding-bottom: 70px; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --dark: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #333; padding-bottom: 20px; }
         
         /* Navegação por Abas */
         .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; color: #666; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; font-weight: bold; color: #666; cursor: pointer; border-bottom: 3px solid transparent; font-size: 11px; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         .container { padding: 15px; max-width: 600px; margin: auto; }
@@ -32,20 +32,19 @@
         .btn-add { background: var(--success); }
         .btn-entregar { background: var(--warning); color: #000; padding: 10px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-top: 10px; }
         
-        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
         .search-box { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 2px solid var(--primary); }
         
         .item-row { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-row.entregue { border-left-color: var(--success); opacity: 0.8; }
+        .item-row.entregue { border-left-color: var(--success); }
+        
+        .badge { background: var(--danger); color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 3px; }
         
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
         canvas { border: 2px solid #ddd; background: #fff; width: 100%; height: 200px; touch-action: none; border-radius: 8px; margin: 10px 0; }
         
-        .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; font-weight: bold; color: var(--primary); }
-        .admin-check input { width: auto; margin-bottom: 0; }
-        
-        .badge { background: var(--danger); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: 5px; }
+        .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; font-weight: bold; color: var(--primary); font-size: 13px; }
     </style>
 </head>
 <body>
@@ -53,11 +52,12 @@
 <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('registro')">📥 ENTRADA</button>
     <button class="tab-btn" onclick="switchTab('pendentes')">📤 SAÍDA <span id="count-badge" class="badge">0</span></button>
+    <button class="tab-btn" onclick="switchTab('retiradas')">✅ RETIRADAS</button>
 </div>
 
 <div id="aba-registro" class="container">
     <div class="card">
-        <h3 style="margin-top:0">Nova Encomenda</h3>
+        <h3 style="margin-top:0">Novo Registro</h3>
         <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
         <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
         
@@ -65,7 +65,7 @@
         <input type="text" id="recebidoPor" placeholder="Quem está recebendo" oninput="salvarNome()">
 
         <label class="admin-check">
-            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Administração
+            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
         </label>
 
         <label>Destinatário:</label>
@@ -84,15 +84,22 @@
 
 <div id="aba-pendentes" class="container" style="display:none">
     <div class="search-box">
-        <input type="text" id="busca" placeholder="🔍 Buscar por Apto, Bloco, Nome ou Rastreio..." oninput="filtrarPendentes()">
+        <input type="text" id="busca-pendente" placeholder="🔍 Buscar para entregar..." oninput="filtrarPendentes()">
     </div>
     <div id="lista-pendentes"></div>
-    <button class="btn" style="background:#333; margin-top:20px" onclick="baixarPDF()">📄 GERAR RELATÓRIO PDF</button>
+</div>
+
+<div id="aba-retiradas" class="container" style="display:none">
+    <div class="search-box" style="border-color: var(--success);">
+        <input type="text" id="busca-retirada" placeholder="🔍 Buscar no histórico..." oninput="filtrarRetiradas()">
+    </div>
+    <div id="lista-retiradas"></div>
+    <button class="btn" style="background:var(--dark); margin-top:20px" onclick="baixarPDF()">📄 EXPORTAR PDF COMPLETO</button>
 </div>
 
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h3>Assinatura Digital</h3>
+        <h3>Assinatura do Morador</h3>
         <canvas id="signature-pad"></canvas>
         <div style="display: flex; gap: 10px;">
             <button class="btn" style="background:var(--danger); flex:1" onclick="cancelarAssinatura()">CANCELAR</button>
@@ -103,7 +110,7 @@
 
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=12').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=13').then(reg => {
             reg.onupdatefound = () => {
                 const worker = reg.installing;
                 worker.onstatechange = () => {
@@ -127,9 +134,12 @@
     function switchTab(tab) {
         document.getElementById('aba-registro').style.display = tab === 'registro' ? 'block' : 'none';
         document.getElementById('aba-pendentes').style.display = tab === 'pendentes' ? 'block' : 'none';
+        document.getElementById('aba-retiradas').style.display = tab === 'retiradas' ? 'block' : 'none';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         event.currentTarget.classList.add('active');
+        
         if(tab === 'pendentes') filtrarPendentes();
+        if(tab === 'retiradas') filtrarRetiradas();
     }
 
     function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
@@ -169,30 +179,45 @@
         });
 
         localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
-        alert("Registrado com sucesso!");
+        alert("Entrada registrada!");
         document.getElementById('destinatario').value = "";
         document.getElementById('rastreio').value = "";
+        document.getElementById('apto').value = "";
+        document.getElementById('bloco').value = "";
         atualizarTabelas();
     }
 
     function filtrarPendentes() {
-        const termo = document.getElementById('busca').value.toLowerCase();
+        const termo = document.getElementById('busca-pendente').value.toLowerCase();
         const lista = document.getElementById('lista-pendentes');
         lista.innerHTML = "";
-
-        const pendentes = encomendas.filter(i => i.status === "PENDENTE");
+        const filtrados = encomendas.filter(i => i.status === "PENDENTE" && (i.dest.toLowerCase().includes(termo) || i.local.toLowerCase().includes(termo) || i.rastreio.toLowerCase().includes(termo)));
         
-        pendentes.filter(i => 
-            i.dest.toLowerCase().includes(termo) || 
-            i.local.toLowerCase().includes(termo) || 
-            i.rastreio.toLowerCase().includes(termo)
-        ).reverse().forEach(i => {
+        filtrados.reverse().forEach(i => {
             lista.innerHTML += `
                 <div class="item-row">
-                    <b style="font-size:16px">${i.dest.toUpperCase()}</b><br>
-                    <span style="color:var(--primary); font-weight:bold">${i.local}</span><br>
+                    <b>${i.dest.toUpperCase()}</b><br>
+                    <span style="color:var(--primary)">${i.local}</span><br>
                     <small>Rastreio: ${i.rastreio}</small><br>
                     <button class="btn-entregar" onclick="abrirAssinatura(${i.id})">✍️ COLETAR ASSINATURA</button>
+                </div>`;
+        });
+    }
+
+    function filtrarRetiradas() {
+        const termo = document.getElementById('busca-retirada').value.toLowerCase();
+        const lista = document.getElementById('lista-retiradas');
+        lista.innerHTML = "";
+        const filtrados = encomendas.filter(i => i.status === "ENTREGUE" && (i.dest.toLowerCase().includes(termo) || i.local.toLowerCase().includes(termo) || i.rastreio.toLowerCase().includes(termo)));
+
+        filtrados.reverse().forEach(i => {
+            const dataS = new Date(i.dataRetirada).toLocaleString('pt-BR');
+            lista.innerHTML += `
+                <div class="item-row entregue">
+                    <b>${i.dest.toUpperCase()}</b> (${i.local})<br>
+                    <small>Entrada: ${new Date(i.dataEntrada).toLocaleDateString('pt-BR')}</small><br>
+                    <small style="color:var(--success)"><b>Saída: ${dataS}</b></small>
+                    <div style="margin-top:5px"><img src="${i.assinatura}" style="height:30px; background:#eee; border-radius:4px;"></div>
                 </div>`;
         });
     }
@@ -225,17 +250,17 @@
     async function baixarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: "l" });
-        doc.text("LIVRO DE PROTOCOLO DIGITAL", 14, 15);
+        doc.text("LIVRO DE PROTOCOLO DIGITAL - COMPLETO", 14, 15);
         const rows = encomendas.map(i => [
             new Date(i.dataEntrada).toLocaleDateString('pt-BR'),
             `${i.dest}\n(${i.local})`,
             i.rastreio,
-            i.dataRetirada ? new Date(i.dataRetirada).toLocaleDateString('pt-BR') : "PENDENTE",
+            i.dataRetirada ? new Date(i.dataRetirada).toLocaleString('pt-BR') : "PENDENTE",
             { content: '', styles: { minCellHeight: 15 } }
         ]);
         doc.autoTable({
             startY: 25,
-            head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RETIRADA', 'ASSINATURA']],
+            head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'ASSINATURA']],
             body: rows,
             didDrawCell: (data) => {
                 if (data.column.index === 4 && data.cell.section === 'body') {
@@ -244,7 +269,7 @@
                 }
             }
         });
-        doc.save("Protocolo_Geral.pdf");
+        doc.save("Relatorio_Completo_Portaria.pdf");
     }
 </script>
 </body>
