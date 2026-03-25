@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v40</title>
-    <link rel="manifest" href="manifest.json?v=40">
+    <title>Portaria Digital v41</title>
+    <link rel="manifest" href="manifest.json?v=41">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -27,9 +27,10 @@
         window.limparBancoDeDadosTotal = async () => {
             const senhaDigitada = prompt("Senha de administrador:");
             if (senhaDigitada === SENHA_MESTRA) {
-                if(confirm("Apagar TUDO?")) {
+                if(confirm("Apagar TUDO? Esta ação é irreversível.")) {
                     const querySnapshot = await getDocs(collection(window.db, "encomendas"));
                     for (const documento of querySnapshot.docs) { await deleteDoc(doc(window.db, "encomendas", documento.id)); }
+                    alert("Banco de dados resetado.");
                     location.reload();
                 }
             }
@@ -62,7 +63,6 @@
         .item-row.entregue { border-left-color: var(--success); display: block; }
         .info-col { flex: 1; display: flex; flex-direction: column; }
         .check-box { width: 25px; height: 25px; cursor: pointer; }
-        .btn-pdf { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .sign-img { height: 60px; width: auto; max-width: 150px; margin: 8px 0; border: 1px solid #eee; border-radius: 4px; background: #fff; display: block; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
@@ -71,7 +71,7 @@
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v40</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v41</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -92,10 +92,11 @@
         <div id="lista-pre-entrada" style="margin-top:20px"></div>
         <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:15px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
     </div>
+    <p style="text-align:center; font-size:10px; color:#ccc; margin-top:30px; cursor:pointer;" onclick="limparBancoDeDadosTotal()">[ Manutenção ]</p>
 </div>
 
 <div id="aba-pendentes" class="container" style="display:none">
-    <div class="form-group"><input type="text" id="busca-pen" placeholder="🔍 Buscar nome ou apto..." oninput="render()"></div>
+    <div class="form-group"><input type="text" id="busca-pen" placeholder="🔍 Buscar nome, apto ou rastreio..." oninput="render()"></div>
     <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none; margin-bottom:15px;" onclick="abrirModalLote()">✍️ RETIRAR SELECIONADOS</button>
     <div id="lista-pendentes"></div>
 </div>
@@ -202,7 +203,15 @@
         dados.forEach(i => {
             const txt = `${i.dest} ${i.local} ${i.rastreio}`.toLowerCase();
             if (i.status === 'PENDENTE' && txt.includes(bP)) {
-                lp.innerHTML += `<div class="item-row"><input type="checkbox" class="check-box" value="${i.idDoc}" onchange="atualizarBotaoLote()"><div class="info-col"><b>${i.dest} (${i.local})</b><small>Entrada: ${formatData(i.dataEntrada)}</small></div></div>`;
+                lp.innerHTML += `
+                <div class="item-row">
+                    <input type="checkbox" class="check-box" value="${i.idDoc}" onchange="atualizarBotaoLote()">
+                    <div class="info-col">
+                        <b>${i.dest} (${i.local})</b>
+                        <small style="color:#1a73e8; font-weight:bold;">🏷️ ${i.rastreio}</small>
+                        <small>Entrada: ${formatData(i.dataEntrada)}</small>
+                    </div>
+                </div>`;
             } else if (i.status === 'ENTREGUE' && txt.includes(bH)) {
                 lr.innerHTML += `
                 <div class="item-row entregue" style="padding:15px; border-bottom:1px solid #eee;">
