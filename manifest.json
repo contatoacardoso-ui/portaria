@@ -2,7 +2,7 @@
   "name": "Portaria Digital Pro",
   "short_name": "Portaria",
   "description": "Sistema de Gestão de Encomendas em Nuvem",
-  "start_url": "./index.html?v=21",
+  "start_url": "./index.html?v=22",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#1a73e8",
