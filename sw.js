@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portaria-v8-final'; 
+const CACHE_NAME = 'portaria-v9-final'; 
 const assetsToCache = [
   './',
   './index.html',
