@@ -1,4 +1,4 @@
-const CACHE_NAME = 'protocolo-digital-v10'; 
+const CACHE_NAME = 'protocolo-digital-v11'; 
 const assetsToCache = [
   './',
   './index.html',
@@ -10,8 +10,8 @@ const assetsToCache = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(assetsToCache)));
   self.skipWaiting();
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(assetsToCache)));
 });
 
 self.addEventListener('activate', (e) => {
@@ -20,5 +20,5 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
