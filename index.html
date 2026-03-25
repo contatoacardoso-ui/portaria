@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v39</title>
-    <link rel="manifest" href="manifest.json?v=39">
+    <title>Portaria Digital v40</title>
+    <link rel="manifest" href="manifest.json?v=40">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -71,7 +71,7 @@
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v39</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v40</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -200,11 +200,24 @@
         lp.innerHTML = ""; lr.innerHTML = "";
         
         dados.forEach(i => {
-            const txt = `${i.dest} ${i.local}`.toLowerCase();
+            const txt = `${i.dest} ${i.local} ${i.rastreio}`.toLowerCase();
             if (i.status === 'PENDENTE' && txt.includes(bP)) {
                 lp.innerHTML += `<div class="item-row"><input type="checkbox" class="check-box" value="${i.idDoc}" onchange="atualizarBotaoLote()"><div class="info-col"><b>${i.dest} (${i.local})</b><small>Entrada: ${formatData(i.dataEntrada)}</small></div></div>`;
             } else if (i.status === 'ENTREGUE' && txt.includes(bH)) {
-                lr.innerHTML += `<div class="item-row entregue" style="padding:15px; border-bottom:1px solid #eee;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><div class="info-col"><b style="font-size:16px; color:#333;">${i.dest}</b><small style="color:#666;">📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small><small style="color:#28a745; font-weight:600;">📤 Saída: ${formatData(i.dataRetirada)}</small><small style="color:#555; font-weight:bold; margin-top:2px;">👤 Retirado por: ${i.quemRetirou}</small></div><div class="btn-pdf" onclick="exportarIndividual('${i.idDoc}')"><img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" width="22" height="22"></div></div><img src="${i.assinatura}" class="sign-img"></div>`;
+                lr.innerHTML += `
+                <div class="item-row entregue" style="padding:15px; border-bottom:1px solid #eee;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <div class="info-col">
+                            <b style="font-size:16px; color:#333;">${i.dest}</b>
+                            <small style="color:#666;">📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small>
+                            <small style="color:#28a745; font-weight:600;">📤 Saída: ${formatData(i.dataRetirada)}</small>
+                            <small style="color:#1a73e8; font-weight:bold; margin-top:2px;">🏷️ ${i.rastreio}</small>
+                            <small style="color:#555; font-weight:bold; margin-top:2px;">👤 Retirado por: ${i.quemRetirou}</small>
+                        </div>
+                        <div class="btn-pdf" onclick="exportarIndividual('${i.idDoc}')"><img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" width="22" height="22"></div>
+                    </div>
+                    <img src="${i.assinatura}" class="sign-img">
+                </div>`;
             }
         });
     };
@@ -229,7 +242,6 @@
     window.confirmarEntrega = async () => {
         const nomeRaw = document.getElementById('quemRetirou').value;
         if (pad.isEmpty() || !nomeRaw) return alert("Preencha Nome e Assinatura!");
-        
         const canvas = document.getElementById('signature-pad');
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -239,17 +251,10 @@
         tempCtx.drawImage(canvas, 0, 0);
         const img = tempCanvas.toDataURL('image/png');
         const nomeCap = capitalizarNome(nomeRaw);
-
-        for (const id of idsParaRetirar) { 
-            await updateDoc(doc(window.db, "encomendas", id), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: img, quemRetirou: nomeCap }); 
-        }
-
+        for (const id of idsParaRetirar) { await updateDoc(doc(window.db, "encomendas", id), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: img, quemRetirou: nomeCap }); }
         document.getElementById('quemRetirou').value = "";
         idsParaRetirar = [];
-        
-        // CORREÇÃO: Força o botão a sumir imediatamente
         document.getElementById('btn-retirar-lote').style.display = 'none';
-        
         fecharModal();
     };
 
