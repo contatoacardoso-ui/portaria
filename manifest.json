@@ -1,8 +1,8 @@
 {
-  "name": "Controle Encomendas",
-  "short_name": "Encomendas",
+  "name": "Portaria Digital v31",
+  "short_name": "Portaria",
   "description": "Sistema de Gestão de Encomendas em Nuvem",
-  "start_url": "./index.html?v=30",
+  "start_url": "./index.html?v=31",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#1a73e8",
