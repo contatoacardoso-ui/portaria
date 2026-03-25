@@ -1,7 +1,7 @@
 {
-  "name": "Portaria Digital v40",
+  "name": "Portaria Digital v41",
   "short_name": "Portaria",
-  "start_url": "./index.html?v=40",
+  "start_url": "./index.html?v=41",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#1a73e8",
