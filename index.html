@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
     <title>Controle Encomendas</title>
-    <link rel="manifest" href="manifest.json?v=27">
+    <link rel="manifest" href="manifest.json?v=28">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -39,13 +39,13 @@
         .container { padding: 12px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
         .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 8px; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; }
-        .admin-box input { width: auto; margin: 0; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; outline: none; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; font-size: 14px; }
-        .temp-list { margin-top: 15px; border-top: 2px solid #eee; padding-top: 10px; }
         .temp-item { background: #fffde7; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 12px; border: 1px solid #ffe082; display: flex; justify-content: space-between; align-items: center; }
-        .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
+        .sign-img { height: 50px; margin: 8px 0; border: 1px solid #eee; border-radius: 4px; display: block; background: #fdfdfd; }
+        .btn-pdf { background: #333; color: white; font-size: 10px; padding: 6px 10px; width: auto; margin-top: 5px; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
         canvas { border: 1px solid #ddd; background: #fff; width: 100%; height: 150px; border-radius: 6px; touch-action: none; }
@@ -64,20 +64,16 @@
 <div id="aba-registro" class="container">
     <div class="card">
         <input type="text" id="recebidoPor" placeholder="Nome do Funcionário">
-        <hr style="opacity: 0.2; margin: 15px 0;">
+        <hr style="opacity: 0.1; margin: 15px 0;">
         <div id="reader" style="width:100%; border-radius:8px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
         <button class="btn" style="background:#6f42c1; margin-bottom:10px;" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-        
         <label class="admin-box"><input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> Entrega Para Administração</label>
-        
         <input type="text" id="destinatario" placeholder="Nome do Destinatário">
         <div id="campos-local" style="display: flex; gap: 8px;"><input type="text" id="apto" placeholder="Apto" style="flex:1"><input type="text" id="bloco" placeholder="Bl" style="flex:1"></div>
         <input type="text" id="rastreio" placeholder="Rastreio/Transportadora">
-        
         <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">➕ ADICIONAR À LISTA</button>
-
-        <div id="lista-pre-entrada" class="temp-list"></div>
-        <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:20px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
+        <div id="lista-pre-entrada" style="margin-top:15px"></div>
+        <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:15px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
     </div>
 </div>
 
@@ -110,6 +106,7 @@
     let dados = [], listaTemp = [], idDocAtual = null, pad, html5QrCode;
     
     const formatData = (d) => {
+        if(!d) return "-";
         const data = new Date(d);
         return data.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + " " + data.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     };
@@ -134,14 +131,11 @@
         html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
             const c = text.toUpperCase();
             let t = "TRANSPORTADORA";
-            
-            // LÓGICA DE DETECÇÃO AMPLIADA
             if (c.startsWith("BR") || c.includes("SPX") || c.startsWith("LP")) t = "SHOPEE";
             else if (c.startsWith("3320") || c.startsWith("UP19") || c.startsWith("IM")) t = "IMILE";
             else if (c.startsWith("999") || c.startsWith("888") || c.startsWith("777")) t = "J&T EXPRESS";
             else if (c.startsWith("MLE") || c.startsWith("MLB")) t = "MERCADO LIVRE";
             else if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) t = "CORREIOS";
-            
             document.getElementById('rastreio').value = `${t}: ${c}`;
             html5QrCode.stop();
         }).catch(() => {});
@@ -150,7 +144,6 @@
     window.adicionarNaLista = () => {
         const dest = document.getElementById('destinatario').value;
         if (!dest) return alert("Digite o nome do destinatário!");
-
         listaTemp.push({
             dest: dest.toUpperCase(),
             local: document.getElementById('isAdmin').checked ? "ADMIN" : `${document.getElementById('apto').value}/${document.getElementById('bloco').value}`,
@@ -158,63 +151,86 @@
             dataEntrada: new Date().toISOString(),
             status: "PENDENTE"
         });
-
         atualizarListaVisual();
-        document.getElementById('destinatario').value = "";
-        document.getElementById('apto').value = "";
-        document.getElementById('bloco').value = "";
-        document.getElementById('rastreio').value = "";
-        document.getElementById('isAdmin').checked = false;
-        toggleAdmin();
+        document.getElementById('destinatario').value = ""; document.getElementById('apto').value = "";
+        document.getElementById('bloco').value = ""; document.getElementById('rastreio').value = "";
+        document.getElementById('isAdmin').checked = false; toggleAdmin();
     };
 
     function atualizarListaVisual() {
         const div = document.getElementById('lista-pre-entrada');
-        div.innerHTML = listaTemp.map((i, index) => `
-            <div class="temp-item">
-                <span><b>${i.dest}</b> (${i.local})</span>
-                <span style="color:red; font-size:18px; padding:0 10px;" onclick="removerDaLista(${index})">✖</span>
-            </div>
-        `).join('');
+        div.innerHTML = listaTemp.map((i, index) => `<div class="temp-item"><span><b>${i.dest}</b> (${i.local})</span><span style="color:red;font-size:18px;padding:0 10px;" onclick="removerDaLista(${index})">✖</span></div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
-    window.removerDaLista = (index) => {
-        listaTemp.splice(index, 1);
-        atualizarListaVisual();
-    };
+    window.removerDaLista = (idx) => { listaTemp.splice(idx, 1); atualizarListaVisual(); };
 
     window.salvarTudoNoFirebase = async () => {
         const func = document.getElementById('recebidoPor').value;
         if (!func) return alert("Digite seu nome (Funcionário)!");
-
-        try {
-            for (const item of listaTemp) {
-                item.recebidoPor = func;
-                await addDoc(collection(window.db, "encomendas"), item);
-            }
-            alert("✅ Tudo registrado!");
-            listaTemp = [];
-            atualizarListaVisual();
-            document.getElementById('recebidoPor').value = ""; 
-        } catch (e) { alert("Erro ao salvar."); }
+        for (const item of listaTemp) { item.recebidoPor = func; await addDoc(collection(window.db, "encomendas"), item); }
+        alert("✅ Registrado!"); listaTemp = []; atualizarListaVisual(); document.getElementById('recebidoPor').value = ""; 
     };
 
     window.render = () => {
         const lp = document.getElementById('lista-pendentes'), lr = document.getElementById('lista-retiradas');
         const bP = document.getElementById('busca-pen').value.toLowerCase(), bH = document.getElementById('busca-his').value.toLowerCase();
         lp.innerHTML = ""; lr.innerHTML = "";
-
         dados.forEach(i => {
             const txt = `${i.dest} ${i.local}`.toLowerCase();
             if (i.status === 'PENDENTE' && txt.includes(bP)) {
-                lp.innerHTML += `<div class="item-row"><b>${i.dest.toUpperCase()} (${i.local})</b><small>Entrada: ${formatData(i.dataEntrada)}</small>
-                <button class="btn" style="background:var(--warning);color:#000;padding:8px;font-size:12px;" onclick="abrirModal('${i.idDoc}')">✍️ RETIRAR</button></div>`;
+                lp.innerHTML += `<div class="item-row"><b>${i.dest.toUpperCase()} (${i.local})</b><small>Entrada: ${formatData(i.dataEntrada)}</small><button class="btn" style="background:var(--warning);color:#000;padding:8px;font-size:12px;" onclick="abrirModal('${i.idDoc}')">✍️ RETIRAR</button></div>`;
             } else if (i.status === 'ENTREGUE' && txt.includes(bH)) {
-                lr.innerHTML += `<div class="item-row entregue"><b>${i.dest.toUpperCase()}</b><small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small>
-                <small>📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small></div>`;
+                lr.innerHTML += `
+                <div class="item-row entregue">
+                    <b>${i.dest.toUpperCase()}</b>
+                    <small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small>
+                    <small>📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small>
+                    <img src="${i.assinatura}" class="sign-img">
+                    <button class="btn btn-pdf" onclick="exportarIndividual('${i.idDoc}')">📄 IMPRIMIR PROTOCOLO</button>
+                </div>`;
             }
         });
+    };
+
+    window.exportarIndividual = (id) => {
+        const item = dados.find(d => d.idDoc === id);
+        const { jsPDF } = window.jspdf;
+        const docP = new jsPDF();
+        docP.setFontSize(16); docP.text("PROTOCOLO DE ENTREGA", 20, 20);
+        docP.setFontSize(10);
+        docP.text(`Destinatário: ${item.dest}`, 20, 40);
+        docP.text(`Local: ${item.local}`, 20, 50);
+        docP.text(`Transportadora/Rastreio: ${item.rastreio}`, 20, 60);
+        docP.text(`Recebido na Portaria por: ${item.recebidoPor}`, 20, 70);
+        docP.text(`Data Entrada: ${formatData(item.dataEntrada)}`, 20, 80);
+        docP.text(`Data Retirada: ${formatData(item.dataRetirada)}`, 20, 90);
+        docP.text(`Retirado por: ${item.quemRetirou}`, 20, 100);
+        docP.text("Assinatura:", 20, 115);
+        docP.addImage(item.assinatura, 'PNG', 20, 120, 60, 25);
+        docP.save(`protocolo_${item.dest}.pdf`);
+    };
+
+    window.gerarRelatorioGeral = () => {
+        const { jsPDF } = window.jspdf;
+        const docP = new jsPDF('l', 'mm', 'a4');
+        docP.text("LIVRO DE PROTOCOLO - RELATÓRIO GERAL", 14, 15);
+        const rows = dados.map(i => [
+            formatData(i.dataEntrada),
+            i.recebidoPor,
+            `${i.dest} (${i.local})`,
+            i.rastreio,
+            i.status==='PENDENTE' ? 'EM ESPERA' : formatData(i.dataRetirada),
+            i.quemRetirou || '-'
+        ]);
+        docP.autoTable({
+            head: [['ENTRADA', 'RECEBIDO POR', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'RETIRADO POR']],
+            body: rows,
+            startY: 20,
+            theme: 'grid',
+            headStyles: {fillColor: [26, 115, 232]}
+        });
+        docP.save("livro_protocolo_completo.pdf");
     };
 
     window.abrirModal = (id) => { idDocAtual = id; document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); };
@@ -229,16 +245,7 @@
             assinatura: pad.toDataURL(),
             quemRetirou: nome
         });
-        document.getElementById('quemRetirou').value = ""; fecharModal();
-    };
-
-    window.gerarRelatorioGeral = () => {
-        const { jsPDF } = window.jspdf;
-        const docP = new jsPDF('l', 'mm', 'a4');
-        docP.text("LIVRO DE PROTOCOLO - PORTARIA", 14, 15);
-        const rows = dados.map(i => [i.dest, i.local, formatData(i.dataEntrada), i.status==='PENDENTE'?'PENDENTE':formatData(i.dataRetirada), i.quemRetirou || '-', i.recebidoPor]);
-        docP.autoTable({ head: [['Destinatário', 'Local', 'Entrada', 'Saída', 'Retirado por', 'Funcionário']], body: rows, startY: 20 });
-        docP.save("protocolo_geral.pdf");
+        fecharModal();
     };
 
     window.switchTab = (t) => {
