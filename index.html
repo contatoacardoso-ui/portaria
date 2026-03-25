@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v34</title>
-    <link rel="manifest" href="manifest.json?v=34">
+    <title>Portaria Digital v35</title>
+    <link rel="manifest" href="manifest.json?v=35">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -55,13 +55,12 @@
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; }
         
-        /* ESTILO DOS ITENS COM CHECKBOX */
         .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-row.entregue { border-left-color: var(--success); }
+        .item-row.entregue { border-left-color: var(--success); display: block; } /* Voltei para display block no histórico */
         .info-col { flex: 1; display: flex; flex-direction: column; }
         .check-box { width: 25px; height: 25px; cursor: pointer; }
 
-        .sign-img { height: 60px; margin: 8px 0; border: 1px solid #ccc; background: #fff; }
+        .sign-img { height: 60px; width: auto; max-width: 150px; margin: 8px 0; border: 1px solid #eee; border-radius: 4px; background: #fff; display: block; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
         canvas { border: 2px solid #333; background: #fff; width: 100%; height: 180px; border-radius: 6px; }
@@ -69,7 +68,7 @@
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v34</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v35</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -184,8 +183,6 @@
         if (!func) return alert("Nome do funcionário é obrigatório!");
         for (const item of listaTemp) { item.recebidoPor = func; await addDoc(collection(window.db, "encomendas"), item); }
         alert("✅ Sucesso!");
-        
-        // LIMPEZA TOTAL DA TELA DE ENTRADA
         listaTemp = [];
         document.getElementById('recebidoPor').value = ""; 
         atualizarListaVisual();
@@ -207,7 +204,18 @@
                     </div>
                 </div>`;
             } else if (i.status === 'ENTREGUE' && txt.includes(bH)) {
-                lr.innerHTML += `<div class="item-row entregue"><div class="info-col"><b>${i.dest}</b><small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small><small>📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small><img src="${i.assinatura}" class="sign-img"></div><button class="btn" style="background:#333;font-size:10px;padding:6px;width:auto;" onclick="exportarIndividual('${i.idDoc}')">📄</button></div>`;
+                lr.innerHTML += `
+                <div class="item-row entregue">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div class="info-col">
+                            <b>${i.dest}</b>
+                            <small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small>
+                            <small>📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small>
+                        </div>
+                        <button class="btn" style="background:#333;font-size:10px;padding:6px;width:35px;margin:0;" onclick="exportarIndividual('${i.idDoc}')">📄</button>
+                    </div>
+                    <img src="${i.assinatura}" class="sign-img">
+                </div>`;
             }
         });
     };
@@ -231,7 +239,6 @@
     window.confirmarEntrega = async () => {
         const nome = document.getElementById('quemRetirou').value;
         if (pad.isEmpty() || !nome) return alert("Preencha Nome e Assinatura!");
-        
         const canvas = document.getElementById('signature-pad');
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -240,19 +247,11 @@
         tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
         tempCtx.drawImage(canvas, 0, 0);
         const img = tempCanvas.toDataURL('image/png');
-
         for (const id of idsParaRetirar) {
-            await updateDoc(doc(window.db, "encomendas", id), {
-                status: "ENTREGUE",
-                dataRetirada: new Date().toISOString(),
-                assinatura: img,
-                quemRetirou: nome.toUpperCase()
-            });
+            await updateDoc(doc(window.db, "encomendas", id), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: img, quemRetirou: nome.toUpperCase() });
         }
-        
         document.getElementById('quemRetirou').value = "";
         fecharModal();
-        alert("Retirada concluída!");
     };
 
     window.exportarIndividual = (id) => {
