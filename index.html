@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v31</title>
-    <link rel="manifest" href="manifest.json?v=31">
+    <title>Portaria Digital v32</title>
+    <link rel="manifest" href="manifest.json?v=32">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
@@ -21,6 +21,18 @@
         };
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
+
+        // FUNÇÃO PARA LIMPAR TUDO
+        window.limparBancoDeDadosTotal = async () => {
+            if(confirm("ATENÇÃO: Isso apagará TODO o histórico permanentemente. Deseja continuar?")) {
+                const querySnapshot = await getDocs(collection(window.db, "encomendas"));
+                for (const documento of querySnapshot.docs) {
+                    await deleteDoc(doc(window.db, "encomendas", documento.id));
+                }
+                alert("Banco de dados resetado! O app está como novo.");
+                location.reload();
+            }
+        };
     </script>
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
@@ -38,7 +50,11 @@
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .container { padding: 12px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 10px; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 14px; font-weight: 600; color: #555; cursor: pointer; }
+        
+        /* ALINHAMENTO À ESQUERDA CORRIGIDO */
+        .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 12px; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; }
+        .admin-box input[type="checkbox"] { width: 22px; height: 22px; margin: 0; flex-shrink: 0; cursor: pointer; }
+
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; outline: none; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; font-size: 14px; }
         .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -51,7 +67,7 @@
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v31</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v32</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -67,16 +83,18 @@
         <input type="text" id="rastreio" placeholder="Rastreio/Transportadora">
         <input type="text" id="destinatario" placeholder="Nome do Destinatário">
         <div id="campos-local" style="display: flex; gap: 8px;"><input type="text" id="apto" placeholder="Apto" style="flex:1"><input type="text" id="bloco" placeholder="Bl" style="flex:1"></div>
-        
         <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)">
         
-        <label class="admin-box"><input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> <span>Entrega Para Administração</span></label>
+        <label class="admin-box">
+            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 
+            <span>Entrega Para Administração</span>
+        </label>
         
         <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">➕ ADICIONAR À LISTA</button>
-        
         <div id="lista-pre-entrada" style="margin-top:15px"></div>
         <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:15px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
     </div>
+    <p style="text-align:center; font-size:10px; color:#ddd; margin-top:30px;" onclick="limparBancoDeDadosTotal()">[ Reset do Sistema ]</p>
 </div>
 
 <div id="aba-pendentes" class="container" style="display:none">
@@ -141,6 +159,7 @@
             else if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) t = "CORREIOS";
             document.getElementById('rastreio').value = `${t}: ${c}`;
             html5QrCode.stop();
+            document.getElementById('destinatario').focus();
         }).catch(() => {});
     };
 
@@ -149,18 +168,8 @@
         const aptoVal = document.getElementById('apto').value;
         const blVal = document.getElementById('bloco').value;
         if (!dest) return alert("Digite o nome do destinatário!");
-
-        // FORMATAÇÃO DO LOCAL
         let localStr = document.getElementById('isAdmin').checked ? "ADMIN" : `Apto ${aptoVal} Bl ${blVal}`;
-
-        listaTemp.push({
-            dest: dest.toUpperCase(),
-            local: localStr,
-            rastreio: document.getElementById('rastreio').value || "MANUAL",
-            dataEntrada: new Date().toISOString(),
-            status: "PENDENTE"
-        });
-
+        listaTemp.push({ dest: dest.toUpperCase(), local: localStr, rastreio: document.getElementById('rastreio').value || "MANUAL", dataEntrada: new Date().toISOString(), status: "PENDENTE" });
         atualizarListaVisual();
         document.getElementById('destinatario').value = ""; document.getElementById('apto').value = "";
         document.getElementById('bloco').value = ""; document.getElementById('rastreio').value = "";
@@ -169,7 +178,7 @@
 
     function atualizarListaVisual() {
         const div = document.getElementById('lista-pre-entrada');
-        div.innerHTML = listaTemp.map((i, index) => `<div class="temp-item"><span><b>${i.dest}</b> (${i.local})</span><span style="color:red;font-size:18px;padding:0 10px;" onclick="removerDaLista(${index})">✖</span></div>`).join('');
+        div.innerHTML = listaTemp.map((i, index) => `<div class="temp-item" style="background:#fffde7;padding:8px;border-radius:6px;margin-bottom:5px;font-size:12px;display:flex;justify-content:space-between;border:1px solid #ffe082;"><span><b>${i.dest}</b> (${i.local})</span><span style="color:red;font-weight:bold;padding:0 10px;" onclick="removerDaLista(${index})">✖</span></div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
@@ -200,7 +209,7 @@
         const item = dados.find(d => d.idDoc === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.setFontSize(16); docP.text("PROTOCOLO DE ENTREGA", 20, 20);
+        docP.text("PROTOCOLO DE ENTREGA", 20, 20);
         docP.setFontSize(10);
         docP.text(`Destinatário: ${item.dest} (${item.local})`, 20, 40);
         docP.text(`Rastreio: ${item.rastreio}`, 20, 50);
@@ -217,30 +226,16 @@
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF('l', 'mm', 'a4');
         docP.text("LIVRO DE PROTOCOLO - RELATÓRIO GERAL", 14, 15);
-        
-        const rows = dados.map(i => [
-            formatData(i.dataEntrada),
-            i.recebidoPor,
-            `${i.dest} (${i.local})`,
-            i.rastreio,
-            i.status==='PENDENTE' ? 'PENDENTE' : formatData(i.dataRetirada),
-            i.quemRetirou || '-',
-            '' 
-        ]);
-
+        const rows = dados.map(i => [formatData(i.dataEntrada), i.recebidoPor, `${i.dest} (${i.local})`, i.rastreio, i.status==='PENDENTE' ? 'PENDENTE' : formatData(i.dataRetirada), i.quemRetirou || '-', '']);
         docP.autoTable({
             head: [['ENTRADA', 'RECEBIDO POR', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'RETIRADO POR', 'ASSINATURA']],
-            body: rows,
-            startY: 20,
-            theme: 'grid',
-            styles: { fontSize: 8, valign: 'middle', minCellHeight: 12 },
+            body: rows, startY: 20, theme: 'grid', styles: { fontSize: 8, valign: 'middle', minCellHeight: 15 },
             headStyles: { fillColor: [26, 115, 232] },
             didDrawCell: (data) => {
                 if (data.column.index === 6 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
                     if (item && item.assinatura) {
-                        // AJUSTE DE POSIÇÃO DA ASSINATURA NO PDF
-                        docP.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 1, 31, 10);
+                        docP.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 31, 11);
                     }
                 }
             },
@@ -255,7 +250,6 @@
     window.confirmarEntrega = async () => {
         const nome = document.getElementById('quemRetirou').value;
         if (pad.isEmpty() || !nome) return alert("Preencha Nome e Assinatura!");
-        
         const canvas = document.getElementById('signature-pad');
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -263,13 +257,7 @@
         tempCtx.fillStyle = "#ffffff";
         tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
         tempCtx.drawImage(canvas, 0, 0);
-
-        await updateDoc(doc(window.db, "encomendas", idDocAtual), {
-            status: "ENTREGUE",
-            dataRetirada: new Date().toISOString(),
-            assinatura: tempCanvas.toDataURL('image/png'),
-            quemRetirou: nome
-        });
+        await updateDoc(doc(window.db, "encomendas", idDocAtual), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: tempCanvas.toDataURL('image/png'), quemRetirou: nome });
         document.getElementById('quemRetirou').value = ""; fecharModal();
     };
 
