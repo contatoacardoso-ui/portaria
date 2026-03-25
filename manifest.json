@@ -1,7 +1,7 @@
 {
   "name": "Portaria Digital Pro",
   "short_name": "Portaria",
-  "description": "Sistema V5.7.2 Atualizado",
+  "description": "Sistema V5.7.3 Atualizado",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
