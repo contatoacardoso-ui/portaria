@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json?v=7">
+    <link rel="manifest" href="manifest.json?v=8">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -33,13 +33,13 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.7.1</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.7.2</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
     
     <label>Funcionário:</label>
-    <input type="text" id="recebidoPor" placeholder="Nome de quem está recebendo." oninput="salvarNome()">
+    <input type="text" id="recebidoPor" placeholder="Quem está recebendo" oninput="salvarNome()">
 
     <label class="admin-check">
         <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
@@ -47,7 +47,7 @@
 
     <label>Destinatário:</label>
     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-        <input type="text" id="destinatario" placeholder="Digite o nome." style="flex:2; margin-bottom:0;">
+        <input type="text" id="destinatario" placeholder="Nome destinatário" style="flex:2; margin-bottom:0;">
         <div id="campos-local" style="display: flex; gap: 5px; flex: 1.6;">
             <input type="text" id="apto" placeholder="Apto" style="flex:1; margin-bottom:0;">
             <input type="text" id="bloco" placeholder="Bl" style="flex:0.7; margin-bottom:0;">
@@ -66,7 +66,7 @@
 
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=7').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=8').then(reg => {
             reg.onupdatefound = () => {
                 const worker = reg.installing;
                 worker.onstatechange = () => {
