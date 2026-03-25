@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
     <title>Controle Encomendas</title>
-    <link rel="manifest" href="manifest.json?v=26">
+    <link rel="manifest" href="manifest.json?v=27">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
@@ -21,8 +21,6 @@
         };
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
-        window.writeBatch = writeBatch;
-        window.docRef = doc;
     </script>
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
@@ -40,17 +38,12 @@
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .container { padding: 12px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        
         .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 8px; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; }
         .admin-box input { width: auto; margin: 0; }
-
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; outline: none; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; font-size: 14px; }
-        
-        /* Lista temporária na entrada */
         .temp-list { margin-top: 15px; border-top: 2px solid #eee; padding-top: 10px; }
-        .temp-item { background: #fffde7; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 12px; border: 1px solid #ffe082; display: flex; justify-content: space-between; }
-        
+        .temp-item { background: #fffde7; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 12px; border: 1px solid #ffe082; display: flex; justify-content: space-between; align-items: center; }
         .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
@@ -71,7 +64,7 @@
 <div id="aba-registro" class="container">
     <div class="card">
         <input type="text" id="recebidoPor" placeholder="Nome do Funcionário">
-        <hr>
+        <hr style="opacity: 0.2; margin: 15px 0;">
         <div id="reader" style="width:100%; border-radius:8px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
         <button class="btn" style="background:#6f42c1; margin-bottom:10px;" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
         
@@ -84,7 +77,6 @@
         <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">➕ ADICIONAR À LISTA</button>
 
         <div id="lista-pre-entrada" class="temp-list"></div>
-        
         <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:20px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
     </div>
 </div>
@@ -141,7 +133,15 @@
         if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
             const c = text.toUpperCase();
-            let t = (c.startsWith("3320") || c.startsWith("UP19")) ? "IMILE" : (c.startsWith("BR") || c.includes("SPX")) ? "SHOPEE" : "TRANSP";
+            let t = "TRANSPORTADORA";
+            
+            // LÓGICA DE DETECÇÃO AMPLIADA
+            if (c.startsWith("BR") || c.includes("SPX") || c.startsWith("LP")) t = "SHOPEE";
+            else if (c.startsWith("3320") || c.startsWith("UP19") || c.startsWith("IM")) t = "IMILE";
+            else if (c.startsWith("999") || c.startsWith("888") || c.startsWith("777")) t = "J&T EXPRESS";
+            else if (c.startsWith("MLE") || c.startsWith("MLB")) t = "MERCADO LIVRE";
+            else if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) t = "CORREIOS";
+            
             document.getElementById('rastreio').value = `${t}: ${c}`;
             html5QrCode.stop();
         }).catch(() => {});
@@ -151,18 +151,15 @@
         const dest = document.getElementById('destinatario').value;
         if (!dest) return alert("Digite o nome do destinatário!");
 
-        const item = {
+        listaTemp.push({
             dest: dest.toUpperCase(),
             local: document.getElementById('isAdmin').checked ? "ADMIN" : `${document.getElementById('apto').value}/${document.getElementById('bloco').value}`,
             rastreio: document.getElementById('rastreio').value || "MANUAL",
             dataEntrada: new Date().toISOString(),
             status: "PENDENTE"
-        };
+        });
 
-        listaTemp.push(item);
         atualizarListaVisual();
-        
-        // Limpa apenas os campos da encomenda atual
         document.getElementById('destinatario').value = "";
         document.getElementById('apto').value = "";
         document.getElementById('bloco').value = "";
@@ -175,8 +172,8 @@
         const div = document.getElementById('lista-pre-entrada');
         div.innerHTML = listaTemp.map((i, index) => `
             <div class="temp-item">
-                <span>${i.dest} (${i.local})</span>
-                <b style="color:red" onclick="removerDaLista(${index})">✖</b>
+                <span><b>${i.dest}</b> (${i.local})</span>
+                <span style="color:red; font-size:18px; padding:0 10px;" onclick="removerDaLista(${index})">✖</span>
             </div>
         `).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
@@ -189,20 +186,18 @@
 
     window.salvarTudoNoFirebase = async () => {
         const func = document.getElementById('recebidoPor').value;
-        if (!func) return alert("Nome do Funcionário é obrigatório para registrar!");
+        if (!func) return alert("Digite seu nome (Funcionário)!");
 
         try {
             for (const item of listaTemp) {
                 item.recebidoPor = func;
                 await addDoc(collection(window.db, "encomendas"), item);
             }
-            alert("✅ Todas as encomendas foram registradas!");
+            alert("✅ Tudo registrado!");
             listaTemp = [];
             atualizarListaVisual();
-            document.getElementById('recebidoPor').value = ""; // Limpa o nome do funcionário no final
-        } catch (e) {
-            alert("Erro ao salvar.");
-        }
+            document.getElementById('recebidoPor').value = ""; 
+        } catch (e) { alert("Erro ao salvar."); }
     };
 
     window.render = () => {
