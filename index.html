@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json?v=6">
+    <link rel="manifest" href="manifest.json?v=7">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -33,7 +33,7 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.7</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.7.1</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -45,7 +45,7 @@
         <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
     </label>
 
-    <label id="label-destinatario">Destinatário:</label>
+    <label>Destinatário:</label>
     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
         <input type="text" id="destinatario" placeholder="Digite o nome." style="flex:2; margin-bottom:0;">
         <div id="campos-local" style="display: flex; gap: 5px; flex: 1.6;">
@@ -65,15 +65,12 @@
 </div>
 
 <script>
-    // Registro do SW forçando v6 para atualização automática
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=6').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=7').then(reg => {
             reg.onupdatefound = () => {
                 const worker = reg.installing;
                 worker.onstatechange = () => {
-                    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                        window.location.reload(); 
-                    }
+                    if (worker.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
                 };
             };
         });
@@ -121,9 +118,10 @@
 
     function identificarTransportadora(codigo) {
         const c = codigo.toUpperCase().replace(/\s/g, '');
+        if (c.startsWith("3320") || c.startsWith("UP19")) return "IMILE DELIVERY";
+        if (c.startsWith("999") || c.startsWith("888") || /^[0-9]{15}$/.test(c)) return "J&T EXPRESS";
         if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
         if (c.startsWith("BR") || c.includes("SPX") || c.startsWith("LP")) return "SHOPEE";
-        if (c.startsWith("999") || c.startsWith("888") || /^[0-9]{15}$/.test(c)) return "J&T EXPRESS";
         if (c.startsWith("MLB") || (c.startsWith("1") && c.length >= 15)) return "MERCADO ENVIOS";
         if (c.startsWith("MGL") || c.startsWith("LUZ")) return "MAGALU";
         if (/^[0-9]{10}$/.test(c) || /^[0-9]{14}$/.test(c)) return "JADLOG";
@@ -136,21 +134,16 @@
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
         const isAdmin = document.getElementById('isAdmin').checked;
-        
         if (!dest || !quem) { alert("Preencha os dados!"); return; }
-        
         const localTexto = isAdmin ? "ADMINISTRAÇÃO" : `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`;
         const agora = new Date();
         const entradaF = `${agora.toLocaleDateString('pt-BR')} - ${agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-        
         encomendas.push({ 
             entrada: entradaF, dest: dest, local: localTexto, 
             rastreio: document.getElementById('rastreio').value || "Manual", quem: quem 
         });
-        
         localStorage.setItem('encomendas_v4', JSON.stringify(encomendas));
         atualizarTabelas();
-        
         document.getElementById('destinatario').value = ""; 
         document.getElementById('apto').value = ""; 
         document.getElementById('bloco').value = ""; 
@@ -173,19 +166,15 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape" });
             const dataG = new Date().toLocaleDateString('pt-BR');
-            const horaG = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-            
-            doc.setFontSize(18);
             doc.text("PROTOCOLO DE ENTREGA DE ENCOMENDAS", 14, 15);
             doc.autoTable({
                 startY: 25,
                 head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'RECEBIDO POR', 'DATA RETIRADA', 'ASSINATURA']],
                 body: encomendas.map(i => [i.entrada, `${i.dest.toUpperCase()}\n${i.local.toUpperCase()}`, i.rastreio.toUpperCase(), i.quem.toUpperCase(), "", ""]),
                 theme: 'grid',
-                headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255], fontStyle: 'bold' },
-                styles: { minCellHeight: 12, verticalAlign: 'middle', fontSize: 9 }
+                headStyles: { fillColor: [26, 115, 232], fontStyle: 'bold' },
+                styles: { fontSize: 9 }
             });
-
             doc.save(`Protocolo_${dataG.replace(/\//g, '-')}.pdf`);
         } catch (erro) { alert("Erro ao gerar PDF."); }
     }
