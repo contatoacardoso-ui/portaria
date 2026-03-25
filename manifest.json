@@ -2,7 +2,7 @@
   "name": "Controle Encomendas",
   "short_name": "Encomendas",
   "description": "Sistema de Gestão de Encomendas em Nuvem",
-  "start_url": "./index.html?v=27",
+  "start_url": "./index.html?v=28",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#1a73e8",
