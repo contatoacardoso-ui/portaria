@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital</title>
 
-    <link rel="manifest" href="manifest.json?v=8">
+    <link rel="manifest" href="manifest.json?v=9">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -33,7 +33,7 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.7.2</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📦 Portaria Digital <small style="font-size:10px">V5.7.3</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -65,12 +65,15 @@
 </div>
 
 <script>
+    // Registro do SW forçando v9 para atualização automática
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=8').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=9').then(reg => {
             reg.onupdatefound = () => {
                 const worker = reg.installing;
                 worker.onstatechange = () => {
-                    if (worker.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
+                    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                        window.location.reload(); 
+                    }
                 };
             };
         });
