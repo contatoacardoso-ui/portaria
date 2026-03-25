@@ -1,7 +1,7 @@
 {
   "name": "Protocolo Digital Pro",
   "short_name": "Protocolo",
-  "description": "Sistema de Protocolo com Filtro de Busca v12",
+  "description": "Sistema de Protocolo com Histórico v13",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
