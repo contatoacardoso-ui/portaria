@@ -1,4 +1,4 @@
-const CACHE_NAME = 'protocolo-v12-abas'; 
+const CACHE_NAME = 'protocolo-v13-historico'; 
 const assetsToCache = [
   './',
   './index.html',
