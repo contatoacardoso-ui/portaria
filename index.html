@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v41</title>
-    <link rel="manifest" href="manifest.json?v=41">
+    <title>Portaria Digital v42</title>
+    <link rel="manifest" href="manifest.json?v=42">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, deleteDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
@@ -27,10 +27,9 @@
         window.limparBancoDeDadosTotal = async () => {
             const senhaDigitada = prompt("Senha de administrador:");
             if (senhaDigitada === SENHA_MESTRA) {
-                if(confirm("Apagar TUDO? Esta ação é irreversível.")) {
+                if(confirm("Apagar TUDO?")) {
                     const querySnapshot = await getDocs(collection(window.db, "encomendas"));
                     for (const documento of querySnapshot.docs) { await deleteDoc(doc(window.db, "encomendas", documento.id)); }
-                    alert("Banco de dados resetado.");
                     location.reload();
                 }
             }
@@ -71,7 +70,7 @@
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v41</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v42</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -120,7 +119,7 @@
 </div>
 
 <script type="module">
-    import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let dados = [], listaTemp = [], idsParaRetirar = [], pad, html5QrCode;
     
@@ -165,22 +164,57 @@
         }).catch(() => {});
     };
 
-    window.adicionarNaLista = () => {
+    window.adicionarNaLista = async () => {
         const destRaw = document.getElementById('destinatario').value;
         const aptoVal = document.getElementById('apto').value;
         const blVal = document.getElementById('bloco').value;
+        const rastreioVal = document.getElementById('rastreio').value || "Manual";
+
         if (!destRaw) return alert("Digite o nome!");
+
+        // --- VERIFICAÇÃO DE DUPLICADO NO FIREBASE ---
+        const qDuplicado = query(collection(window.db, "encomendas"), where("rastreio", "==", rastreioVal), where("status", "==", "PENDENTE"));
+        const snapshot = await getDocs(qDuplicado);
+        
+        if (!snapshot.empty && rastreioVal !== "Manual") {
+            return alert(`ATENÇÃO: Este código (${rastreioVal}) já está cadastrado como pendente na portaria!`);
+        }
+
+        // --- VERIFICAÇÃO NA LISTA TEMPORÁRIA (A que está na tela) ---
+        if (listaTemp.some(i => i.rastreio === rastreioVal && rastreioVal !== "Manual")) {
+            return alert("Este código já está na lista que você está montando agora!");
+        }
+
         let localStr = document.getElementById('isAdmin').checked ? "ADMIN" : `Apto ${aptoVal} Bl ${blVal}`;
-        listaTemp.push({ dest: capitalizarNome(destRaw), local: localStr, rastreio: document.getElementById('rastreio').value || "Manual", dataEntrada: new Date().toISOString(), status: "PENDENTE" });
+        
+        listaTemp.push({ 
+            dest: capitalizarNome(destRaw), 
+            local: localStr, 
+            rastreio: rastreioVal, 
+            dataEntrada: new Date().toISOString(), 
+            status: "PENDENTE" 
+        });
+
         atualizarListaVisual();
-        document.getElementById('destinatario').value = ""; document.getElementById('apto').value = "";
-        document.getElementById('bloco').value = ""; document.getElementById('rastreio').value = "";
-        document.getElementById('isAdmin').checked = false; toggleAdmin();
+        document.getElementById('destinatario').value = ""; 
+        document.getElementById('apto').value = "";
+        document.getElementById('bloco').value = ""; 
+        document.getElementById('rastreio').value = "";
+        document.getElementById('isAdmin').checked = false; 
+        toggleAdmin();
     };
 
     function atualizarListaVisual() {
         const div = document.getElementById('lista-pre-entrada');
-        div.innerHTML = listaTemp.map((i, index) => `<div style="background:#fffde7;padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;border:1px solid #ffe082; align-items:center;"><span><b>${i.dest}</b> (${i.local})</span><span style="color:var(--danger);font-weight:bold;cursor:pointer;" onclick="removerDaLista(${index})">REMOVER</span></div>`).join('');
+        // MODIFICADO: Agora mostra o RASTREIO em destaque na pré-lista
+        div.innerHTML = listaTemp.map((i, index) => `
+            <div style="background:#fffde7;padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;border:1px solid #ffe082; align-items:center;">
+                <div style="display:flex; flex-direction:column;">
+                    <b style="color:var(--primary);">🏷️ ${i.rastreio}</b>
+                    <span>${i.dest} (${i.local})</span>
+                </div>
+                <span style="color:var(--danger);font-weight:bold;cursor:pointer; padding:10px;" onclick="removerDaLista(${index})">REMOVER</span>
+            </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
@@ -191,7 +225,7 @@
         if (!funcRaw) return alert("Nome do funcionário é obrigatório!");
         const funcCap = capitalizarNome(funcRaw);
         for (const item of listaTemp) { item.recebidoPor = funcCap; await addDoc(collection(window.db, "encomendas"), item); }
-        alert("✅ Registrado com sucesso!");
+        alert("✅ Todos os itens foram registrados!");
         listaTemp = []; document.getElementById('recebidoPor').value = ""; atualizarListaVisual();
     };
 
