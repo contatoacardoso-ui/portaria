@@ -3,30 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Cloud Pro v17</title>
-    <link rel="manifest" href="manifest.json?v=17">
+    <meta name="theme-color" content="#1a73e8">
+    <title>Portaria Digital Pro</title>
+    <link rel="manifest" href="manifest.json?v=18">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // === CONFIGURAÇÃO DO SEU FIREBASE (COLE SEUS DADOS AQUI) ===
         const firebaseConfig = {
-  apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
-  authDomain: "portari-digiral-v3.firebaseapp.com",
-  projectId: "portari-digiral-v3",
-  storageBucket: "portari-digiral-v3.firebasestorage.app",
-  messagingSenderId: "859559354841",
-  appId: "1:859559354841:web:2926bdeb4536029e29b9c8"
-};
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            window.db = getFirestore(app);
-            console.log("Nuvem conectada!");
-        } catch (e) {
-            alert("Erro ao conectar na nuvem. Verifique as chaves!");
-        }
+     apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
+     authDomain: "portari-digiral-v3.firebaseapp.com",
+     projectId: "portari-digiral-v3",
+     storageBucket: "portari-digiral-v3.firebasestorage.app",
+     messagingSenderId: "859559354841",
+     appId: "1:859559354841:web:2926bdeb4536029e29b9c8"
+     };
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
     </script>
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
@@ -35,41 +29,47 @@
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 30px; }
+        .header { background: var(--primary); color: white; padding: 20px 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header h1 { margin: 0; font-size: 22px; }
         .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 12px; border-bottom: 3px solid transparent; }
+        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; cursor: pointer; border-bottom: 3px solid transparent; font-size: 11px; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; color: white; cursor: pointer; margin-top: 5px; }
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 14px; color: white; text-align: center; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
         .item-row { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
-        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
+        .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; font-weight: bold; color: var(--primary); font-size: 13px; }
+        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
-        canvas { border: 1px solid #ddd; width: 100%; height: 200px; background: #fff; touch-action: none; border-radius: 8px; }
+        canvas { border: 2px solid #ddd; background: #fff; width: 100%; height: 200px; touch-action: none; border-radius: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
 
+<div class="header"><h1>PORTARIA DIGITAL PRO</h1></div>
 <div class="tabs">
-    <button class="tab-btn active" id="t1" onclick="switchTab('registro')">📥 ENTRADA</button>
-    <button class="tab-btn" id="t2" onclick="switchTab('pendentes')">📤 SAÍDA</button>
-    <button class="tab-btn" id="t3" onclick="switchTab('retiradas')">✅ HISTÓRICO</button>
+    <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 ENTRADA</button>
+    <button class="tab-btn" id="tab2" onclick="switchTab('pendentes')">📤 SAÍDA</button>
+    <button class="tab-btn" id="tab3" onclick="switchTab('retiradas')">✅ HISTÓRICO</button>
 </div>
 
 <div id="aba-registro" class="container">
     <div class="card">
-        <h3>Novo Registro (Nuvem)</h3>
-        <input type="text" id="recebidoPor" placeholder="Seu nome (Funcionário)" oninput="localStorage.setItem('user', this.value)">
-        <input type="text" id="destinatario" placeholder="Nome do Morador">
-        <input type="text" id="local" placeholder="Apto / Bloco">
-        <input type="text" id="rastreio" placeholder="Rastreio ou código">
-        <button class="btn" style="background:var(--success)" onclick="salvarNuvem()">➕ SALVAR NA NUVEM</button>
+        <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px;"></div>
+        <button class="btn" style="background:#6f42c1" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
+        <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)" oninput="localStorage.setItem('user', this.value)">
+        <label class="admin-check"><input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração</label>
+        <input type="text" id="destinatario" placeholder="Nome do Destinatário">
+        <div id="campos-local" style="display: flex; gap: 5px;"><input type="text" id="apto" placeholder="Apto" style="flex:1"><input type="text" id="bloco" placeholder="Bl" style="flex:1"></div>
+        <input type="text" id="rastreio" placeholder="Rastreio ou transportadora...">
+        <button class="btn" style="background:var(--success)" onclick="salvarNaNuvem()">➕ REGISTRAR ENTRADA</button>
     </div>
 </div>
 
 <div id="aba-pendentes" class="container" style="display:none">
-    <input type="text" id="busca-pen" placeholder="🔍 Buscar morador..." oninput="render()">
+    <input type="text" id="busca-pen" placeholder="🔍 Buscar..." oninput="render()" style="border: 2px solid var(--primary)">
     <div id="lista-pendentes"></div>
 </div>
 
@@ -77,102 +77,65 @@
     <div id="lista-retiradas"></div>
 </div>
 
-<div id="modal-assinatura">
-    <div class="modal-content">
-        <h3>Assinatura de Saída</h3>
-        <canvas id="signature-pad"></canvas>
-        <button class="btn" style="background:var(--success)" onclick="confirmarEntrega()">CONFIRMAR ENTREGA</button>
-        <button class="btn" style="background:var(--danger)" onclick="fecharModal()">CANCELAR</button>
-    </div>
-</div>
+<div id="modal-assinatura"><div class="modal-content"><h3>Assinatura</h3><canvas id="signature-pad"></canvas><button class="btn" style="background:var(--success)" onclick="confirmarEntrega()">CONFIRMAR</button><button class="btn" style="background:var(--danger)" onclick="fecharModal()">CANCELAR</button></div></div>
 
 <script type="module">
     import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    let dados = [];
-    let idAtual = null;
-    let pad;
-
+    let dados = [], idDocAtual = null, pad, html5QrCode;
     window.onload = () => {
         pad = new SignaturePad(document.getElementById('signature-pad'));
         document.getElementById('recebidoPor').value = localStorage.getItem('user') || "";
-        
-        // Monitorar Mudanças na Nuvem
-        if(window.db) {
-            const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
-            onSnapshot(q, (snap) => {
-                dados = snap.docs.map(d => ({ idDoc: d.id, ...d.data() }));
-                render();
-            });
-        }
+        const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
+        onSnapshot(q, (snap) => { dados = snap.docs.map(d => ({ idDoc: d.id, ...d.data() })); render(); });
     };
-
-    window.salvarNuvem = async () => {
-        const dest = document.getElementById('destinatario').value;
-        if(!dest) return alert("Digite o nome!");
-        
-        try {
-            await addDoc(collection(window.db, "encomendas"), {
-                dest: dest,
-                local: document.getElementById('local').value,
-                rastreio: document.getElementById('rastreio').value,
-                recebidoPor: document.getElementById('recebidoPor').value,
-                dataEntrada: new Date().toISOString(),
-                status: "PENDENTE"
-            });
-            document.getElementById('destinatario').value = "";
-            document.getElementById('local').value = "";
-            document.getElementById('rastreio').value = "";
-            alert("Salvo com sucesso!");
-        } catch (e) { alert("Erro ao salvar: " + e.message); }
+    window.toggleAdmin = () => { document.getElementById('campos-local').style.display = document.getElementById('isAdmin').checked ? 'none' : 'flex'; };
+    window.alternarScanner = () => {
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            let t = "TRANSPORTADORA";
+            if (text.startsWith("3320") || text.startsWith("UP19")) t = "IMILE";
+            if (text.startsWith("BR") || text.includes("SPX")) t = "SHOPEE";
+            document.getElementById('rastreio').value = `${t}: ${text}`;
+            html5QrCode.stop();
+        });
     };
-
+    window.salvarNaNuvem = async () => {
+        const d = document.getElementById('destinatario').value;
+        if (!d) return alert("Preencha o nome!");
+        await addDoc(collection(window.db, "encomendas"), {
+            dest: d,
+            local: document.getElementById('isAdmin').checked ? "ADMINISTRAÇÃO" : `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
+            rastreio: document.getElementById('rastreio').value || "MANUAL",
+            recebidoPor: document.getElementById('recebidoPor').value,
+            dataEntrada: new Date().toISOString(),
+            status: "PENDENTE",
+            assinatura: null
+        });
+        document.getElementById('destinatario').value = ""; document.getElementById('rastreio').value = "";
+    };
     window.render = () => {
-        const lp = document.getElementById('lista-pendentes');
-        const lr = document.getElementById('lista-retiradas');
-        const busca = document.getElementById('busca-pen').value.toLowerCase();
+        const lp = document.getElementById('lista-pendentes'), lr = document.getElementById('lista-retiradas'), busca = document.getElementById('busca-pen').value.toLowerCase();
         lp.innerHTML = ""; lr.innerHTML = "";
-
         dados.forEach(i => {
-            const texto = `${i.dest} ${i.local}`.toLowerCase();
-            if(!texto.includes(busca)) return;
-
-            const html = `
-                <div class="item-row ${i.status==='ENTREGUE'?'entregue':''}">
-                    <b>${i.dest.toUpperCase()}</b> - ${i.local}<br>
-                    <small>Rastreio: ${i.rastreio}</small><br>
-                    ${i.status === 'PENDENTE' 
-                        ? `<button class="btn" style="background:var(--warning); color:#000" onclick="abrirModal('${i.idDoc}')">ENTREGAR</button>` 
-                        : `<small style="color:green">Retirado em: ${new Date(i.dataRetirada).toLocaleString()}</small>`}
-                </div>`;
-            
-            if(i.status === 'PENDENTE') lp.innerHTML += html;
-            else lr.innerHTML += html;
+            const html = `<div class="item-row ${i.status==='ENTREGUE'?'entregue':''}"><b>${i.dest.toUpperCase()}</b><br>${i.local}<br><small>${i.rastreio}</small><br>
+                ${i.status==='PENDENTE' ? `<button class="btn" style="background:var(--warning);color:#000;margin-top:10px" onclick="abrirModal('${i.idDoc}')">✍️ ASSINAR</button>` : `<img src="${i.assinatura}" style="height:40px;margin-top:5px;border:1px solid #ddd">`}</div>`;
+            if (i.status === 'PENDENTE' && (i.dest.toLowerCase().includes(busca) || i.local.toLowerCase().includes(busca))) lp.innerHTML += html;
+            if (i.status === 'ENTREGUE') lr.innerHTML += html;
         });
     };
-
-    window.abrirModal = (id) => { idAtual = id; document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); };
-    window.fecharModal = () => document.getElementById('modal-assinatura').style.display='none';
-    
+    window.abrirModal = (id) => { idDocAtual = id; document.getElementById('modal-assinatura').style.display = 'flex'; pad.clear(); };
+    window.fecharModal = () => document.getElementById('modal-assinatura').style.display = 'none';
     window.confirmarEntrega = async () => {
-        if(pad.isEmpty()) return alert("Peça para o morador assinar!");
-        const ref = doc(window.db, "encomendas", idAtual);
-        await updateDoc(ref, { 
-            status: "ENTREGUE", 
-            dataRetirada: new Date().toISOString(), 
-            assinatura: pad.toDataURL() 
-        });
+        if (pad.isEmpty()) return alert("Assine!");
+        await updateDoc(doc(window.db, "encomendas", idDocAtual), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: pad.toDataURL() });
         fecharModal();
     };
-
-    window.switchTab = (tab) => {
-        document.getElementById('aba-registro').style.display = tab==='registro'?'block':'none';
-        document.getElementById('aba-pendentes').style.display = tab==='pendentes'?'block':'none';
-        document.getElementById('aba-retiradas').style.display = tab==='retiradas'?'block':'none';
+    window.switchTab = (t) => {
+        document.getElementById('aba-registro').style.display = t==='registro'?'block':'none';
+        document.getElementById('aba-pendentes').style.display = t==='pendentes'?'block':'none';
+        document.getElementById('aba-retiradas').style.display = t==='retiradas'?'block':'none';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        if(tab==='registro') document.getElementById('t1').classList.add('active');
-        if(tab==='pendentes') document.getElementById('t2').classList.add('active');
-        if(tab==='retiradas') document.getElementById('t3').classList.add('active');
+        document.getElementById('tab'+(t==='registro'?'1':t==='pendentes'?'2':'3')).classList.add('active');
     };
 </script>
 </body>
