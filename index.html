@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital Pro</title>
-    <link rel="manifest" href="manifest.json?v=22">
+    <link rel="manifest" href="manifest.json?v=23">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO DO SEU FIREBASE (portari-digiral-v3)
         const firebaseConfig = {
             apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
             authDomain: "portari-digiral-v3.firebaseapp.com",
@@ -26,6 +25,7 @@
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f0f2f5; }
@@ -38,36 +38,26 @@
         .container { padding: 12px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
         
-        /* --- CORREÇÃO DO LAYOUT ADMINISTRAÇÃO --- */
-        .admin-box { 
-            display: flex; 
-            align-items: center; 
-            justify-content: flex-start; /* Alinha tudo à esquerda */
-            gap: 10px; /* Mantém o texto bem próximo ao botão (check) */
-            background: #f8f9fa; 
-            padding: 10px 15px; /* Ajuste leve no padding lateral */
-            border-radius: 8px; 
-            margin-bottom: 12px; 
-            border: 1px dashed #ccc; 
-            cursor: pointer; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: #555; 
-        }
-        .admin-box input { width: auto; margin: 0; cursor: pointer; }
-        /* --------------------------------------- */
+        .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 10px; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; cursor: pointer; font-size: 13px; font-weight: 600; color: #555; }
+        .admin-box input { width: auto; margin: 0; }
 
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; outline: none; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; margin-top: 4px; }
         .btn-scan { background: #6f42c1; margin-bottom: 12px; }
         .btn-add { background: var(--success); }
+        .btn-pdf { background: #333; color: white; font-size: 10px; padding: 5px 10px; width: auto; margin-top: 10px; }
+        
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
+        .item-row b { font-size: 15px; display: block; }
+        .item-row small { color: #666; display: block; margin-top: 3px; font-size: 12px; }
+
         .btn-coletar { background: var(--warning); color: #000; padding: 10px; border-radius: 6px; border: none; font-weight: bold; width: 100%; margin-top: 10px; }
+        
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
         canvas { border: 1px solid #ddd; background: #fff; width: 100%; height: 180px; touch-action: none; border-radius: 6px; margin: 10px 0; }
-        .sign-img { height: 45px; margin-top: 8px; border: 1px solid #eee; border-radius: 4px; display: block; }
+        .sign-img { height: 50px; margin-top: 8px; border: 1px solid #eee; border-radius: 4px; display: block; background: #fdfdfd; }
     </style>
 </head>
 <body>
@@ -84,21 +74,17 @@
     <div class="card">
         <div id="reader" style="width:100%; border-radius:8px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
         <button class="btn btn-scan" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-        
         <input type="text" id="recebidoPor" placeholder="Porteiro de Plantão">
-        
         <label class="admin-box">
             <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
         </label>
-
         <input type="text" id="destinatario" placeholder="Nome do Destinatário">
         <div id="campos-local" style="display: flex; gap: 8px;">
             <input type="text" id="apto" placeholder="Apto" style="flex:1">
             <input type="text" id="bloco" placeholder="Bloco" style="flex:1">
         </div>
         <input type="text" id="rastreio" placeholder="Rastreio ou transportadora...">
-        
-        <button class="btn btn-add" onclick="salvarNaNuvem()">➕ REGISTRAR NA NUVEM</button>
+        <button class="btn btn-add" onclick="salvarNaNuvem()">➕ REGISTRAR ENTRADA</button>
     </div>
 </div>
 
@@ -108,6 +94,7 @@
 </div>
 
 <div id="aba-retiradas" class="container" style="display:none">
+    <input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()" style="border: 2px solid var(--success)">
     <div id="lista-retiradas"></div>
 </div>
 
@@ -130,7 +117,6 @@
     window.onload = () => {
         pad = new SignaturePad(document.getElementById('signature-pad'));
         document.getElementById('recebidoPor').value = localStorage.getItem('user') || "";
-        
         const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
         onSnapshot(q, (snap) => {
             dados = snap.docs.map(d => ({ idDoc: d.id, ...d.data() }));
@@ -141,13 +127,7 @@
     window.toggleAdmin = () => {
         const isAdm = document.getElementById('isAdmin').checked;
         document.getElementById('campos-local').style.display = isAdm ? 'none' : 'flex';
-        if(isAdm) {
-            document.getElementById('destinatario').value = "ADMINISTRAÇÃO";
-            document.getElementById('apto').value = "";
-            document.getElementById('bloco').value = "";
-        } else {
-            document.getElementById('destinatario').value = "";
-        }
+        document.getElementById('destinatario').value = isAdm ? "ADMINISTRAÇÃO" : "";
     };
 
     window.alternarScanner = () => {
@@ -161,70 +141,91 @@
             else if (c.startsWith("999") || c.startsWith("888")) t = "J&T EXPRESS";
             document.getElementById('rastreio').value = `${t}: ${c}`;
             html5QrCode.stop();
-        }).catch(err => alert("Câmera não iniciada."));
+        }).catch(() => {});
     };
 
     window.salvarNaNuvem = async () => {
         const d = document.getElementById('destinatario').value;
         const q = document.getElementById('recebidoPor').value;
-        const aptoVal = document.getElementById('apto').value;
-        const blocoVal = document.getElementById('bloco').value;
-
-        if (!d || !q) return alert("Preencha o destinatário!");
-
+        if (!d || !q) return alert("Preencha os dados!");
         localStorage.setItem('user', q);
         try {
             await addDoc(collection(window.db, "encomendas"), {
                 dest: d,
-                local: document.getElementById('isAdmin').checked ? "ADMINISTRAÇÃO" : `Apto ${aptoVal} Bl ${blocoVal}`,
+                local: document.getElementById('isAdmin').checked ? "ADMINISTRAÇÃO" : `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
                 rastreio: document.getElementById('rastreio').value || "MANUAL",
                 recebidoPor: q,
-                dataEntrada: new Date().toISOString(),
+                dataEntrada: new Date().toLocaleString('pt-BR'),
                 status: "PENDENTE"
             });
-            
-            // LIMPEZA DOS CAMPOS
             document.getElementById('destinatario').value = "";
             document.getElementById('rastreio').value = "";
             document.getElementById('apto').value = "";
             document.getElementById('bloco').value = "";
             document.getElementById('isAdmin').checked = false;
-            document.getElementById('campos-local').style.display = 'flex';
-            
-            alert("✅ Salvo na Nuvem!");
-        } catch (e) { alert("❌ Erro de conexão."); }
+            toggleAdmin();
+            alert("✅ Salvo!");
+        } catch (e) { alert("Erro ao salvar."); }
     };
 
     window.render = () => {
         const lp = document.getElementById('lista-pendentes'), lr = document.getElementById('lista-retiradas');
-        const busca = document.getElementById('busca-pen').value.toLowerCase();
+        const bPen = document.getElementById('busca-pen').value.toLowerCase();
+        const bHis = document.getElementById('busca-his').value.toLowerCase();
         lp.innerHTML = ""; lr.innerHTML = "";
 
         dados.forEach(i => {
             const texto = `${i.dest} ${i.local}`.toLowerCase();
-            const html = `
-                <div class="item-row ${i.status==='ENTREGUE'?'entregue':''}">
+            if (i.status === 'PENDENTE' && texto.includes(bPen)) {
+                lp.innerHTML += `
+                <div class="item-row">
                     <b>${i.dest.toUpperCase()}</b>
-                    <small>${i.local}</small>
-                    <small>Rastreio: ${i.rastreio}</small>
-                    ${i.status==='PENDENTE' 
-                        ? `<button class="btn-coletar" onclick="abrirModal('${i.idDoc}')">✍️ ASSINAR SAÍDA</button>` 
-                        : `<img src="${i.assinatura}" class="sign-img">`}
+                    <small>${i.local} | Entrada: ${i.dataEntrada}</small>
+                    <button class="btn-coletar" onclick="abrirModal('${i.idDoc}')">✍️ COLETAR ASSINATURA</button>
                 </div>`;
-
-            if (i.status === 'PENDENTE' && texto.includes(busca)) lp.innerHTML += html;
-            if (i.status === 'ENTREGUE') lr.innerHTML += html;
+            } else if (i.status === 'ENTREGUE' && texto.includes(bHis)) {
+                lr.innerHTML += `
+                <div class="item-row entregue">
+                    <b>${i.dest.toUpperCase()}</b>
+                    <small>📍 ${i.local}</small>
+                    <small>📥 Entrada: ${i.dataEntrada}</small>
+                    <small>📤 Retirada: ${i.dataRetirada}</small>
+                    <img src="${i.assinatura}" class="sign-img">
+                    <button class="btn btn-pdf" onclick="exportarPDF('${i.idDoc}')">📄 GERAR PROTOCOLO PDF</button>
+                </div>`;
+            }
         });
+    };
+
+    window.exportarPDF = (id) => {
+        const item = dados.find(d => d.idDoc === id);
+        const { jsPDF } = window.jspdf;
+        const docPDF = new jsPDF();
+        
+        docPDF.setFontSize(18);
+        docPDF.text("PROTOCOLO DE ENTREGA - PORTARIA", 20, 20);
+        docPDF.setFontSize(12);
+        docPDF.text(`Destinatário: ${item.dest.toUpperCase()}`, 20, 40);
+        docPDF.text(`Local: ${item.local}`, 20, 50);
+        docPDF.text(`Rastreio/Transp: ${item.rastreio}`, 20, 60);
+        docPDF.text(`Data Entrada: ${item.dataEntrada}`, 20, 70);
+        docPDF.text(`Data Retirada: ${item.dataRetirada}`, 20, 80);
+        docPDF.text(`Recebido por: ${item.recebidoPor}`, 20, 90);
+        
+        docPDF.text("Assinatura do Morador:", 20, 110);
+        docPDF.addImage(item.assinatura, 'PNG', 20, 115, 60, 25);
+        
+        docPDF.save(`protocolo_${item.dest}.pdf`);
     };
 
     window.abrirModal = (id) => { idDocAtual = id; document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); };
     window.fecharModal = () => document.getElementById('modal-assinatura').style.display='none';
 
     window.confirmarEntrega = async () => {
-        if (pad.isEmpty()) return alert("Assine primeiro!");
+        if (pad.isEmpty()) return alert("Assine!");
         await updateDoc(doc(window.db, "encomendas", idDocAtual), {
             status: "ENTREGUE",
-            dataRetirada: new Date().toISOString(),
+            dataRetirada: new Date().toLocaleString('pt-BR'),
             assinatura: pad.toDataURL()
         });
         fecharModal();
