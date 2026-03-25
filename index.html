@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
     <title>Controle Encomendas</title>
-    <link rel="manifest" href="manifest.json?v=29">
+    <link rel="manifest" href="manifest.json?v=30">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -38,27 +38,18 @@
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .container { padding: 12px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        
-        /* Alinhamento corrigido */
         .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 10px; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 14px; font-weight: 600; color: #555; cursor: pointer; }
-        .admin-box input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; }
-
+        .admin-box input { width: 18px; height: 18px; margin: 0; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; outline: none; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; font-size: 14px; }
-        
         .temp-item { background: #fffde7; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 12px; border: 1px solid #ffe082; display: flex; justify-content: space-between; align-items: center; }
         .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
-        
-        /* Fundo branco forçado para assinaturas */
-        .sign-img { height: 60px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; display: block; background: #ffffff !important; }
+        .sign-img { height: 60px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; display: block; background: #fff; }
         .btn-pdf { background: #333; color: white; font-size: 10px; padding: 6px 10px; width: auto; margin-top: 5px; }
-        
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
-        
-        /* Canvas com fundo branco */
-        canvas { border: 2px solid #333; background: #ffffff !important; width: 100%; height: 180px; border-radius: 6px; touch-action: none; display: block; }
+        canvas { border: 2px solid #333; background: #fff; width: 100%; height: 180px; border-radius: 6px; touch-action: none; }
     </style>
 </head>
 <body>
@@ -77,12 +68,7 @@
         <hr style="opacity: 0.1; margin: 15px 0;">
         <div id="reader" style="width:100%; border-radius:8px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
         <button class="btn" style="background:#6f42c1; margin-bottom:10px;" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-        
-        <label class="admin-box">
-            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 
-            <span>Entrega Para Administração</span>
-        </label>
-        
+        <label class="admin-box"><input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> <span>Entrega Para Administração</span></label>
         <input type="text" id="destinatario" placeholder="Nome do Destinatário">
         <div id="campos-local" style="display: flex; gap: 8px;"><input type="text" id="apto" placeholder="Apto" style="flex:1"><input type="text" id="bloco" placeholder="Bl" style="flex:1"></div>
         <input type="text" id="rastreio" placeholder="Rastreio/Transportadora">
@@ -107,9 +93,7 @@
     <div class="modal-content">
         <h3>Assinatura de Retirada</h3>
         <input type="text" id="quemRetirou" placeholder="Nome de quem está retirando">
-        <div style="background: white; padding: 5px; border-radius: 8px;">
-            <canvas id="signature-pad"></canvas>
-        </div>
+        <canvas id="signature-pad"></canvas>
         <div style="display: flex; gap: 8px; margin-top:10px;">
             <button class="btn" style="background:var(--danger); flex:1" onclick="fecharModal()">CANCELAR</button>
             <button class="btn" style="background:var(--success); flex:1" onclick="confirmarEntrega()">CONFIRMAR</button>
@@ -131,7 +115,6 @@
     window.onload = () => {
         const canvas = document.getElementById('signature-pad');
         pad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
-        
         const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
         onSnapshot(q, (snap) => {
             dados = snap.docs.map(d => ({ idDoc: d.id, ...d.data() }));
@@ -216,19 +199,16 @@
         const item = dados.find(d => d.idDoc === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.setFillColor(255, 255, 255);
-        docP.rect(0, 0, 210, 297, 'F'); // Garante fundo branco no PDF
         docP.setFontSize(16); docP.text("PROTOCOLO DE ENTREGA", 20, 20);
         docP.setFontSize(10);
-        docP.text(`Destinatário: ${item.dest}`, 20, 40);
-        docP.text(`Local: ${item.local}`, 20, 50);
-        docP.text(`Transportadora: ${item.rastreio}`, 20, 60);
-        docP.text(`Funcionário Portaria: ${item.recebidoPor}`, 20, 70);
-        docP.text(`Data Entrada: ${formatData(item.dataEntrada)}`, 20, 80);
-        docP.text(`Data Retirada: ${formatData(item.dataRetirada)}`, 20, 90);
-        docP.text(`Quem Retirou: ${item.quemRetirou}`, 20, 100);
-        docP.text("Assinatura do Morador:", 20, 115);
-        docP.addImage(item.assinatura, 'PNG', 20, 120, 70, 30);
+        docP.text(`Destinatário: ${item.dest} (${item.local})`, 20, 40);
+        docP.text(`Rastreio: ${item.rastreio}`, 20, 50);
+        docP.text(`Recebido Por: ${item.recebidoPor}`, 20, 60);
+        docP.text(`Data Entrada: ${formatData(item.dataEntrada)}`, 20, 70);
+        docP.text(`Data Saída: ${formatData(item.dataRetirada)}`, 20, 80);
+        docP.text(`Retirado Por: ${item.quemRetirou}`, 20, 90);
+        docP.text("Assinatura:", 20, 105);
+        docP.addImage(item.assinatura, 'PNG', 20, 110, 60, 25);
         docP.save(`protocolo_${item.dest}.pdf`);
     };
 
@@ -236,12 +216,36 @@
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF('l', 'mm', 'a4');
         docP.text("LIVRO DE PROTOCOLO - RELATÓRIO GERAL", 14, 15);
-        const rows = dados.map(i => [formatData(i.dataEntrada), i.recebidoPor, `${i.dest} (${i.local})`, i.rastreio, i.status==='PENDENTE' ? 'EM ESPERA' : formatData(i.dataRetirada), i.quemRetirou || '-']);
+        
+        const rows = dados.map(i => [
+            formatData(i.dataEntrada),
+            i.recebidoPor,
+            `${i.dest} (${i.local})`,
+            i.rastreio,
+            i.status==='PENDENTE' ? 'PENDENTE' : formatData(i.dataRetirada),
+            i.quemRetirou || '-',
+            '' // Espaço para a imagem da assinatura
+        ]);
+
         docP.autoTable({
-            head: [['ENTRADA', 'RECEBIDO POR', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'RETIRADO POR']],
-            body: rows, startY: 20, theme: 'grid', headStyles: {fillColor: [26, 115, 232]}
+            head: [['ENTRADA', 'RECEBIDO POR', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'RETIRADO POR', 'ASSINATURA']],
+            body: rows,
+            startY: 20,
+            theme: 'grid',
+            styles: { fontSize: 8, valign: 'middle' },
+            headStyles: { fillColor: [26, 115, 232] },
+            didDrawCell: (data) => {
+                // Se for a última coluna (Assinatura) e houver uma assinatura salva
+                if (data.column.index === 6 && data.cell.section === 'body') {
+                    const item = dados[data.row.index];
+                    if (item && item.assinatura) {
+                        docP.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 25, 10);
+                    }
+                }
+            },
+            columnStyles: { 6: { cellWidth: 35 } } // Ajusta largura da coluna da assinatura
         });
-        docP.save("livro_protocolo.pdf");
+        docP.save("livro_protocolo_completo.pdf");
     };
 
     window.abrirModal = (id) => { idDocAtual = id; document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); };
@@ -251,12 +255,9 @@
         const nome = document.getElementById('quemRetirou').value;
         if (pad.isEmpty() || !nome) return alert("Preencha Nome e Assinatura!");
         
-        // Garante que o fundo da imagem salva seja branco (evita transparência preta)
         const canvas = document.getElementById('signature-pad');
-        const context = canvas.getContext('2d');
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
+        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.fillStyle = "#ffffff";
         tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
