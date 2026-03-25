@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portaria-v6-estavel'; 
+const CACHE_NAME = 'portaria-v7-imile'; 
 const assetsToCache = [
   './',
   './index.html',
@@ -18,11 +18,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
-      keys.map((key) => { 
-        if (key !== CACHE_NAME) {
-          return caches.delete(key); 
-        }
-      })
+      keys.map((key) => { if (key !== CACHE_NAME) return caches.delete(key); })
     ))
   );
   return self.clients.claim();
