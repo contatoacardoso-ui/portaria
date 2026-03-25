@@ -1,4 +1,4 @@
-const CACHE_NAME = 'protocolo-v35';
+const CACHE_NAME = 'protocolo-v37';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
