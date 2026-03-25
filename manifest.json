@@ -1,24 +1,12 @@
 {
-  "name": "Portaria Digital v37",
+  "name": "Portaria Digital v38",
   "short_name": "Portaria",
-  "description": "Sistema de Gestão de Encomendas em Nuvem",
-  "start_url": "./index.html?v=37",
+  "start_url": "./index.html?v=38",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#1a73e8",
-  "orientation": "portrait",
   "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
