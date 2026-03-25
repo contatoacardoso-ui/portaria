@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v38</title>
-    <link rel="manifest" href="manifest.json?v=38">
+    <title>Portaria Digital v39</title>
+    <link rel="manifest" href="manifest.json?v=39">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -47,35 +47,23 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; }
         .header { background: var(--primary); color: white; padding: 12px; text-align: center; }
         .header h1 { margin: 0; font-size: 18px; letter-spacing: 1px; }
-        
         .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 11px; text-transform: uppercase; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-        
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-
-        /* AJUSTES DE ALINHAMENTO DA TELA DE ENTRADA */
         .form-group { margin-bottom: 12px; width: 100%; }
-        input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s; }
-        input[type="text"]:focus { border-color: var(--primary); }
-        
+        input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; }
         .row-local { display: flex; gap: 10px; margin-bottom: 12px; }
         .row-local input { flex: 1; }
-
-        .admin-box { display: flex; align-items: center; gap: 12px; background: #f8f9fa; padding: 14px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #ccc; font-size: 14px; cursor: pointer; }
-        
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.8; }
-
+        .admin-box { display: flex; align-items: center; gap: 12px; background: #f8f9fa; padding: 14px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #ccc; font-size: 14px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 14px; }
         .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); display: block; }
         .info-col { flex: 1; display: flex; flex-direction: column; }
         .check-box { width: 25px; height: 25px; cursor: pointer; }
-
         .btn-pdf { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .sign-img { height: 60px; width: auto; max-width: 150px; margin: 8px 0; border: 1px solid #eee; border-radius: 4px; background: #fff; display: block; }
-        
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
         canvas { border: 2px solid #333; background: #fff; width: 100%; height: 180px; border-radius: 6px; }
@@ -83,7 +71,7 @@
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v38</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v39</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -95,50 +83,26 @@
     <div class="card">
         <div id="reader" style="width:100%; border-radius:8px; overflow:hidden; margin-bottom:12px; background:#000;"></div>
         <button class="btn" style="background:#6f42c1; margin-bottom:15px;" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-        
-        <div class="form-group">
-            <input type="text" id="rastreio" placeholder="Rastreio ou Transportadora">
-        </div>
-        <div class="form-group">
-            <input type="text" id="destinatario" placeholder="Nome do Destinatário">
-        </div>
-        
-        <div id="campos-local" class="row-local">
-            <input type="text" id="apto" placeholder="Apto">
-            <input type="text" id="bloco" placeholder="Bloco">
-        </div>
-
-        <div class="form-group">
-            <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)">
-        </div>
-
-        <label class="admin-box">
-            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()" style="width:20px;height:20px; cursor:pointer;"> 
-            <span>Entrega Para Administração</span>
-        </label>
-
+        <div class="form-group"><input type="text" id="rastreio" placeholder="Rastreio ou Transportadora"></div>
+        <div class="form-group"><input type="text" id="destinatario" placeholder="Nome do Destinatário"></div>
+        <div id="campos-local" class="row-local"><input type="text" id="apto" placeholder="Apto"><input type="text" id="bloco" placeholder="Bloco"></div>
+        <div class="form-group"><input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)"></div>
+        <label class="admin-box"><input type="checkbox" id="isAdmin" onchange="toggleAdmin()" style="width:20px;height:20px;"> <span>Entrega Para Administração</span></label>
         <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">➕ ADICIONAR À LISTA</button>
-        
         <div id="lista-pre-entrada" style="margin-top:20px"></div>
-        
         <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:15px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
     </div>
-    <p style="text-align:center; font-size:10px; color:#ccc; margin-top:30px; cursor:pointer;" onclick="limparBancoDeDadosTotal()">[ Manutenção ]</p>
 </div>
 
 <div id="aba-pendentes" class="container" style="display:none">
-    <div class="form-group">
-        <input type="text" id="busca-pen" placeholder="🔍 Buscar nome ou apto..." oninput="render()">
-    </div>
+    <div class="form-group"><input type="text" id="busca-pen" placeholder="🔍 Buscar nome ou apto..." oninput="render()"></div>
     <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none; margin-bottom:15px;" onclick="abrirModalLote()">✍️ RETIRAR SELECIONADOS</button>
     <div id="lista-pendentes"></div>
 </div>
 
 <div id="aba-retiradas" class="container" style="display:none">
     <button class="btn" style="background:#333; margin-bottom:15px;" onclick="gerarRelatorioGeral()">📄 LIVRO DE PROTOCOLO (PDF)</button>
-    <div class="form-group">
-        <input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()">
-    </div>
+    <div class="form-group"><input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()"></div>
     <div id="lista-retiradas"></div>
 </div>
 
@@ -215,7 +179,7 @@
 
     function atualizarListaVisual() {
         const div = document.getElementById('lista-pre-entrada');
-        div.innerHTML = listaTemp.map((i, index) => `<div style="background:#fffde7;padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;border:1px solid #ffe082; align-items:center;"><span><b>${i.dest}</b> (${i.local})</span><span style="color:var(--danger);font-weight:bold;cursor:pointer; padding:5px;" onclick="removerDaLista(${index})">REMOVER</span></div>`).join('');
+        div.innerHTML = listaTemp.map((i, index) => `<div style="background:#fffde7;padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;border:1px solid #ffe082; align-items:center;"><span><b>${i.dest}</b> (${i.local})</span><span style="color:var(--danger);font-weight:bold;cursor:pointer;" onclick="removerDaLista(${index})">REMOVER</span></div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
@@ -265,6 +229,7 @@
     window.confirmarEntrega = async () => {
         const nomeRaw = document.getElementById('quemRetirou').value;
         if (pad.isEmpty() || !nomeRaw) return alert("Preencha Nome e Assinatura!");
+        
         const canvas = document.getElementById('signature-pad');
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -274,9 +239,17 @@
         tempCtx.drawImage(canvas, 0, 0);
         const img = tempCanvas.toDataURL('image/png');
         const nomeCap = capitalizarNome(nomeRaw);
-        for (const id of idsParaRetirar) { await updateDoc(doc(window.db, "encomendas", id), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: img, quemRetirou: nomeCap }); }
+
+        for (const id of idsParaRetirar) { 
+            await updateDoc(doc(window.db, "encomendas", id), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: img, quemRetirou: nomeCap }); 
+        }
+
         document.getElementById('quemRetirou').value = "";
         idsParaRetirar = [];
+        
+        // CORREÇÃO: Força o botão a sumir imediatamente
+        document.getElementById('btn-retirar-lote').style.display = 'none';
+        
         fecharModal();
     };
 
