@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v33</title>
-    <link rel="manifest" href="manifest.json?v=33">
+    <title>Portaria Digital v34</title>
+    <link rel="manifest" href="manifest.json?v=34">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -22,23 +22,16 @@
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
 
-        // CONFIGURAÇÃO DE SEGURANÇA
         const SENHA_MESTRA = "admin123"; 
 
         window.limparBancoDeDadosTotal = async () => {
-            const senhaDigitada = prompt("Digite a senha de administrador para resetar o sistema:");
-            
+            const senhaDigitada = prompt("Senha de administrador:");
             if (senhaDigitada === SENHA_MESTRA) {
-                if(confirm("CONFIRMAÇÃO FINAL: Isso apagará TODOS os registros permanentemente. Deseja continuar?")) {
+                if(confirm("Apagar TUDO?")) {
                     const querySnapshot = await getDocs(collection(window.db, "encomendas"));
-                    for (const documento of querySnapshot.docs) {
-                        await deleteDoc(doc(window.db, "encomendas", documento.id));
-                    }
-                    alert("Sistema reiniciado com sucesso!");
+                    for (const documento of querySnapshot.docs) { await deleteDoc(doc(window.db, "encomendas", documento.id)); }
                     location.reload();
                 }
-            } else if (senhaDigitada !== null) {
-                alert("Senha incorreta! Acesso negado.");
             }
         };
     </script>
@@ -58,23 +51,25 @@
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .container { padding: 12px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 12px; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 14px; font-weight: 600; color: #444; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; }
         
-        .admin-box { display: flex; align-items: center; justify-content: flex-start; gap: 12px; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #ccc; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; }
-        .admin-box input[type="checkbox"] { width: 22px; height: 22px; margin: 0; flex-shrink: 0; }
-
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 8px; outline: none; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; margin-top: 4px; cursor: pointer; font-size: 14px; }
-        .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* ESTILO DOS ITENS COM CHECKBOX */
+        .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
-        .sign-img { height: 60px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; display: block; background: #fff; }
+        .info-col { flex: 1; display: flex; flex-direction: column; }
+        .check-box { width: 25px; height: 25px; cursor: pointer; }
+
+        .sign-img { height: 60px; margin: 8px 0; border: 1px solid #ccc; background: #fff; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
-        canvas { border: 2px solid #333; background: #fff; width: 100%; height: 180px; border-radius: 6px; touch-action: none; }
+        canvas { border: 2px solid #333; background: #fff; width: 100%; height: 180px; border-radius: 6px; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>PORTARIA DIGITAL v33</h1></div>
+<div class="header"><h1>PORTARIA DIGITAL v34</h1></div>
 
 <div class="tabs">
     <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -86,26 +81,21 @@
     <div class="card">
         <div id="reader" style="width:100%; border-radius:8px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
         <button class="btn" style="background:#6f42c1; margin-bottom:15px;" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-        
         <input type="text" id="rastreio" placeholder="Rastreio/Transportadora">
         <input type="text" id="destinatario" placeholder="Nome do Destinatário">
         <div id="campos-local" style="display: flex; gap: 8px;"><input type="text" id="apto" placeholder="Apto" style="flex:1"><input type="text" id="bloco" placeholder="Bl" style="flex:1"></div>
         <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)">
-        
-        <label class="admin-box">
-            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 
-            <span>Entrega Para Administração</span>
-        </label>
-        
+        <label class="admin-box"><input type="checkbox" id="isAdmin" onchange="toggleAdmin()" style="width:20px;height:20px;"> <span>Entrega Para Administração</span></label>
         <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">➕ ADICIONAR À LISTA</button>
         <div id="lista-pre-entrada" style="margin-top:15px"></div>
         <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:15px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
     </div>
-    <p style="text-align:center; font-size:10px; color:#ddd; margin-top:30px; cursor:pointer;" onclick="limparBancoDeDadosTotal()">[ Manutenção do Sistema ]</p>
+    <p style="text-align:center; font-size:10px; color:#ddd; margin-top:30px; cursor:pointer;" onclick="limparBancoDeDadosTotal()">[ Manutenção ]</p>
 </div>
 
 <div id="aba-pendentes" class="container" style="display:none">
     <input type="text" id="busca-pen" placeholder="🔍 Buscar nome ou apto..." oninput="render()">
+    <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none; margin-bottom:10px;" onclick="abrirModalLote()">✍️ RETIRAR SELECIONADOS</button>
     <div id="lista-pendentes"></div>
 </div>
 
@@ -117,7 +107,7 @@
 
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h3>Assinatura de Retirada</h3>
+        <h3 id="titulo-modal">Assinatura</h3>
         <input type="text" id="quemRetirou" placeholder="Nome de quem está retirando">
         <canvas id="signature-pad"></canvas>
         <div style="display: flex; gap: 8px; margin-top:10px;">
@@ -130,7 +120,7 @@
 <script type="module">
     import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let dados = [], listaTemp = [], idDocAtual = null, pad, html5QrCode;
+    let dados = [], listaTemp = [], idsParaRetirar = [], pad, html5QrCode;
     
     const formatData = (d) => {
         if(!d) return "-";
@@ -139,8 +129,7 @@
     };
 
     window.onload = () => {
-        const canvas = document.getElementById('signature-pad');
-        pad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
+        pad = new SignaturePad(document.getElementById('signature-pad'), { backgroundColor: 'rgb(255, 255, 255)' });
         const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
         onSnapshot(q, (snap) => {
             dados = snap.docs.map(d => ({ idDoc: d.id, ...d.data() }));
@@ -165,8 +154,7 @@
             else if (c.startsWith("MLE") || c.startsWith("MLB")) t = "MERCADO LIVRE";
             else if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) t = "CORREIOS";
             document.getElementById('rastreio').value = `${t}: ${c}`;
-            html5QrCode.stop();
-            document.getElementById('destinatario').focus();
+            html5QrCode.stop(); document.getElementById('destinatario').focus();
         }).catch(() => {});
     };
 
@@ -174,7 +162,7 @@
         const dest = document.getElementById('destinatario').value;
         const aptoVal = document.getElementById('apto').value;
         const blVal = document.getElementById('bloco').value;
-        if (!dest) return alert("Digite o nome do destinatário!");
+        if (!dest) return alert("Digite o nome!");
         let localStr = document.getElementById('isAdmin').checked ? "ADMIN" : `Apto ${aptoVal} Bl ${blVal}`;
         listaTemp.push({ dest: dest.toUpperCase(), local: localStr, rastreio: document.getElementById('rastreio').value || "MANUAL", dataEntrada: new Date().toISOString(), status: "PENDENTE" });
         atualizarListaVisual();
@@ -185,7 +173,7 @@
 
     function atualizarListaVisual() {
         const div = document.getElementById('lista-pre-entrada');
-        div.innerHTML = listaTemp.map((i, index) => `<div class="temp-item" style="background:#fffde7;padding:8px;border-radius:6px;margin-bottom:5px;font-size:12px;display:flex;justify-content:space-between;border:1px solid #ffe082;"><span><b>${i.dest}</b> (${i.local})</span><span style="color:red;font-weight:bold;padding:0 10px;" onclick="removerDaLista(${index})">✖</span></div>`).join('');
+        div.innerHTML = listaTemp.map((i, index) => `<div style="background:#fffde7;padding:8px;border-radius:6px;margin-bottom:5px;font-size:12px;display:flex;justify-content:space-between;border:1px solid #ffe082;"><span><b>${i.dest}</b> (${i.local})</span><span style="color:red;font-weight:bold;cursor:pointer" onclick="removerDaLista(${index})">✖</span></div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
@@ -193,9 +181,14 @@
 
     window.salvarTudoNoFirebase = async () => {
         const func = document.getElementById('recebidoPor').value;
-        if (!func) return alert("Digite o nome do funcionário!");
+        if (!func) return alert("Nome do funcionário é obrigatório!");
         for (const item of listaTemp) { item.recebidoPor = func; await addDoc(collection(window.db, "encomendas"), item); }
-        alert("✅ Registrado com sucesso!"); listaTemp = []; atualizarListaVisual();
+        alert("✅ Sucesso!");
+        
+        // LIMPEZA TOTAL DA TELA DE ENTRADA
+        listaTemp = [];
+        document.getElementById('recebidoPor').value = ""; 
+        atualizarListaVisual();
     };
 
     window.render = () => {
@@ -205,11 +198,61 @@
         dados.forEach(i => {
             const txt = `${i.dest} ${i.local}`.toLowerCase();
             if (i.status === 'PENDENTE' && txt.includes(bP)) {
-                lp.innerHTML += `<div class="item-row"><b>${i.dest} (${i.local})</b><small>Entrada: ${formatData(i.dataEntrada)}</small><button class="btn" style="background:var(--warning);color:#000;padding:8px;font-size:12px;" onclick="abrirModal('${i.idDoc}')">✍️ RETIRAR</button></div>`;
+                lp.innerHTML += `
+                <div class="item-row">
+                    <input type="checkbox" class="check-box" value="${i.idDoc}" onchange="atualizarBotaoLote()">
+                    <div class="info-col">
+                        <b>${i.dest} (${i.local})</b>
+                        <small>Entrada: ${formatData(i.dataEntrada)}</small>
+                    </div>
+                </div>`;
             } else if (i.status === 'ENTREGUE' && txt.includes(bH)) {
-                lr.innerHTML += `<div class="item-row entregue"><b>${i.dest}</b><small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small><small>📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small><img src="${i.assinatura}" class="sign-img"><button class="btn" style="background:#333;font-size:10px;padding:6px;width:auto;" onclick="exportarIndividual('${i.idDoc}')">📄 PROTOCOLO</button></div>`;
+                lr.innerHTML += `<div class="item-row entregue"><div class="info-col"><b>${i.dest}</b><small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small><small>📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small><img src="${i.assinatura}" class="sign-img"></div><button class="btn" style="background:#333;font-size:10px;padding:6px;width:auto;" onclick="exportarIndividual('${i.idDoc}')">📄</button></div>`;
             }
         });
+    };
+
+    window.atualizarBotaoLote = () => {
+        const selecionados = document.querySelectorAll('.check-box:checked');
+        document.getElementById('btn-retirar-lote').style.display = selecionados.length > 0 ? 'block' : 'none';
+        document.getElementById('btn-retirar-lote').innerText = `✍️ RETIRAR SELECIONADOS (${selecionados.length})`;
+    };
+
+    window.abrirModalLote = () => {
+        const selecionados = document.querySelectorAll('.check-box:checked');
+        idsParaRetirar = Array.from(selecionados).map(cb => cb.value);
+        document.getElementById('titulo-modal').innerText = `Retirada de ${idsParaRetirar.length} item(ns)`;
+        document.getElementById('modal-assinatura').style.display='flex';
+        pad.clear();
+    };
+
+    window.fecharModal = () => document.getElementById('modal-assinatura').style.display='none';
+
+    window.confirmarEntrega = async () => {
+        const nome = document.getElementById('quemRetirou').value;
+        if (pad.isEmpty() || !nome) return alert("Preencha Nome e Assinatura!");
+        
+        const canvas = document.getElementById('signature-pad');
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.fillStyle = "#ffffff";
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(canvas, 0, 0);
+        const img = tempCanvas.toDataURL('image/png');
+
+        for (const id of idsParaRetirar) {
+            await updateDoc(doc(window.db, "encomendas", id), {
+                status: "ENTREGUE",
+                dataRetirada: new Date().toISOString(),
+                assinatura: img,
+                quemRetirou: nome.toUpperCase()
+            });
+        }
+        
+        document.getElementById('quemRetirou').value = "";
+        fecharModal();
+        alert("Retirada concluída!");
     };
 
     window.exportarIndividual = (id) => {
@@ -224,8 +267,7 @@
         docP.text(`Data Entrada: ${formatData(item.dataEntrada)}`, 20, 70);
         docP.text(`Data Saída: ${formatData(item.dataRetirada)}`, 20, 80);
         docP.text(`Retirado Por: ${item.quemRetirou}`, 20, 90);
-        docP.text("Assinatura:", 20, 105);
-        docP.addImage(item.assinatura, 'PNG', 20, 110, 60, 25);
+        docP.addImage(item.assinatura, 'PNG', 20, 100, 60, 25);
         docP.save(`protocolo_${item.dest}.pdf`);
     };
 
@@ -241,31 +283,12 @@
             didDrawCell: (data) => {
                 if (data.column.index === 6 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
-                    if (item && item.assinatura) {
-                        docP.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 31, 12);
-                    }
+                    if (item && item.assinatura) { docP.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 31, 12); }
                 }
             },
             columnStyles: { 6: { cellWidth: 35 } }
         });
         docP.save("livro_protocolo.pdf");
-    };
-
-    window.abrirModal = (id) => { idDocAtual = id; document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); };
-    window.fecharModal = () => document.getElementById('modal-assinatura').style.display='none';
-
-    window.confirmarEntrega = async () => {
-        const nome = document.getElementById('quemRetirou').value;
-        if (pad.isEmpty() || !nome) return alert("Preencha Nome e Assinatura!");
-        const canvas = document.getElementById('signature-pad');
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.fillStyle = "#ffffff";
-        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        tempCtx.drawImage(canvas, 0, 0);
-        await updateDoc(doc(window.db, "encomendas", idDocAtual), { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: tempCanvas.toDataURL('image/png'), quemRetirou: nome });
-        document.getElementById('quemRetirou').value = ""; fecharModal();
     };
 
     window.switchTab = (t) => {
