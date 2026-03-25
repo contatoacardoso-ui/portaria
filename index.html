@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital Pro</title>
+    <title>Portaria Cloud Pro</title>
 
-    <link rel="manifest" href="manifest.json?v=13">
+    <link rel="manifest" href="manifest.json?v=16">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO SEU FIREBASE - APENAS PREENCHA O QUE ESTÁ ENTRE AS ASPAS
+        const firebaseConfig = {
+  const firebaseConfig = {
+  apiKey: "AIzaSyBfZDAEGaSbzm6W63yTqYo01dnnSrOqIzM",
+  authDomain: "portari-digiral-v3.firebaseapp.com",
+  projectId: "portari-digiral-v3",
+  storageBucket: "portari-digiral-v3.firebasestorage.app",
+  messagingSenderId: "859559354841",
+  appId: "1:859559354841:web:2926bdeb4536029e29b9c8"
+};
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+    </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -16,261 +34,126 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --dark: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #333; padding-bottom: 20px; }
-        
-        /* Navegação por Abas */
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; padding-bottom: 20px; }
         .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 12px 5px; border: none; background: none; font-weight: bold; color: #666; cursor: pointer; border-bottom: 3px solid transparent; font-size: 11px; }
+        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; text-align: center; box-sizing: border-box; }
-        .btn-scan { background: #6f42c1; }
-        .btn-add { background: var(--success); }
-        .btn-entregar { background: var(--warning); color: #000; padding: 10px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-top: 10px; }
-        
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
-        .search-box { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 2px solid var(--primary); }
-        
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; color: white; margin-top: 10px; cursor: pointer; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
         .item-row { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
-        
-        .badge { background: var(--danger); color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 3px; }
-        
-        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
-        canvas { border: 2px solid #ddd; background: #fff; width: 100%; height: 200px; touch-action: none; border-radius: 8px; margin: 10px 0; }
-        
-        .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; font-weight: bold; color: var(--primary); font-size: 13px; }
+        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; }
+        canvas { border: 1px solid #ddd; width: 100%; height: 200px; background: #fff; touch-action: none; }
     </style>
 </head>
 <body>
 
 <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('registro')">📥 ENTRADA</button>
-    <button class="tab-btn" onclick="switchTab('pendentes')">📤 SAÍDA <span id="count-badge" class="badge">0</span></button>
-    <button class="tab-btn" onclick="switchTab('retiradas')">✅ RETIRADAS</button>
+    <button class="tab-btn active" id="btn-reg" onclick="switchTab('registro')">📥 ENTRADA</button>
+    <button class="tab-btn" id="btn-pen" onclick="switchTab('pendentes')">📤 SAÍDA</button>
+    <button class="tab-btn" id="btn-ret" onclick="switchTab('retiradas')">✅ HISTÓRICO</button>
 </div>
 
 <div id="aba-registro" class="container">
     <div class="card">
-        <h3 style="margin-top:0">Novo Registro</h3>
-        <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
-        <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
-        
-        <label>Funcionário:</label>
-        <input type="text" id="recebidoPor" placeholder="Quem está recebendo" oninput="salvarNome()">
-
-        <label class="admin-check">
-            <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
-        </label>
-
-        <label>Destinatário:</label>
-        <div style="display: flex; gap: 5px;">
-            <input type="text" id="destinatario" placeholder="Nome destinatário" style="flex:2">
-            <div id="campos-local" style="display: flex; gap: 5px; flex: 1.5;">
-                <input type="text" id="apto" placeholder="Apto" style="flex:1">
-                <input type="text" id="bloco" placeholder="Bl" style="flex:0.7">
-            </div>
-        </div>
-
-        <input type="text" id="rastreio" placeholder="Rastreio ou transportadora...">
-        <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
+        <h3 style="margin:0 0 15px 0">Nova Encomenda (Nuvem)</h3>
+        <div id="reader" style="width:100%; margin-bottom:10px;"></div>
+        <button class="btn" style="background:#6f42c1" onclick="alternarScanner()">📷 ESCANEAR</button>
+        <input type="text" id="destinatario" placeholder="Nome do Morador">
+        <input type="text" id="local" placeholder="Apto / Bloco">
+        <input type="text" id="rastreio" placeholder="Rastreio">
+        <button class="btn" style="background:var(--success)" onclick="salvarNuvem()">➕ SALVAR NA NUVEM</button>
     </div>
 </div>
 
 <div id="aba-pendentes" class="container" style="display:none">
-    <div class="search-box">
-        <input type="text" id="busca-pendente" placeholder="🔍 Buscar para entregar..." oninput="filtrarPendentes()">
-    </div>
+    <input type="text" id="busca-pen" placeholder="🔍 Buscar para entregar..." oninput="render()">
     <div id="lista-pendentes"></div>
 </div>
 
 <div id="aba-retiradas" class="container" style="display:none">
-    <div class="search-box" style="border-color: var(--success);">
-        <input type="text" id="busca-retirada" placeholder="🔍 Buscar no histórico..." oninput="filtrarRetiradas()">
-    </div>
     <div id="lista-retiradas"></div>
-    <button class="btn" style="background:var(--dark); margin-top:20px" onclick="baixarPDF()">📄 EXPORTAR PDF COMPLETO</button>
 </div>
 
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h3>Assinatura do Morador</h3>
+        <h3>Assinatura</h3>
         <canvas id="signature-pad"></canvas>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn" style="background:var(--danger); flex:1" onclick="cancelarAssinatura()">CANCELAR</button>
-            <button class="btn" style="background:var(--success); flex:1" onclick="salvarEntrega()">CONFIRMAR</button>
-        </div>
+        <button class="btn" style="background:var(--success)" onclick="confirmarEntrega()">CONFIRMAR</button>
+        <button class="btn" style="background:var(--danger)" onclick="fecharModal()">CANCELAR</button>
     </div>
 </div>
 
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=13').then(reg => {
-            reg.onupdatefound = () => {
-                const worker = reg.installing;
-                worker.onstatechange = () => {
-                    if (worker.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
-                };
-            };
-        });
-    }
+<script type="module">
+    import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let encomendas = JSON.parse(localStorage.getItem('protocolo_v6_data')) || [];
-    let idParaEntregar = null;
-    let signaturePad;
+    let dados = [];
+    let idAtual = null;
+    let pad;
 
     window.onload = () => {
-        const canvas = document.getElementById('signature-pad');
-        signaturePad = new SignaturePad(canvas);
-        document.getElementById('recebidoPor').value = localStorage.getItem('nome_usuario') || "";
-        atualizarTabelas();
+        pad = new SignaturePad(document.getElementById('signature-pad'));
+        
+        // Conexão em tempo real
+        const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
+        onSnapshot(q, (snap) => {
+            dados = snap.docs.map(d => ({ idDoc: d.id, ...d.data() }));
+            render();
+        });
     };
 
-    function switchTab(tab) {
-        document.getElementById('aba-registro').style.display = tab === 'registro' ? 'block' : 'none';
-        document.getElementById('aba-pendentes').style.display = tab === 'pendentes' ? 'block' : 'none';
-        document.getElementById('aba-retiradas').style.display = tab === 'retiradas' ? 'block' : 'none';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        
-        if(tab === 'pendentes') filtrarPendentes();
-        if(tab === 'retiradas') filtrarRetiradas();
-    }
-
-    function salvarNome() { localStorage.setItem('nome_usuario', document.getElementById('recebidoPor').value); }
-    function toggleAdmin() { document.getElementById('campos-local').style.visibility = document.getElementById('isAdmin').checked ? 'hidden' : 'visible'; }
-
-    function identificarTransportadora(codigo) {
-        const c = codigo.toUpperCase().replace(/\s/g, '');
-        if (c.startsWith("3320") || c.startsWith("UP19")) return "IMILE DELIVERY";
-        if (c.startsWith("999") || c.startsWith("888")) return "J&T EXPRESS";
-        if (/^[A-Z]{2}[0-9]{9}BR$/.test(c)) return "CORREIOS";
-        if (c.startsWith("BR") || c.includes("SPX")) return "SHOPEE";
-        return "TRANSPORTADORA";
-    }
-
-    function alternarScanner() {
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
-            document.getElementById('rastreio').value = `${identificarTransportadora(text)}: ${text}`;
-            html5QrCode.stop();
-        });
-    }
-
-    function adicionarRegistro() {
+    window.salvarNuvem = async () => {
         const dest = document.getElementById('destinatario').value;
-        const quem = document.getElementById('recebidoPor').value;
-        if (!dest || !quem) { alert("Preencha os campos!"); return; }
-
-        encomendas.push({
-            id: Date.now(),
-            dataEntrada: new Date().toISOString(),
+        if(!dest) return alert("Preencha o nome!");
+        await addDoc(collection(window.db, "encomendas"), {
             dest: dest,
-            local: document.getElementById('isAdmin').checked ? "ADMINISTRAÇÃO" : `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
-            rastreio: document.getElementById('rastreio').value || "MANUAL",
-            recebidoPor: quem,
-            status: "PENDENTE",
-            assinatura: null
+            local: document.getElementById('local').value,
+            rastreio: document.getElementById('rastreio').value,
+            dataEntrada: new Date().toISOString(),
+            status: "PENDENTE"
         });
-
-        localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
-        alert("Entrada registrada!");
         document.getElementById('destinatario').value = "";
+        document.getElementById('local').value = "";
         document.getElementById('rastreio').value = "";
-        document.getElementById('apto').value = "";
-        document.getElementById('bloco').value = "";
-        atualizarTabelas();
-    }
+    };
 
-    function filtrarPendentes() {
-        const termo = document.getElementById('busca-pendente').value.toLowerCase();
-        const lista = document.getElementById('lista-pendentes');
-        lista.innerHTML = "";
-        const filtrados = encomendas.filter(i => i.status === "PENDENTE" && (i.dest.toLowerCase().includes(termo) || i.local.toLowerCase().includes(termo) || i.rastreio.toLowerCase().includes(termo)));
+    window.render = () => {
+        const lp = document.getElementById('lista-pendentes');
+        const lr = document.getElementById('lista-retiradas');
+        lp.innerHTML = ""; lr.innerHTML = "";
         
-        filtrados.reverse().forEach(i => {
-            lista.innerHTML += `
-                <div class="item-row">
-                    <b>${i.dest.toUpperCase()}</b><br>
-                    <span style="color:var(--primary)">${i.local}</span><br>
-                    <small>Rastreio: ${i.rastreio}</small><br>
-                    <button class="btn-entregar" onclick="abrirAssinatura(${i.id})">✍️ COLETAR ASSINATURA</button>
-                </div>`;
+        dados.forEach(i => {
+            const html = `<div class="item-row ${i.status==='ENTREGUE'?'entregue':''}">
+                <b>${i.dest.toUpperCase()}</b> (${i.local})<br>
+                ${i.status==='PENDENTE' 
+                    ? `<button class="btn" style="background:var(--warning); color:#000" onclick="abrirModal('${i.idDoc}')">ASSINAR SAÍDA</button>` 
+                    : `<small>Entregue: ${new Date(i.dataRetirada).toLocaleString()}</small>`}
+            </div>`;
+            if(i.status === 'PENDENTE') lp.innerHTML += html;
+            else lr.innerHTML += html;
         });
-    }
+    };
 
-    function filtrarRetiradas() {
-        const termo = document.getElementById('busca-retirada').value.toLowerCase();
-        const lista = document.getElementById('lista-retiradas');
-        lista.innerHTML = "";
-        const filtrados = encomendas.filter(i => i.status === "ENTREGUE" && (i.dest.toLowerCase().includes(termo) || i.local.toLowerCase().includes(termo) || i.rastreio.toLowerCase().includes(termo)));
-
-        filtrados.reverse().forEach(i => {
-            const dataS = new Date(i.dataRetirada).toLocaleString('pt-BR');
-            lista.innerHTML += `
-                <div class="item-row entregue">
-                    <b>${i.dest.toUpperCase()}</b> (${i.local})<br>
-                    <small>Entrada: ${new Date(i.dataEntrada).toLocaleDateString('pt-BR')}</small><br>
-                    <small style="color:var(--success)"><b>Saída: ${dataS}</b></small>
-                    <div style="margin-top:5px"><img src="${i.assinatura}" style="height:30px; background:#eee; border-radius:4px;"></div>
-                </div>`;
-        });
-    }
-
-    function atualizarTabelas() {
-        const pCount = encomendas.filter(i => i.status === "PENDENTE").length;
-        document.getElementById('count-badge').innerText = pCount;
-    }
-
-    function abrirAssinatura(id) {
-        idParaEntregar = id;
-        document.getElementById('modal-assinatura').style.display = 'flex';
-        signaturePad.clear();
-    }
-
-    function cancelarAssinatura() { document.getElementById('modal-assinatura').style.display = 'none'; }
-
-    function salvarEntrega() {
-        if (signaturePad.isEmpty()) { alert("Assinatura necessária!"); return; }
-        const idx = encomendas.findIndex(i => i.id === idParaEntregar);
-        encomendas[idx].status = "ENTREGUE";
-        encomendas[idx].dataRetirada = new Date().toISOString();
-        encomendas[idx].assinatura = signaturePad.toDataURL();
-        localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
-        cancelarAssinatura();
-        atualizarTabelas();
-        filtrarPendentes();
-    }
-
-    async function baixarPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: "l" });
-        doc.text("LIVRO DE PROTOCOLO DIGITAL - COMPLETO", 14, 15);
-        const rows = encomendas.map(i => [
-            new Date(i.dataEntrada).toLocaleDateString('pt-BR'),
-            `${i.dest}\n(${i.local})`,
-            i.rastreio,
-            i.dataRetirada ? new Date(i.dataRetirada).toLocaleString('pt-BR') : "PENDENTE",
-            { content: '', styles: { minCellHeight: 15 } }
-        ]);
-        doc.autoTable({
-            startY: 25,
-            head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'ASSINATURA']],
-            body: rows,
-            didDrawCell: (data) => {
-                if (data.column.index === 4 && data.cell.section === 'body') {
-                    const img = encomendas[data.row.index].assinatura;
-                    if (img) doc.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 1, 25, 12);
-                }
-            }
-        });
-        doc.save("Relatorio_Completo_Portaria.pdf");
-    }
+    window.abrirModal = (id) => { idAtual = id; document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); };
+    window.fecharModal = () => document.getElementById('modal-assinatura').style.display='none';
+    window.confirmarEntrega = async () => {
+        const ref = doc(window.db, "encomendas", idAtual);
+        await updateDoc(ref, { status: "ENTREGUE", dataRetirada: new Date().toISOString(), assinatura: pad.toDataURL() });
+        fecharModal();
+    };
+    window.switchTab = (tab) => {
+        document.getElementById('aba-registro').style.display = tab==='registro'?'block':'none';
+        document.getElementById('aba-pendentes').style.display = tab==='pendentes'?'block':'none';
+        document.getElementById('aba-retiradas').style.display = tab==='retiradas'?'block':'none';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        if(tab==='registro') document.getElementById('btn-reg').classList.add('active');
+        if(tab==='pendentes') document.getElementById('btn-pen').classList.add('active');
+        if(tab==='retiradas') document.getElementById('btn-ret').classList.add('active');
+    };
 </script>
 </body>
 </html>
