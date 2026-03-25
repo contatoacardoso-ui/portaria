@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a73e8">
     <title>Portaria Digital Pro</title>
 
-    <link rel="manifest" href="manifest.json?v=10">
+    <link rel="manifest" href="manifest.json?v=11">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -22,21 +22,16 @@
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 16px; color: white; text-align: center; box-sizing: border-box; }
         .btn-scan { background: #6f42c1; }
         .btn-add { background: var(--success); }
-        .btn-entregar { background: #ffc107; color: #000; padding: 8px; font-size: 12px; margin: 5px 0; }
+        .btn-entregar { background: #ffc107; color: #000; padding: 10px; font-size: 12px; margin-top: 8px; border-radius: 6px; border: none; font-weight: bold; width: 100%; }
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }
         label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
-        
-        /* Estilo da Lista */
         .item-row { background: #f9f9f9; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid #ccc; position: relative; }
         .item-row.pendente { border-left-color: var(--danger); }
         .item-row.entregue { border-left-color: var(--success); background: #f0fff4; }
-        .status-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; float: right; }
-        
-        /* Modal de Assinatura */
-        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 15px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
-        canvas { border: 1px solid #000; background: #fff; width: 100%; height: 200px; touch-action: none; border-radius: 8px; }
-        
+        .status-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; float: right; text-transform: uppercase; }
+        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        canvas { border: 2px solid #ddd; background: #fff; width: 100%; height: 200px; touch-action: none; border-radius: 8px; margin: 10px 0; }
         .admin-check { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #eef4ff; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--primary); border: 1px solid #d0e3ff; }
         .admin-check input { width: auto; margin-bottom: 0; transform: scale(1.4); }
     </style>
@@ -44,7 +39,7 @@
 <body>
 
 <div class="card">
-    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📋 Protocolo Digital <small style="font-size:10px">V6.0</small></h2>
+    <h2 style="color:var(--primary); text-align:center; margin-top:0;">📋 Protocolo Digital <small style="font-size:10px">V6.0.1</small></h2>
     
     <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; margin-bottom:10px; background:#000;"></div>
     <button class="btn btn-scan" id="btn-start" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
@@ -53,17 +48,15 @@
     <input type="text" id="recebidoPor" placeholder="Quem está recebendo" oninput="salvarNome()">
 
     <label class="admin-check">
-        <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Administração
+        <input type="checkbox" id="isAdmin" onchange="toggleAdmin()"> 🏢 Entrega para Administração
     </label>
 
-    <div id="container-destinatario">
-        <label>Destinatário:</label>
-        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-            <input type="text" id="destinatario" placeholder="Nome destinatário" style="flex:2; margin-bottom:0;">
-            <div id="campos-local" style="display: flex; gap: 5px; flex: 1.6;">
-                <input type="text" id="apto" placeholder="Apto" style="flex:1; margin-bottom:0;">
-                <input type="text" id="bloco" placeholder="Bl" style="flex:0.7; margin-bottom:0;">
-            </div>
+    <label>Destinatário:</label>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <input type="text" id="destinatario" placeholder="Nome destinatário" style="flex:2; margin-bottom:0;">
+        <div id="campos-local" style="display: flex; gap: 5px; flex: 1.6;">
+            <input type="text" id="apto" placeholder="Apto" style="flex:1; margin-bottom:0;">
+            <input type="text" id="bloco" placeholder="Bl" style="flex:0.7; margin-bottom:0;">
         </div>
     </div>
 
@@ -71,37 +64,39 @@
     <button class="btn btn-add" onclick="adicionarRegistro()">➕ REGISTRAR ENTRADA</button>
     
     <hr>
-    <h3 style="font-size: 14px; color: #666;">ENCOMENDAS NO SISTEMA:</h3>
     <div id="lista-preview"></div>
-    
-    <button class="btn" style="background:#000; font-size:12px;" onclick="baixarPDF()">📄 EXPORTAR RELATÓRIO COMPLETO (PDF)</button>
+    <button class="btn" style="background:#000; font-size:12px; margin-top:20px;" onclick="baixarPDF()">📄 EXPORTAR PROTOCOLO (PDF)</button>
 </div>
 
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h4>Assinatura do Destinatário</h4>
+        <h3 style="margin-top:0;">Assinatura Digital</h3>
+        <p style="font-size:12px; color:#666;">O destinatário deve assinar abaixo:</p>
         <canvas id="signature-pad"></canvas>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn" style="background:var(--danger); padding:10px;" onclick="cancelarAssinatura()">CANCELAR</button>
-            <button class="btn" style="background:var(--success); padding:10px;" onclick="salvarEntrega()">CONFIRMAR</button>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" style="background:var(--danger); flex:1;" onclick="cancelarAssinatura()">CANCELAR</button>
+            <button class="btn" style="background:var(--success); flex:1;" onclick="salvarEntrega()">CONFIRMAR</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Registro do SW v10
+    // Registro SW v11 com Alerta de Atualização
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=10').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=11').then(reg => {
             reg.onupdatefound = () => {
                 const worker = reg.installing;
                 worker.onstatechange = () => {
-                    if (worker.state === 'installed' && navigator.serviceWorker.controller) window.location.reload();
+                    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                        alert("Nova versão disponível! Atualizando...");
+                        window.location.reload(true);
+                    }
                 };
             };
         });
     }
 
-    let encomendas = JSON.parse(localStorage.getItem('protocolo_digital_v6')) || [];
+    let encomendas = JSON.parse(localStorage.getItem('protocolo_v6_data')) || [];
     let idParaEntregar = null;
     let signaturePad;
 
@@ -134,16 +129,16 @@
         html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
             document.getElementById('rastreio').value = `${identificarTransportadora(text)}: ${text}`;
             html5QrCode.stop();
-        }).catch(err => alert("Câmera ocupada ou negada."));
+        }).catch(err => alert("Câmera não disponível."));
     }
 
     function adicionarRegistro() {
         const dest = document.getElementById('destinatario').value;
         const quem = document.getElementById('recebidoPor').value;
         const isAdmin = document.getElementById('isAdmin').checked;
-        if (!dest || !quem) { alert("Nome e Funcionário são obrigatórios!"); return; }
+        if (!dest || !quem) { alert("Preencha o nome e quem está recebendo!"); return; }
 
-        const novo = {
+        encomendas.push({
             id: Date.now(),
             dataEntrada: new Date().toISOString(),
             dest: dest,
@@ -153,12 +148,10 @@
             status: "PENDENTE",
             assinatura: null,
             dataRetirada: null
-        };
+        });
 
-        encomendas.push(novo);
-        localStorage.setItem('protocolo_digital_v6', JSON.stringify(encomendas));
+        localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
         atualizarTabelas();
-        // Limpar campos
         document.getElementById('destinatario').value = "";
         document.getElementById('rastreio').value = "";
     }
@@ -167,89 +160,69 @@
         const lista = document.getElementById('lista-preview');
         lista.innerHTML = "";
         encomendas.slice().reverse().forEach(i => {
-            const dataF = new Date(i.dataEntrada).toLocaleDateString('pt-BR');
             const isEntregue = i.status === "ENTREGUE";
-            
             lista.innerHTML += `
                 <div class="item-row ${i.status.toLowerCase()}">
-                    <span class="status-tag" style="background:${isEntregue?'#28a745':'#dc3545'}; color:white">
-                        ${i.status}
-                    </span>
-                    <b>${i.dest.toUpperCase()}</b> - ${i.local}<br>
-                    <small>Entrada: ${dataF} | Por: ${i.recebidoPor}</small><br>
-                    <small>Rastreio: ${i.rastreio}</small>
-                    ${!isEntregue ? `<button class="btn btn-entregar" onclick="abrirAssinatura(${i.id})">✍️ COLETAR ASSINATURA</button>` : `<br><b style="color:green; font-size:10px;">Retirado em: ${new Date(i.dataRetirada).toLocaleDateString('pt-BR')}</b>`}
-                </div>
-            `;
+                    <span class="status-tag" style="background:${isEntregue?'#28a745':'#dc3545'}; color:white">${i.status}</span>
+                    <b>${i.dest.toUpperCase()}</b> (${i.local})<br>
+                    <small>Rastreio: ${i.rastreio}</small><br>
+                    ${!isEntregue ? `<button class="btn-entregar" onclick="abrirAssinatura(${i.id})">✍️ COLETAR ASSINATURA</button>` : `<small style="color:#28a745"><b>Entregue em:</b> ${new Date(i.dataRetirada).toLocaleString('pt-BR')}</small>`}
+                </div>`;
         });
     }
 
-    // Lógica da Assinatura
     function abrirAssinatura(id) {
         idParaEntregar = id;
         document.getElementById('modal-assinatura').style.display = 'flex';
         signaturePad.clear();
     }
 
-    function cancelarAssinatura() {
-        document.getElementById('modal-assinatura').style.display = 'none';
-    }
+    function cancelarAssinatura() { document.getElementById('modal-assinatura').style.display = 'none'; }
 
     function salvarEntrega() {
-        if (signaturePad.isEmpty()) { alert("O morador precisa assinar!"); return; }
-        
+        if (signaturePad.isEmpty()) { alert("Assinatura obrigatória!"); return; }
         const index = encomendas.findIndex(i => i.id === idParaEntregar);
         encomendas[index].status = "ENTREGUE";
         encomendas[index].dataRetirada = new Date().toISOString();
-        encomendas[index].assinatura = signaturePad.toDataURL(); // Salva a imagem da assinatura
-
-        localStorage.setItem('protocolo_digital_v6', JSON.stringify(encomendas));
-        document.getElementById('modal-assinatura').style.display = 'none';
+        encomendas[index].assinatura = signaturePad.toDataURL();
+        localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
+        cancelarAssinatura();
         atualizarTabelas();
     }
 
     function limpezaAutomatica() {
         const agora = new Date();
-        const seisMeses = 180 * 24 * 60 * 60 * 1000;
-        const umAno = 365 * 24 * 60 * 60 * 1000;
-
         encomendas = encomendas.filter(i => {
-            const dataItem = new Date(i.dataEntrada);
-            const diferenca = agora - dataItem;
-            if (i.status === "ENTREGUE") return diferenca < seisMeses;
-            return diferenca < umAno;
+            const diff = agora - new Date(i.dataEntrada);
+            return i.status === "ENTREGUE" ? diff < 15552000000 : diff < 31536000000;
         });
-        localStorage.setItem('protocolo_digital_v6', JSON.stringify(encomendas));
+        localStorage.setItem('protocolo_v6_data', JSON.stringify(encomendas));
     }
 
     async function baixarPDF() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: "l", format: "a4" });
-        doc.text("LIVRO DE PROTOCOLO DIGITAL - PORTARIA", 14, 15);
-        
+        const doc = new jsPDF({ orientation: "l" });
+        doc.text("PROTOCOLO DIGITAL - HISTÓRICO", 14, 15);
         const rows = encomendas.map(i => [
             new Date(i.dataEntrada).toLocaleDateString('pt-BR'),
             `${i.dest}\n(${i.local})`,
             i.rastreio,
             i.recebidoPor,
-            i.dataRetirada ? new Date(i.dataRetirada).toLocaleDateString('pt-BR') : "PENDENTE",
-            { content: '', styles: { minCellHeight: 20 } } // Espaço para a imagem
+            i.dataRetirada ? new Date(i.dataRetirada).toLocaleDateString('pt-BR') : "---",
+            { content: '', styles: { minCellHeight: 15 } }
         ]);
-
         doc.autoTable({
             startY: 25,
             head: [['ENTRADA', 'DESTINATÁRIO', 'RASTREIO', 'FUNC.', 'RETIRADA', 'ASSINATURA']],
             body: rows,
             didDrawCell: (data) => {
-                if (data.section === 'body' && data.column.index === 5) {
-                    const item = encomendas[data.row.index];
-                    if (item && item.assinatura) {
-                        doc.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 30, 15);
-                    }
+                if (data.column.index === 5 && data.cell.section === 'body') {
+                    const img = encomendas[data.row.index].assinatura;
+                    if (img) doc.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 1, 25, 12);
                 }
             }
         });
-        doc.save("Relatorio_Protocolo_Digital.pdf");
+        doc.save("Protocolo_Digital.pdf");
     }
 </script>
 </body>
