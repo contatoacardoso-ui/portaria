@@ -1,4 +1,4 @@
-const CACHE_NAME = 'protocolo-digital-v11'; 
+const CACHE_NAME = 'protocolo-v12-abas'; 
 const assetsToCache = [
   './',
   './index.html',
