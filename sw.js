@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portaria-v49';
+const CACHE_NAME = 'portaria-v51';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
