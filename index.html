@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v62</title>
-    <link rel="manifest" href="manifest.json?v=62">
+    <title>Portaria Digital v63</title>
+    <link rel="manifest" href="manifest.json?v=63">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -49,7 +49,7 @@
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
         
-        #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 10px; }
+        #reader, #reader-saida { width: 100%; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 10px; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
         .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; text-transform: none; }
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v62</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v63</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v62</div>
+    <div class="header">Portaria Digital v63</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -80,7 +80,7 @@
     <div id="aba-registro" class="container">
         <div class="card">
             <div id="reader"></div>
-            <button class="btn" style="background:#6f42c1" onclick="alternarScanner()">📷 Escanear Código</button>
+            <button class="btn" style="background:#6f42c1" onclick="alternarScanner('entrada')">📷 Escanear Código</button>
             <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="processarRastreio(this)">
             <input type="text" id="loja" placeholder="Empresa/Loja">
             <input type="text" id="destinatario" placeholder="Nome Do Destinatário">
@@ -96,6 +96,8 @@
     </div>
 
     <div id="aba-pendentes" class="container" style="display:none;">
+        <div id="reader-saida"></div>
+        <button class="btn" style="background:#6f42c1" onclick="alternarScanner('saida')">📷 Escanear Para Saída</button>
         <input type="text" id="busca-pen" placeholder="🔍 Buscar Encomendas..." oninput="render()">
         <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Dar Baixa Nos Selecionados</button>
         <div id="lista-pendentes"></div>
@@ -151,18 +153,14 @@
     function processarRastreio(input) {
         let v = input.value.trim();
         if(!v) return;
-
         const existeTemp = listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
         const existeBanco = dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
-
         if(existeTemp || existeBanco) {
-            // Ajuste solicitado: Mensagem simplificada
             alert("Esta encomenda já consta no sistema.");
             input.value = "";
             setTimeout(() => input.focus(), 10);
             return;
         }
-
         identificarTransportadora(input);
     }
 
@@ -176,22 +174,45 @@
         input.value = `${emp}: ${v}`;
     }
 
-    function alternarScanner() {
+    function alternarScanner(modo) {
+        const idReader = modo === 'entrada' ? 'reader' : 'reader-saida';
         if (!html5QrCode) {
-            document.getElementById('reader').style.display = 'block';
-            html5QrCode = new Html5Qrcode("reader");
+            document.getElementById(idReader).style.display = 'block';
+            html5QrCode = new Html5Qrcode(idReader);
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                const inp = document.getElementById('rastreio');
-                inp.value = text;
-                processarRastreio(inp);
-                pararScanner();
+                if(modo === 'entrada') {
+                    const inp = document.getElementById('rastreio');
+                    inp.value = text;
+                    processarRastreio(inp);
+                    pararScanner();
+                } else {
+                    selecionarPorScan(text);
+                    // No modo saída, não para o scanner para permitir bipar vários em sequência
+                }
             });
         } else pararScanner();
     }
 
+    function selecionarPorScan(codigo) {
+        // Tenta achar o item que contém o código bipado
+        const item = dados.find(d => d.status === "PENDENTE" && d.rastreio.toLowerCase().includes(codigo.toLowerCase()));
+        if(item) {
+            if(!idsSelecionados.includes(item.id)) {
+                idsSelecionados.push(item.id);
+                render(); // Atualiza a lista para mostrar o check
+            }
+        } else {
+            alert("Encomenda não encontrada nos pendentes.");
+        }
+    }
+
     function pararScanner() {
         if (html5QrCode) {
-            html5QrCode.stop().then(() => { html5QrCode = null; document.getElementById('reader').style.display = 'none'; });
+            html5QrCode.stop().then(() => { 
+                html5QrCode = null; 
+                document.getElementById('reader').style.display = 'none'; 
+                document.getElementById('reader-saida').style.display = 'none'; 
+            });
         }
     }
 
@@ -216,13 +237,11 @@
         const r = document.getElementById('rastreio').value, d = document.getElementById('destinatario').value, a = document.getElementById('apto').value;
         const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value;
         if(!r || !d || !a) return alert("Preencha Os Campos!");
-        
         listaTemp.push({
             rastreio: r, loja: caps(lo) || "Não Informada",
             dest: caps(d), apto: a, bloco: caps(bl) || "-",
             dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
-        
         document.getElementById('rastreio').value = ""; 
         document.getElementById('destinatario').value = ""; 
         document.getElementById('loja').value = "";
@@ -236,12 +255,7 @@
         div.innerHTML = listaTemp.map((i, idx) => `
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div>
-                        <b>${i.dest}</b><br>
-                        <small>Apto ${i.apto} / Bl ${i.bloco}</small><br>
-                        <small>Loja: ${i.loja}</small><br>
-                        <small class="no-cap" style="color:blue;">${i.rastreio}</small>
-                    </div>
+                    <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small></div>
                     <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:18px;">×</button>
                 </div>
             </div>`).join('');
@@ -264,9 +278,10 @@
         dados.forEach(i => {
             const txt = `${i.dest} ${i.apto} ${i.rastreio} ${i.quemRetirou}`.toLowerCase();
             if(i.status === "PENDENTE" && txt.includes(bP)) {
+                const isChecked = idsSelecionados.includes(i.id) ? "checked" : "";
                 lp.innerHTML += `
                     <div class="item-row">
-                        <input type="checkbox" style="width:22px; height:22px" value="${i.id}" onchange="contar()">
+                        <input type="checkbox" style="width:22px; height:22px" value="${i.id}" ${isChecked} onchange="contar()">
                         <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco} | ${i.loja}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small></div>
                     </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
@@ -274,26 +289,33 @@
                     <div class="item-row entregue" style="flex-direction:column; align-items:flex-start;">
                         <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <b>${i.dest}</b><br>
-                                <small>Apto ${i.apto} / Bl ${i.bloco} | ${i.loja}</small><br>
-                                <small class="no-cap" style="color:blue;">${i.rastreio}</small><br>
-                                <small style="color:green">Retirado Por: ${i.quemRetirou}</small><br>
-                                <small style="font-size:10px; color:#999;">${new Date(i.dataRetirada).toLocaleString()}</small>
+                                <b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco} | ${i.loja}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small><br>
+                                <small style="color:green">Retirado Por: ${i.quemRetirou}</small>
                             </div>
-                            <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')" title="Baixar PDF">📄</div>
+                            <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')">📄</div>
                         </div>
                     </div>`;
             }
         });
-        contar();
+        verificarBotaoLote();
     }
 
     function contar() {
         idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value);
-        document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
+        verificarBotaoLote();
     }
 
-    function abrirModal() { document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); }
+    function verificarBotaoLote() {
+        document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
+        document.getElementById('btn-retirar-lote').innerText = `Dar Baixa Em ${idsSelecionados.length} Pacote(s)`;
+    }
+
+    function abrirModal() { 
+        pararScanner(); // Garante que a câmera fecha ao abrir o modal
+        document.getElementById('modal-assinatura').style.display='flex'; 
+        pad.clear(); 
+    }
+    
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
     function getTrimmedSignature() {
@@ -306,10 +328,7 @@
         ctx.drawImage(originalCanvas, 0, 0);
         const imgData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i + 1], b = data[i + 2];
-            if (r > 240 && g > 240 && b > 240) data[i + 3] = 0; 
-        }
+        for (let i = 0; i < data.length; i += 4) { if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i + 3] = 0; }
         ctx.putImageData(imgData, 0, 0);
         return tempCanvas.toDataURL('image/png');
     }
@@ -332,50 +351,32 @@
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.setFontSize(16); docP.text("Recibo De Retirada", 105, 20, { align: 'center' });
+        docP.text("Recibo De Retirada", 105, 20, { align: 'center' });
         docP.autoTable({
             startY: 30,
-            body: [
-                ['Destinatário', i.dest],
-                ['Unidade/Bloco', `Apto: ${i.apto} / Bloco: ${i.bloco}`],
-                ['Rastreio (Loja)', `${i.rastreio} (${i.loja})`],
-                ['Data De Entrada', new Date(i.dataEntrada).toLocaleString()],
-                ['Recebido Por (Funcionário)', i.recebidoPor],
-                ['Data De Retirada', new Date(i.dataRetirada).toLocaleString()],
-                ['Retirado Por (Morador/Terceiro)', i.quemRetirou]
-            ],
+            body: [['Destinatário', i.dest], ['Unidade', `Apto: ${i.apto} / Bloco: ${i.bloco}`], ['Rastreio', i.rastreio], ['Entrada', new Date(i.dataEntrada).toLocaleString()], ['Saída', new Date(i.dataRetirada).toLocaleString()], ['Quem Retirou', i.quemRetirou]],
             theme: 'grid'
         });
-        docP.text("Assinatura:", 15, docP.lastAutoTable.finalY + 15);
-        docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 20, 60, 30);
-        docP.save(`Recibo_${i.dest}_${i.apto}.pdf`);
+        docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 10, 60, 30);
+        docP.save(`Recibo_${i.dest}.pdf`);
     }
 
     async function gerarRelatorio() {
         const { jsPDF } = window.jspdf;
         const docR = new jsPDF('l', 'mm', 'a4');
-        docR.text("Relatório Geral De Movimentação", 14, 15);
         const entregues = dados.filter(d => d.status === "ENTREGUE");
         docR.autoTable({
-            head: [['Rastreio (Empresa/Loja)', 'Destinatário (Bloco/Apto)', 'Recebido Por (Data/Hora)', 'Retirado Por (Data/Hora)', 'Assinatura']],
-            body: entregues.map(i => [
-                `${i.rastreio}\n(${i.loja})`, 
-                `${i.dest}\nApto ${i.apto} / Bl ${i.bloco}`, 
-                `${i.recebidoPor}\n${new Date(i.dataEntrada).toLocaleString()}`, 
-                `${i.quemRetirou}\n${new Date(i.dataRetirada).toLocaleString()}`, 
-                ''
-            ]),
-            startY: 20,
-            headStyles: { cellPadding: 1.5, fontSize: 9, valign: 'middle' },
+            head: [['Rastreio', 'Destinatário', 'Entrada', 'Saída / Retirado Por', 'Assinatura']],
+            body: entregues.map(i => [i.rastreio, `${i.dest}\nApto ${i.apto}`, new Date(i.dataEntrada).toLocaleString(), `${new Date(i.dataRetirada).toLocaleString()}\n${i.quemRetirou}`, '']),
             didDrawCell: (data) => {
                 if (data.column.index === 4 && data.cell.section === 'body') {
                     const img = entregues[data.row.index].assinatura;
-                    if (img) docR.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 2, 22, 10, undefined, 'FAST');
+                    if (img) docR.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 2, 22, 10);
                 }
             },
-            styles: { minCellHeight: 18, verticalAlign: 'middle', fontSize: 8, overflow: 'linebreak' }
+            styles: { minCellHeight: 18, fontSize: 8 }
         });
-        docR.save("Relatorio_Geral_Completo.pdf");
+        docR.save("Relatorio.pdf");
     }
 </script>
 </body>
