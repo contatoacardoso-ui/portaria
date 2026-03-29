@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v61</title>
-    <link rel="manifest" href="manifest.json?v=61">
+    <title>Portaria Digital v62</title>
+    <link rel="manifest" href="manifest.json?v=62">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v61</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v62</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v61</div>
+    <div class="header">Portaria Digital v62</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -148,18 +148,16 @@
         }
     }
 
-    // Ajuste solicitado: Verificar duplicidade antes de identificar transportadora
     function processarRastreio(input) {
         let v = input.value.trim();
         if(!v) return;
 
-        // Verifica na lista temporária (atual)
         const existeTemp = listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
-        // Verifica nos dados já salvos (Pendentes e Histórico)
         const existeBanco = dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
 
         if(existeTemp || existeBanco) {
-            alert("ERRO: Esta encomenda já consta no sistema (Entrada, Saída ou Histórico).");
+            // Ajuste solicitado: Mensagem simplificada
+            alert("Esta encomenda já consta no sistema.");
             input.value = "";
             setTimeout(() => input.focus(), 10);
             return;
@@ -185,7 +183,7 @@
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
                 const inp = document.getElementById('rastreio');
                 inp.value = text;
-                processarRastreio(inp); // Chama a verificação após o scan
+                processarRastreio(inp);
                 pararScanner();
             });
         } else pararScanner();
