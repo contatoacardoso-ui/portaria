@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v44</title>
-    <link rel="manifest" href="manifest.json?v=44">
+    <title>Portaria Digital v45</title>
+    <link rel="manifest" href="manifest.json?v=45">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -58,8 +58,8 @@
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; }
         
-        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--primary); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; color: white; }
-        .login-card { background: white; padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); color: #333; }
+        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--primary); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .login-card { background: white; padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
         
         .header { background: var(--primary); color: white; padding: 12px; text-align: center; }
         .header h1 { margin: 0; font-size: 18px; letter-spacing: 1px; }
@@ -69,13 +69,11 @@
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input[type="text"], input[type="password"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; margin-bottom: 10px; }
-        .row-local { display: flex; gap: 10px; margin-bottom: 12px; }
-        .row-local input { flex: 1; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 14px; }
         .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); display: block; }
         .info-col { flex: 1; display: flex; flex-direction: column; }
-        .rastreio-badge { color: var(--primary); font-weight: bold; font-size: 12px; margin: 2px 0; }
+        .rastreio-txt { color: var(--primary); font-weight: bold; font-size: 13px; margin-bottom: 2px; display: block; }
         .sign-img { height: 60px; width: auto; max-width: 150px; margin: 8px 0; border: 1px solid #eee; border-radius: 4px; background: #fff; display: block; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
@@ -93,7 +91,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header"><h1>PORTARIA DIGITAL v44</h1></div>
+    <div class="header"><h1>PORTARIA DIGITAL v45</h1></div>
 
     <div class="tabs">
         <button class="tab-btn active" id="tab1" onclick="switchTab('registro')">📥 Entrada</button>
@@ -107,9 +105,10 @@
             <button class="btn" style="background:#6f42c1; margin-bottom:15px;" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
             <input type="text" id="rastreio" placeholder="Rastreio ou Transportadora">
             <input type="text" id="destinatario" placeholder="Nome do Destinatário">
-            <div id="campos-local" class="row-local"><input type="text" id="apto" placeholder="Apto"><input type="text" id="bloco" placeholder="Bloco"></div>
+            <div id="campos-local" style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="apto" placeholder="Apto" style="flex:1;"><input type="text" id="bloco" placeholder="Bloco" style="flex:1;"></div>
             <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)">
             <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">➕ ADICIONAR À LISTA</button>
+            
             <div id="lista-pre-entrada" style="margin-top:20px"></div>
             <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:15px;" onclick="salvarTudoNoFirebase()">✅ REGISTRAR TODA A LISTA</button>
         </div>
@@ -142,7 +141,8 @@
 </div>
 
 <script type="module">
-    import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let dados = [], listaTemp = [], idsParaRetirar = [], pad, html5QrCode;
     
@@ -182,9 +182,10 @@
 
         if (!destRaw) return alert("Digite o nome!");
 
+        // VERIFICAÇÃO DE DUPLICADO NO BANCO (PENDENTES)
         const qDuplicado = query(collection(window.db, "encomendas"), where("rastreio", "==", rastreioVal), where("status", "==", "PENDENTE"));
         const snapshot = await getDocs(qDuplicado);
-        if (!snapshot.empty && rastreioVal !== "Manual") return alert(`Já existe o código ${rastreioVal} pendente!`);
+        if (!snapshot.empty && rastreioVal !== "Manual") return alert(`ERRO: O rastreio ${rastreioVal} já está cadastrado na portaria!`);
 
         listaTemp.push({ 
             dest: capitalizarNome(destRaw), 
@@ -202,9 +203,12 @@
     function atualizarListaVisual() {
         const div = document.getElementById('lista-pre-entrada');
         div.innerHTML = listaTemp.map((i, index) => `
-            <div style="background:#fffde7;padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;border:1px solid #ffe082;">
-                <div><b class="rastreio-badge">${i.rastreio}</b><br>${i.dest} (${i.local})</div>
-                <span style="color:var(--danger);font-weight:bold;cursor:pointer;" onclick="removerDaLista(${index})">X</span>
+            <div style="background:#fffde7;padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;border:1px solid #ffe082; align-items:center;">
+                <div>
+                    <span class="rastreio-txt">🏷️ ${i.rastreio}</span>
+                    <b>${i.dest} (${i.local})</b>
+                </div>
+                <span style="color:var(--danger);font-weight:bold;cursor:pointer;padding:5px;" onclick="removerDaLista(${index})">X</span>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
@@ -216,6 +220,7 @@
         if (!funcRaw) return alert("Nome do funcionário é obrigatório!");
         for (const item of listaTemp) { item.recebidoPor = capitalizarNome(funcRaw); await addDoc(collection(window.db, "encomendas"), item); }
         listaTemp = []; document.getElementById('recebidoPor').value = ""; atualizarListaVisual();
+        alert("✅ Lista Registrada!");
     };
 
     window.render = () => {
@@ -228,10 +233,10 @@
             if (i.status === 'PENDENTE' && txt.includes(bP)) {
                 lp.innerHTML += `
                 <div class="item-row">
-                    <input type="checkbox" class="check-box" value="${i.idDoc}" onchange="atualizarBotaoLote()" style="width:25px;height:25px;">
+                    <input type="checkbox" class="check-box" value="${i.idDoc}" onchange="atualizarBotaoLote()" style="width:25px;height:25px;cursor:pointer;">
                     <div class="info-col">
                         <b>${i.dest} (${i.local})</b>
-                        <span class="rastreio-badge">🏷️ RASTREIO: ${i.rastreio}</span>
+                        <span class="rastreio-txt">🏷️ RASTREIO: ${i.rastreio}</span>
                         <small>Entrada: ${formatData(i.dataEntrada)}</small>
                     </div>
                 </div>`;
@@ -241,11 +246,11 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div class="info-col">
                             <b style="font-size:16px;">${i.dest}</b>
-                            <span class="rastreio-badge">🏷️ RASTREIO: ${i.rastreio}</span>
+                            <span class="rastreio-txt">🏷️ RASTREIO: ${i.rastreio}</span>
                             <small>📍 ${i.local} | 📥 ${formatData(i.dataEntrada)}</small>
                             <small style="color:var(--success); font-weight:bold;">📤 Saída: ${formatData(i.dataRetirada)} por ${i.quemRetirou}</small>
                         </div>
-                        <div onclick="exportarIndividual('${i.idDoc}')" style="cursor:pointer; background:#eee; padding:8px; border-radius:50%;">PDF</div>
+                        <div onclick="exportarIndividual('${i.idDoc}')" style="cursor:pointer; background:#eee; padding:10px; border-radius:8px; font-weight:bold;">PDF</div>
                     </div>
                     <img src="${i.assinatura}" class="sign-img">
                 </div>`;
@@ -283,7 +288,7 @@
         docP.setFontSize(16); docP.text("PROTOCOLO DE ENTREGA", 20, 20);
         docP.setFontSize(10);
         docP.text(`Morador: ${item.dest} (${item.local})`, 20, 40);
-        docP.text(`RASTREIO: ${item.rastreio}`, 20, 50); // ADICIONADO
+        docP.text(`RASTREIO: ${item.rastreio}`, 20, 50);
         docP.text(`Recebido por: ${item.recebidoPor}`, 20, 60);
         docP.text(`Data Entrada: ${formatData(item.dataEntrada)}`, 20, 70);
         docP.text(`Data Saída: ${formatData(item.dataRetirada)}`, 20, 80);
@@ -295,16 +300,30 @@
     window.gerarRelatorioGeral = () => {
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF('l', 'mm', 'a4');
-        docP.text("LIVRO DE PROTOCOLO - RELATÓRIO GERAL", 14, 15);
-        // ADICIONADO RASTREIO NA COLUNA 4
-        const rows = dados.map(i => [formatData(i.dataEntrada), i.recebidoPor, `${i.dest} (${i.local})`, i.rastreio, i.status==='PENDENTE' ? 'PENDENTE' : formatData(i.dataRetirada), i.quemRetirou || '-', '']);
+        docP.setFontSize(14);
+        docP.text("LIVRO DE PROTOCOLO - RELATÓRIO GERAL", 14, 12);
+        
+        const rows = dados.map(i => [
+            formatData(i.dataEntrada), 
+            i.recebidoPor, 
+            `${i.dest} (${i.local})`, 
+            i.rastreio, 
+            i.status==='PENDENTE' ? 'PENDENTE' : formatData(i.dataRetirada), 
+            i.quemRetirou || '-', 
+            ''
+        ]);
+
         docP.autoTable({
             head: [['ENTRADA', 'FUNCIONÁRIO', 'DESTINATÁRIO', 'RASTREIO', 'SAÍDA', 'RETIRADO POR', 'ASSINATURA']],
-            body: rows, startY: 20, theme: 'grid', styles: { fontSize: 7, minCellHeight: 15 },
+            body: rows, 
+            startY: 18, 
+            theme: 'grid', 
+            styles: { fontSize: 7, minCellHeight: 12, valign: 'middle' },
+            headStyles: { fillColor: [26, 115, 232], cellPadding: 2 }, // Cabeçalho mais justo
             didDrawCell: (data) => {
                 if (data.column.index === 6 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
-                    if (item && item.assinatura) docP.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 25, 10);
+                    if (item && item.assinatura) docP.addImage(item.assinatura, 'PNG', data.cell.x + 1, data.cell.y + 1, 28, 10);
                 }
             }
         });
