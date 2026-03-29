@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v64</title>
-    <link rel="manifest" href="manifest.json?v=64">
+    <title>Portaria Digital v65</title>
+    <link rel="manifest" href="manifest.json?v=65">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v64</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v65</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v64</div>
+    <div class="header">Portaria Digital v65</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -350,10 +350,8 @@
                 status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: n, assinatura: imgTransparent
             });
         }
-        // SOLICITADO: Limpar seleção e esconder botão após baixa
         idsSelecionados = [];
         verificarBotaoLote();
-        
         document.getElementById('quemRetirou').value = "";
         fecharModal();
     }
@@ -376,18 +374,27 @@
         const { jsPDF } = window.jspdf;
         const docR = new jsPDF('l', 'mm', 'a4');
         const entregues = dados.filter(d => d.status === "ENTREGUE");
+        
+        // SOLICITADO: Ordem Empresa, Rastreio, Destinatário, Recebido Por, Retirado Por, Assinatura
         docR.autoTable({
-            head: [['Rastreio', 'Destinatário', 'Entrada', 'Saída / Retirado Por', 'Assinatura']],
-            body: entregues.map(i => [i.rastreio, `${i.dest}\nApto ${i.apto}`, new Date(i.dataEntrada).toLocaleString(), `${new Date(i.dataRetirada).toLocaleString()}\n${i.quemRetirou}`, '']),
+            head: [['Empresa', 'Rastreio', 'Destinatário (Apto / Bl)', 'Recebido Por (Data - Hora)', 'Retirado Por (Data - Hora)', 'Assinatura']],
+            body: entregues.map(i => [
+                i.loja, 
+                i.rastreio, 
+                `${i.dest}\n(Apto: ${i.apto} / Bl: ${i.bloco})`, 
+                `${i.recebidoPor}\n(${new Date(i.dataEntrada).toLocaleString()})`, 
+                `${i.quemRetirou}\n(${new Date(i.dataRetirada).toLocaleString()})`, 
+                ''
+            ]),
             didDrawCell: (data) => {
-                if (data.column.index === 4 && data.cell.section === 'body') {
+                if (data.column.index === 5 && data.cell.section === 'body') {
                     const img = entregues[data.row.index].assinatura;
                     if (img) docR.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 2, 22, 10);
                 }
             },
             styles: { minCellHeight: 18, fontSize: 8 }
         });
-        docR.save("Relatorio.pdf");
+        docR.save("Relatorio_Geral.pdf");
     }
 </script>
 </body>
