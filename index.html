@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v65</title>
-    <link rel="manifest" href="manifest.json?v=65">
+    <title>Portaria Digital v66</title>
+    <link rel="manifest" href="manifest.json?v=66">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v65</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v66</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v65</div>
+    <div class="header">Portaria Digital v66</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -363,7 +363,16 @@
         docP.text("Recibo De Retirada", 105, 20, { align: 'center' });
         docP.autoTable({
             startY: 30,
-            body: [['Destinatário', i.dest], ['Unidade', `Apto: ${i.apto} / Bloco: ${i.bloco}`], ['Loja/Empresa', i.loja], ['Rastreio', i.rastreio], ['Entrada', new Date(i.dataEntrada).toLocaleString()], ['Saída', new Date(i.dataRetirada).toLocaleString()], ['Quem Retirou', i.quemRetirou]],
+            body: [
+                ['Destinatário', i.dest], 
+                ['Unidade', `Apto: ${i.apto} / Bloco: ${i.bloco}`], 
+                ['Loja/Empresa', i.loja], 
+                ['Rastreio', i.rastreio], 
+                ['Recebido Por', i.recebidoPor], // ADICIONADO CONFORME SOLICITADO
+                ['Entrada', new Date(i.dataEntrada).toLocaleString()], 
+                ['Saída', new Date(i.dataRetirada).toLocaleString()], 
+                ['Quem Retirou', i.quemRetirou]
+            ],
             theme: 'grid'
         });
         docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 10, 60, 30);
@@ -375,7 +384,6 @@
         const docR = new jsPDF('l', 'mm', 'a4');
         const entregues = dados.filter(d => d.status === "ENTREGUE");
         
-        // SOLICITADO: Ordem Empresa, Rastreio, Destinatário, Recebido Por, Retirado Por, Assinatura
         docR.autoTable({
             head: [['Empresa', 'Rastreio', 'Destinatário (Apto / Bl)', 'Recebido Por (Data - Hora)', 'Retirado Por (Data - Hora)', 'Assinatura']],
             body: entregues.map(i => [
@@ -392,6 +400,7 @@
                     if (img) docR.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 2, 22, 10);
                 }
             },
+            headStyles: { minCellHeight: 6 }, // AJUSTADO CONFORME SOLICITADO
             styles: { minCellHeight: 18, fontSize: 8 }
         });
         docR.save("Relatorio_Geral.pdf");
