@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v48</title>
-    <link rel="manifest" href="manifest.json?v=48">
+    <title>Portaria Digital v49</title>
+    <link rel="manifest" href="manifest.json?v=49">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -23,7 +23,6 @@
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
         window.fb = { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, where };
-        console.log("Firebase v48 Conectado");
     </script>
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
@@ -39,15 +38,15 @@
         .login-card { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; }
         .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 11px; text-transform: uppercase; cursor: pointer; }
+        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 11px; text-transform: uppercase; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
-        .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
+        .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); }
-        .rastreio-tag { color: var(--primary); font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px; }
+        #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 10px; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
         canvas { border: 2px solid #333; background: #fff; width: 100%; height: 200px; border-radius: 8px; touch-action: none; }
@@ -59,12 +58,12 @@
     <div class="login-card">
         <h2 style="color:var(--primary)">Portaria Digital</h2>
         <input type="password" id="senha-login" placeholder="Senha de Acesso" style="text-align:center">
-        <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">ACESSAR SISTEMA</button>
+        <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">ACESSAR</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header"><b>PORTARIA DIGITAL v48</b></div>
+    <div class="header"><b>PORTARIA DIGITAL v49</b></div>
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('registro', this)">📥 Entrada</button>
         <button class="tab-btn" onclick="switchTab('pendentes', this)">📤 Saída</button>
@@ -73,6 +72,8 @@
 
     <div id="aba-registro" class="container">
         <div class="card">
+            <div id="reader"></div>
+            <button class="btn" id="btn-scan" style="background:#6f42c1" onclick="alternarScanner()">📷 ESCANEAR CÓDIGO</button>
             <input type="text" id="rastreio" placeholder="Rastreio / Transportadora">
             <input type="text" id="destinatario" placeholder="Nome do Morador">
             <div style="display:flex; gap:10px;">
@@ -81,19 +82,19 @@
             </div>
             <input type="text" id="recebidoPor" placeholder="Recebido por (Porteiro)">
             <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ ADICIONAR À LISTA</button>
-            <div id="lista-pre-entrada" style="margin-top:15px"></div>
-            <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:10px;" onclick="salvarNoFirebase()">REGISTRAR TUDO NO BANCO</button>
+            <div id="lista-pre-entrada"></div>
+            <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none;" onclick="salvarNoFirebase()">REGISTRAR TUDO</button>
         </div>
     </div>
 
     <div id="aba-pendentes" class="container" style="display:none;">
         <input type="text" id="busca-pen" placeholder="🔍 Buscar nome ou apto..." oninput="render()">
-        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none; margin-bottom:15px" onclick="abrirModal()">RETIRAR SELECIONADOS</button>
+        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">RETIRAR SELECIONADOS</button>
         <div id="lista-pendentes"></div>
     </div>
 
     <div id="aba-retiradas" class="container" style="display:none;">
-        <button class="btn" style="background:#333; margin-bottom:15px" onclick="gerarRelatorio()">📄 LIVRO DE PROTOCOLO (PDF)</button>
+        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 LIVRO DE PROTOCOLO (PDF)</button>
         <input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
@@ -101,7 +102,7 @@
 
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h3>Assinatura do Morador</h3>
+        <h3>Assinatura</h3>
         <input type="text" id="quemRetirou" placeholder="Nome de quem está levando">
         <canvas id="signature-pad"></canvas>
         <div style="display:flex; gap:10px; margin-top:20px;">
@@ -112,7 +113,7 @@
 </div>
 
 <script>
-    let dados = [], listaTemp = [], idsSelecionados = [], pad;
+    let dados = [], listaTemp = [], idsSelecionados = [], pad, html5QrCode;
 
     function verificarAcesso() {
         if(document.getElementById('senha-login').value === "1234") {
@@ -123,7 +124,32 @@
         } else { alert("Senha incorreta!"); }
     }
 
+    // --- FUNÇÕES DO SCANNER ---
+    function alternarScanner() {
+        const readerDiv = document.getElementById('reader');
+        if (!html5QrCode) {
+            readerDiv.style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+                (text) => {
+                    document.getElementById('rastreio').value = text.toUpperCase();
+                    pararScanner();
+                }
+            ).catch(err => alert("Erro na câmera: " + err));
+        } else { pararScanner(); }
+    }
+
+    function pararScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode = null;
+                document.getElementById('reader').style.display = 'none';
+            });
+        }
+    }
+
     function switchTab(aba, btn) {
+        pararScanner();
         document.getElementById('aba-registro').style.display = 'none';
         document.getElementById('aba-pendentes').style.display = 'none';
         document.getElementById('aba-retiradas').style.display = 'none';
@@ -144,26 +170,22 @@
     async function adicionarNaLista() {
         const rast = document.getElementById('rastreio').value.toUpperCase() || "MANUAL";
         const nome = document.getElementById('destinatario').value.toUpperCase();
-        if(!nome) return alert("Digite o nome do morador!");
+        if(!nome) return alert("Nome obrigatório!");
 
-        // Trava de duplicados
         const { collection, query, where, getDocs } = window.fb;
         if(rast !== "MANUAL") {
             const q = query(collection(window.db, "encomendas"), where("rastreio", "==", rast), where("status", "==", "PENDENTE"));
             const snapshot = await getDocs(q);
-            if(!snapshot.empty) return alert("ERRO: Este rastreio já está pendente na portaria!");
+            if(!snapshot.empty) return alert("Já existe este rastreio pendente!");
         }
 
         listaTemp.push({
-            rastreio: rast,
-            dest: nome,
+            rastreio: rast, dest: nome,
             local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
-            dataEntrada: new Date().toISOString(),
-            status: "PENDENTE"
+            dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
 
-        document.getElementById('rastreio').value = "";
-        document.getElementById('destinatario').value = "";
+        document.getElementById('rastreio').value = ""; document.getElementById('destinatario').value = "";
         atualizarPreview();
     }
 
@@ -172,20 +194,20 @@
         div.innerHTML = listaTemp.map((i, idx) => `
             <div style="background:#fffde7; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ffd54f; display:flex; justify-content:space-between;">
                 <span><b>${i.dest}</b><br><small>${i.rastreio}</small></span>
-                <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-weight:bold;">X</button>
+                <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none;">X</button>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
     async function salvarNoFirebase() {
         const func = document.getElementById('recebidoPor').value.toUpperCase();
-        if(!func) return alert("Informe quem está recebendo a carga!");
+        if(!func) return alert("Quem recebeu?");
         const { collection, addDoc } = window.fb;
         for(let item of listaTemp) {
             item.recebidoPor = func;
             await addDoc(collection(window.db, "encomendas"), item);
         }
-        listaTemp = []; atualizarPreview(); alert("Salvo com sucesso!");
+        listaTemp = []; atualizarPreview(); alert("Salvo!");
     }
 
     function render() {
@@ -193,24 +215,13 @@
         const lr = document.getElementById('lista-retiradas');
         const bP = document.getElementById('busca-pen').value.toLowerCase();
         const bH = document.getElementById('busca-his').value.toLowerCase();
-
         lp.innerHTML = ""; lr.innerHTML = "";
-
         dados.forEach(i => {
             const txt = `${i.dest} ${i.local} ${i.rastreio}`.toLowerCase();
             if(i.status === "PENDENTE" && txt.includes(bP)) {
-                lp.innerHTML += `
-                    <div class="item-row">
-                        <input type="checkbox" style="width:25px; height:25px" value="${i.id}" onchange="contar()">
-                        <div><span class="rastreio-tag">🏷️ ${i.rastreio}</span><b>${i.dest}</b><br><small>${i.local}</small></div>
-                    </div>`;
+                lp.innerHTML += `<div class="item-row"><input type="checkbox" style="width:25px;height:25px" value="${i.id}" onchange="contar()"><div><b>${i.dest}</b><br><small>${i.local} | ${i.rastreio}</small></div></div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
-                lr.innerHTML += `
-                    <div class="item-row entregue" style="display:block">
-                        <span class="rastreio-tag">🏷️ ${i.rastreio}</span>
-                        <b>${i.dest}</b> (${i.local})<br>
-                        <small style="color:var(--success)">Saiu para: ${i.quemRetirou} às ${new Date(i.dataRetirada).toLocaleString()}</small>
-                    </div>`;
+                lr.innerHTML += `<div class="item-row entregue" style="display:block"><b>${i.dest}</b><br><small>Retirado por: ${i.quemRetirou}</small></div>`;
             }
         });
     }
@@ -225,44 +236,24 @@
 
     async function confirmarEntrega() {
         const nome = document.getElementById('quemRetirou').value.toUpperCase();
-        if(!nome || pad.isEmpty()) return alert("Nome e Assinatura são obrigatórios!");
-        
-        const btn = document.getElementById('btn-confirm-final');
-        btn.disabled = true; btn.innerText = "GRAVANDO...";
-
+        if(!nome || pad.isEmpty()) return alert("Nome e Assinatura!");
         const { doc, updateDoc } = window.fb;
-        const assinaturaImg = pad.toDataURL();
-
+        const img = pad.toDataURL();
         for(let id of idsSelecionados) {
             await updateDoc(doc(window.db, "encomendas", id), {
-                status: "ENTREGUE",
-                dataRetirada: new Date().toISOString(),
-                quemRetirou: nome,
-                assinatura: assinaturaImg
+                status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: nome, assinatura: img
             });
         }
-        
-        btn.disabled = false; btn.innerText = "CONFIRMAR";
-        document.getElementById('quemRetirou').value = "";
         fecharModal();
     }
 
     function gerarRelatorio() {
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF('l', 'mm', 'a4');
-        docP.text("LIVRO DE PROTOCOLO - PORTARIA", 14, 10);
-        const rows = dados.map(i => [
-            new Date(i.dataEntrada).toLocaleDateString(), 
-            i.dest, i.local, i.rastreio, 
-            i.status === 'ENTREGUE' ? 'ENTREGUE' : 'PENDENTE',
-            i.quemRetirou || '-'
-        ]);
-        docP.autoTable({
-            head: [['DATA', 'MORADOR', 'UNIDADE', 'RASTREIO', 'STATUS', 'RETIRADO POR']],
-            body: rows, startY: 15, theme: 'grid', styles: { fontSize: 8 },
-            headStyles: { fillColor: [26, 115, 232], cellPadding: 1 }
-        });
-        docP.save("livro_protocolo.pdf");
+        docP.text("Relatório de Portaria", 14, 10);
+        const rows = dados.map(i => [new Date(i.dataEntrada).toLocaleDateString(), i.dest, i.local, i.rastreio, i.status, i.quemRetirou || '-']);
+        docP.autoTable({ head: [['DATA', 'MORADOR', 'UNIDADE', 'RASTREIO', 'STATUS', 'RETIRADO POR']], body: rows, startY: 15 });
+        docP.save("protocolo.pdf");
     }
 </script>
 </body>
