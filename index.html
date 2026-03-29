@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v56</title>
-    <link rel="manifest" href="manifest.json?v=56">
+    <title>Portaria Digital v57</title>
+    <link rel="manifest" href="manifest.json?v=57">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -31,14 +31,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f0f2f5; }
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f0f2f5; --card-gray: #f8f9fa; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; text-transform: capitalize; }
-        
-        /* Exceção para campos de rastreio não ficarem capitalizados se não desejar */
         .no-cap { text-transform: none !important; }
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; color: #333; }
-
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--primary); z-index: 2000; display: flex; justify-content: center; align-items: center; }
         .login-card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; font-weight: bold; }
@@ -49,26 +46,28 @@
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
-        .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-row.entregue { border-left-color: var(--success); }
+        .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
+        .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
         
         #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 10px; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
         .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; text-transform: none; }
         canvas { width: 100%; height: 200px; touch-action: none; cursor: crosshair; }
-        .badge-info { background: #f8f9fa; padding: 5px 10px; border-radius: 6px; font-size: 12px; color: #333; border: 1px solid #eee; display: block; margin-top: 4px; text-transform: none; }
         
-        /* Ajuste solicitado: Fundo azul e traço branco na tela de histórico */
-        .hist-img-container { background: var(--primary); padding: 5px; border-radius: 8px; margin-top: 8px; display: inline-block; }
-        .hist-img { width: 120px; height: 60px; object-fit: contain; filter: brightness(0) invert(1); }
+        /* Ajuste solicitado: Assinatura com fundo cinza igual ao card e traço branco */
+        .hist-img-container { background: var(--card-gray); padding: 5px; border-radius: 8px; margin-top: 8px; display: inline-block; border: 1px solid #eee; }
+        .hist-img { width: 120px; height: 60px; object-fit: contain; filter: invert(1) brightness(2); }
+
+        /* Botão PDF menor e minimalista */
+        .btn-pdf-small { background: #f1f3f4; color: #d93025; padding: 8px; border-radius: 6px; border: 1px solid #dadce0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v56</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v57</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -76,7 +75,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v56</div>
+    <div class="header">Portaria Digital v57</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -108,7 +107,7 @@
     </div>
 
     <div id="aba-retiradas" class="container" style="display:none;">
-        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Relatório Geral Com Assinaturas</button>
+        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Relatório Geral Completo</button>
         <input type="text" id="busca-his" placeholder="🔍 Filtrar Histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
@@ -128,6 +127,12 @@
 
 <script>
     let dados = [], listaTemp = [], idsSelecionados = [], pad, html5QrCode;
+
+    // Função para capitalizar apenas a primeira letra de cada palavra
+    function caps(str) {
+        if (!str) return "";
+        return str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+    }
 
     function verificarAcesso() {
         if(document.getElementById('senha-login').value === "1234") {
@@ -201,21 +206,25 @@
         
         if(!r || !d || !a) return alert("Preencha Os Campos!");
         
+        // Ajuste: Capitalização forçada ao adicionar
         listaTemp.push({
-            rastreio: r, loja: lo || "Não Informada",
-            dest: d, apto: a, bloco: bl || "-",
+            rastreio: r, loja: caps(lo) || "Não Informada",
+            dest: caps(d), apto: a, bloco: caps(bl) || "-",
             dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
         
+        // Ajuste solicitado: Limpar tudo EXCETO Recebido Por
         document.getElementById('rastreio').value = ""; 
         document.getElementById('destinatario').value = ""; 
         document.getElementById('loja').value = "";
+        document.getElementById('apto').value = "";
+        document.getElementById('bloco').value = "";
+        
         atualizarPreview();
     }
 
     function atualizarPreview() {
         const div = document.getElementById('lista-pre-entrada');
-        // Ajuste solicitado: Mostrar Bl, Apto e Empresa no Preview
         div.innerHTML = listaTemp.map((i, idx) => `
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
@@ -232,13 +241,11 @@
     }
 
     async function salvarNoFirebase() {
-        const f = document.getElementById('recebidoPor').value;
+        const f = caps(document.getElementById('recebidoPor').value);
         if(!f) return alert("Quem Recebeu?");
         for(let item of listaTemp) { item.recebidoPor = f; await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
         listaTemp = [];
         document.getElementById('recebidoPor').value = "";
-        document.getElementById('apto').value = "";
-        document.getElementById('bloco').value = "";
         atualizarPreview();
         switchTab('pendentes', document.getElementById('btn-tab-saida'));
     }
@@ -259,15 +266,15 @@
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
                 lr.innerHTML += `
                     <div class="item-row entregue" style="flex-direction:column; align-items:flex-start;">
-                        <div style="width:100%; display:flex; justify-content:space-between;">
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
                             <div>
                                 <b>${i.dest}</b><br>
                                 <small>${i.apto}/${i.bloco} | ${i.loja}</small><br>
                                 <small class="no-cap" style="color:blue;">${i.rastreio}</small><br>
                                 <small style="color:green">Retirado Por: ${i.quemRetirou}</small><br>
-                                <small style="font-size:10px">${new Date(i.dataRetirada).toLocaleString()}</small>
+                                <small style="font-size:10px; color:#999;">${new Date(i.dataRetirada).toLocaleString()}</small>
                             </div>
-                            <button class="btn" style="width:auto; padding:5px 10px; background:var(--primary); font-size:12px;" onclick="gerarProtocoloIndividual('${i.id}')">PDF</button>
+                            <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')" title="Baixar PDF">📄</div>
                         </div>
                         <div class="hist-img-container">
                             <img src="${i.assinatura}" class="hist-img" />
@@ -287,7 +294,7 @@
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
     async function confirmarEntrega() {
-        const n = document.getElementById('quemRetirou').value;
+        const n = caps(document.getElementById('quemRetirou').value); // Ajuste: Capitalização forçada na saída
         if(!n || pad.isEmpty()) return alert("Nome E Assinatura!");
         const img = pad.toDataURL();
         for(let id of idsSelecionados) {
@@ -312,7 +319,7 @@
                 ['Unidade/Bloco', `Apto: ${i.apto} / Bloco: ${i.bloco}`],
                 ['Rastreio (Loja)', `${i.rastreio} (${i.loja})`],
                 ['Data De Entrada', new Date(i.dataEntrada).toLocaleString()],
-                ['Recebido Por (Funcionário)', i.recebidoPor], // Ajuste solicitado
+                ['Recebido Por (Funcionário)', i.recebidoPor],
                 ['Data De Retirada', new Date(i.dataRetirada).toLocaleString()],
                 ['Retirado Por (Morador/Terceiro)', i.quemRetirou]
             ],
