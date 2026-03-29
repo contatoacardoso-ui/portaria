@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v60</title>
-    <link rel="manifest" href="manifest.json?v=60">
+    <title>Portaria Digital v61</title>
+    <link rel="manifest" href="manifest.json?v=61">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v60</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v61</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v60</div>
+    <div class="header">Portaria Digital v61</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -81,7 +81,7 @@
         <div class="card">
             <div id="reader"></div>
             <button class="btn" style="background:#6f42c1" onclick="alternarScanner()">📷 Escanear Código</button>
-            <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="identificarTransportadora(this)">
+            <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="processarRastreio(this)">
             <input type="text" id="loja" placeholder="Empresa/Loja">
             <input type="text" id="destinatario" placeholder="Nome Do Destinatário">
             <div style="display:flex; gap:10px;">
@@ -132,7 +132,6 @@
         if(document.getElementById('senha-login').value === "1234") {
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
-            // Ajuste: SignaturePad configurado sem fundo opaco
             pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black' });
             iniciarEscuta();
         } else alert("Senha Incorreta!");
@@ -147,6 +146,26 @@
                 location.reload();
             }
         }
+    }
+
+    // Ajuste solicitado: Verificar duplicidade antes de identificar transportadora
+    function processarRastreio(input) {
+        let v = input.value.trim();
+        if(!v) return;
+
+        // Verifica na lista temporária (atual)
+        const existeTemp = listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
+        // Verifica nos dados já salvos (Pendentes e Histórico)
+        const existeBanco = dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
+
+        if(existeTemp || existeBanco) {
+            alert("ERRO: Esta encomenda já consta no sistema (Entrada, Saída ou Histórico).");
+            input.value = "";
+            setTimeout(() => input.focus(), 10);
+            return;
+        }
+
+        identificarTransportadora(input);
     }
 
     function identificarTransportadora(input) {
@@ -166,7 +185,7 @@
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
                 const inp = document.getElementById('rastreio');
                 inp.value = text;
-                identificarTransportadora(inp);
+                processarRastreio(inp); // Chama a verificação após o scan
                 pararScanner();
             });
         } else pararScanner();
@@ -279,49 +298,28 @@
     function abrirModal() { document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); }
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
-    // Função auxiliar para obter a imagem com fundo transparente
     function getTrimmedSignature() {
         if (pad.isEmpty()) return null;
-        
-        // Cria um canvas temporário para processar a transparência
         const originalCanvas = document.getElementById('signature-pad');
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = originalCanvas.width;
         tempCanvas.height = originalCanvas.height;
         const ctx = tempCanvas.getContext('2d');
-        
-        // Desenha a assinatura no canvas temporário
         ctx.drawImage(originalCanvas, 0, 0);
-        
-        // Captura os pixels
         const imgData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imgData.data;
-        
-        // Transforma pixels brancos (ou quase brancos) em transparentes
         for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            // Se for muito claro (perto de branco), define alpha como 0
-            if (r > 240 && g > 240 && b > 240) {
-                data[i + 3] = 0; 
-            }
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            if (r > 240 && g > 240 && b > 240) data[i + 3] = 0; 
         }
-        
-        // Coloca os dados processados de volta no canvas temporário
         ctx.putImageData(imgData, 0, 0);
-        
-        // Retorna a imagem como PNG (que suporta transparência)
         return tempCanvas.toDataURL('image/png');
     }
 
     async function confirmarEntrega() {
         const n = caps(document.getElementById('quemRetirou').value);
-        // Ajuste solicitado: Uso da função auxiliar para garantir transparência
         const imgTransparent = getTrimmedSignature();
-        
         if(!n || !imgTransparent) return alert("Nome E Assinatura!");
-        
         for(let id of idsSelecionados) {
             await window.fb.updateDoc(window.fb.doc(window.db, "encomendas", id), {
                 status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: n, assinatura: imgTransparent
@@ -370,15 +368,10 @@
                 ''
             ]),
             startY: 20,
-            headStyles: { 
-                cellPadding: 1.5, 
-                fontSize: 9,
-                valign: 'middle'
-            },
+            headStyles: { cellPadding: 1.5, fontSize: 9, valign: 'middle' },
             didDrawCell: (data) => {
                 if (data.column.index === 4 && data.cell.section === 'body') {
                     const img = entregues[data.row.index].assinatura;
-                    // Ajuste solicitado: Uso explícito de PNG e processamento rápido para garantir transparência
                     if (img) docR.addImage(img, 'PNG', data.cell.x + 2, data.cell.y + 2, 22, 10, undefined, 'FAST');
                 }
             },
