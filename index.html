@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v51</title>
-    <link rel="manifest" href="manifest.json?v=51">
+    <title>Portaria Digital v52</title>
+    <link rel="manifest" href="manifest.json?v=52">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -33,10 +33,8 @@
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f0f2f5; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; text-transform: capitalize; }
-        /* Impede que placeholders e botões fiquem estranhos com capitalize geral */
         input::placeholder { text-transform: none; }
-        .no-cap { text-transform: none ! embarrassment; }
-
+        
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; }
 
         #tela-login { 
@@ -54,7 +52,7 @@
         
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; text-transform: capitalize; }
+        input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; text-transform: none; }
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -64,24 +62,27 @@
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
         
-        canvas { border: 1px solid #ccc; background: #fff; width: 100%; height: 200px; border-radius: 8px; touch-action: none; }
-        .badge { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #555; margin-right: 5px; text-transform: none; }
+        .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; overflow: hidden; }
+        canvas { width: 100%; height: 200px; touch-action: none; cursor: crosshair; background-color: #fff; }
+        
+        .badge-info { background: #f8f9fa; padding: 5px 10px; border-radius: 6px; font-size: 12px; color: #333; border: 1px solid #eee; display: block; margin-top: 4px; text-transform: none; }
+        .hist-img { width: 120px; height: 60px; object-fit: contain; border: 1px solid #eee; background: white; margin-top: 8px; }
     </style>
 </head>
 <body>
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px; text-transform: none;">Portaria Digital v51</h2>
-        <p style="color:#666; font-size: 14px; margin-bottom:20px;">Controle de Encomendas</p>
+        <h2 style="color:var(--primary); margin-bottom:5px; text-transform: none;">Portaria Digital v52</h2>
+        <p style="color:#666; font-size: 14px; margin-bottom:20px; text-transform: none;">Controle de Encomendas</p>
         <input type="password" id="senha-login" placeholder="Senha de Acesso" style="text-align:center; text-transform: none;">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar no Sistema</button>
-        <button class="btn" style="background:none; color:var(--danger); font-size:12px; border:1px solid var(--danger); margin-top:20px;" onclick="resetarSistema()">Apagar todos os registros</button>
+        <button class="btn" style="background:none; color:var(--danger); font-size:12px; border:1px solid var(--danger); margin-top:20px; text-transform: none;" onclick="resetarSistema()">Apagar todos os registros</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v51</div>
+    <div class="header">Portaria Digital v52</div>
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -93,14 +94,14 @@
         <div class="card">
             <div id="reader"></div>
             <button class="btn" style="background:#6f42c1" onclick="alternarScanner()">📷 Escanear Código</button>
-            <input type="text" id="rastreio" placeholder="Rastreio ou Transportadora">
-            <input type="text" id="loja" placeholder="Empresa/Loja (Ex: Shopee, Amazon...) - Opcional">
+            <input type="text" id="rastreio" placeholder="Rastreio (Ex: Loggi: SMP123)">
+            <input type="text" id="loja" placeholder="Empresa/Loja (Ex: Shopee, Amazon...)">
             <input type="text" id="destinatario" placeholder="Nome do Destinatário">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="apto" placeholder="Apto" style="flex:1;">
                 <input type="text" id="bloco" placeholder="Bloco" style="flex:1;">
             </div>
-            <input type="text" id="recebidoPor" placeholder="Recebido por (Porteiro)">
+            <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)">
             <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ Adicionar à Lista</button>
             
             <div id="lista-pre-entrada" style="margin-top:20px;"></div>
@@ -110,14 +111,14 @@
 
     <!-- ABA PENDENTES -->
     <div id="aba-pendentes" class="container" style="display:none;">
-        <input type="text" id="busca-pen" placeholder="🔍 Buscar nome, apto ou rastreio..." oninput="render()" style="text-transform: none;">
+        <input type="text" id="busca-pen" placeholder="🔍 Buscar por nome, unidade ou rastreio..." oninput="render()" style="text-transform: none;">
         <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Retirar Selecionados</button>
         <div id="lista-pendentes"></div>
     </div>
 
     <!-- ABA HISTÓRICO -->
     <div id="aba-retiradas" class="container" style="display:none;">
-        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Baixar Relatório Completo (PDF)</button>
+        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Baixar Relatório de Movimentação (PDF)</button>
         <input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()" style="text-transform: none;">
         <div id="lista-retiradas"></div>
     </div>
@@ -126,9 +127,9 @@
 <!-- MODAL ASSINATURA -->
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h3 style="margin-top:0">Assinatura do Morador</h3>
+        <h3 style="margin-top:0; text-transform: none;">Assinatura de Retirada</h3>
         <input type="text" id="quemRetirou" placeholder="Nome de quem está retirando">
-        <div style="background:#fff; padding:5px; border-radius:8px;">
+        <div class="sig-wrapper">
             <canvas id="signature-pad"></canvas>
         </div>
         <div style="display:flex; gap:10px; margin-top:20px;">
@@ -145,22 +146,21 @@
         if(document.getElementById('senha-login').value === "1234") {
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
-            pad = new SignaturePad(document.getElementById('signature-pad'));
+            
+            const canvas = document.getElementById('signature-pad');
+            pad = new SignaturePad(canvas, { penColor: 'rgb(0, 0, 0)', backgroundColor: 'rgb(255, 255, 255)' });
             iniciarEscuta();
         } else { alert("Senha incorreta!"); }
     }
 
     async function resetarSistema() {
-        if(confirm("ATENÇÃO: Isso apagará TODOS os registros do banco de dados para sempre. Confirma?")) {
-            const senha = prompt("Digite a senha mestre para apagar:");
+        if(confirm("ATENÇÃO: Isso apagará TODOS os registros. Confirma?")) {
+            const senha = prompt("Senha mestre:");
             if(senha === "9988") {
                 const querySnapshot = await window.fb.getDocs(window.fb.collection(window.db, "encomendas"));
-                for (const doc of querySnapshot.docs) {
-                    await window.fb.deleteDoc(window.fb.doc(window.db, "encomendas", doc.id));
-                }
-                alert("Sistema resetado!");
+                for (const doc of querySnapshot.docs) { await window.fb.deleteDoc(window.fb.doc(window.db, "encomendas", doc.id)); }
                 location.reload();
-            } else { alert("Senha inválida!"); }
+            }
         }
     }
 
@@ -174,7 +174,7 @@
                     document.getElementById('rastreio').value = text;
                     pararScanner();
                 }
-            ).catch(err => alert("Erro ao abrir câmera."));
+            ).catch(() => alert("Câmera indisponível"));
         } else { pararScanner(); }
     }
 
@@ -202,16 +202,16 @@
     }
 
     function adicionarNaLista() {
-        const rast = document.getElementById('rastreio').value || "Não informado";
-        const loja = document.getElementById('loja').value || "Não informada";
+        const rast = document.getElementById('rastreio').value;
+        const loja = document.getElementById('loja').value;
         const dest = document.getElementById('destinatario').value;
         const apt = document.getElementById('apto').value;
         const bl = document.getElementById('bloco').value;
 
-        if(!dest || !apt) return alert("Nome e Apto são obrigatórios!");
+        if(!dest || !apt || !rast) return alert("Destinatário, Unidade e Rastreio são obrigatórios!");
 
         listaTemp.push({
-            rastreio: rast, loja: loja, dest: dest, apto: apt, bloco: bl,
+            rastreio: rast, loja: loja || "Não Informada", dest: dest, apto: apt, bloco: bl,
             dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
 
@@ -224,14 +224,15 @@
     function atualizarPreview() {
         const div = document.getElementById('lista-pre-entrada');
         div.innerHTML = listaTemp.map((i, idx) => `
-            <div style="background:#fffde7; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid #ffd54f;">
-                <div style="display:flex; justify-content:space-between; align-items:start;">
+            <div style="background:#fffde7; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #ffd54f;">
+                <div style="display:flex; justify-content:space-between;">
                     <div>
                         <b>${i.dest}</b><br>
-                        <span class="badge">Apto ${i.apto} Bl ${i.bloco}</span>
-                        <span class="badge">${i.loja}</span>
+                        <span class="badge-info">Unidade: ${i.apto} Bl: ${i.bloco}</span>
+                        <span class="badge-info">Rastreio: ${i.rastreio}</span>
+                        <span class="badge-info">Empresa: ${i.loja}</span>
                     </div>
-                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-weight:bold;">Remover</button>
+                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-weight:bold; font-size:18px;">✕</button>
                 </div>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
@@ -239,12 +240,12 @@
 
     async function salvarNoFirebase() {
         const func = document.getElementById('recebidoPor').value;
-        if(!func) return alert("Informe quem está recebendo.");
+        if(!func) return alert("Quem é o funcionário?");
         for(let item of listaTemp) {
             item.recebidoPor = func;
             await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item);
         }
-        listaTemp = []; atualizarPreview(); alert("Salvo com sucesso!");
+        listaTemp = []; atualizarPreview(); alert("Registrado com sucesso!");
     }
 
     function render() {
@@ -254,30 +255,37 @@
         const bH = document.getElementById('busca-his').value.toLowerCase();
 
         lp.innerHTML = ""; lr.innerHTML = "";
-        idsSelecionados = []; // Limpa seleção ao renderizar
+        
         document.getElementById('btn-retirar-lote').style.display = 'none';
 
         dados.forEach(i => {
             const txt = `${i.dest} ${i.apto} ${i.bloco} ${i.rastreio} ${i.loja}`.toLowerCase();
+            
             if(i.status === "PENDENTE" && txt.includes(bP)) {
                 lp.innerHTML += `
                     <div class="item-row">
-                        <input type="checkbox" style="width:22px; height:22px" value="${i.id}" onchange="contar()">
+                        <input type="checkbox" style="width:24px; height:24px" value="${i.id}" onchange="contar()">
                         <div>
                             <b>${i.dest}</b><br>
-                            <small>${i.apto} Bl ${i.bloco} | Ref: ${i.loja}</small><br>
-                            <small style="color:var(--primary)">${i.rastreio}</small>
+                            <small>${i.apto} Bl ${i.bloco} | Loja: ${i.loja}</small><br>
+                            <small style="color:var(--primary); text-transform:none;">${i.rastreio}</small>
                         </div>
                     </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
                 lr.innerHTML += `
                     <div class="item-row entregue" style="flex-direction:column; align-items:flex-start;">
-                        <div style="width:100%; display:flex; justify-content:space-between;">
-                            <b>${i.dest}</b>
-                            <button class="badge" style="background:var(--primary); color:white; border:none; cursor:pointer;" onclick="gerarProtocoloIndividual('${i.id}')">Protocolo Individual</button>
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <b>${i.dest}</b><br>
+                                <small>Unidade: ${i.apto} Bl: ${i.bloco} | Loja: ${i.loja}</small><br>
+                                <small style="text-transform:none;">Rastreio: ${i.rastreio}</small>
+                            </div>
+                            <button class="btn" style="width:auto; padding:8px 12px; font-size:11px; background:var(--primary);" onclick="gerarProtocoloIndividual('${i.id}')">PDF</button>
                         </div>
-                        <small>Unidade: ${i.apto} Bl ${i.bloco} | Rastreio: ${i.rastreio}</small>
-                        <small style="color:var(--success); margin-top:5px;">Retirado por: ${i.quemRetirou} em ${new Date(i.dataRetirada).toLocaleString()}</small>
+                        <div style="border-top:1px solid #eee; width:100%; padding-top:8px; margin-top:8px;">
+                            <small style="color:var(--success)">Retirado por: ${i.quemRetirou}</small><br>
+                            <img src="${i.assinatura}" class="hist-img" />
+                        </div>
                     </div>`;
             }
         });
@@ -293,7 +301,7 @@
 
     async function confirmarEntrega() {
         const nome = document.getElementById('quemRetirou').value;
-        if(!nome || pad.isEmpty()) return alert("Nome e Assinatura são obrigatórios!");
+        if(!nome || pad.isEmpty()) return alert("Nome e Assinatura!");
         const img = pad.toDataURL();
         for(let id of idsSelecionados) {
             await window.fb.updateDoc(window.fb.doc(window.db, "encomendas", id), {
@@ -301,6 +309,7 @@
             });
         }
         document.getElementById('quemRetirou').value = "";
+        idsSelecionados = [];
         fecharModal();
     }
 
@@ -309,43 +318,46 @@
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
         
-        docP.setFontSize(18); docP.text("Protocolo de Entrega", 105, 20, { align: 'center' });
-        docP.setFontSize(10); docP.text(`Gerado em: ${new Date().toLocaleString()}`, 105, 28, { align: 'center' });
+        docP.setFontSize(16); docP.text("Protocolo de Entrega de Encomenda", 105, 20, { align: 'center' });
         
         docP.autoTable({
-            startY: 40, theme: 'grid',
-            head: [['Campo', 'Informação']],
+            startY: 30, theme: 'grid',
+            head: [['Descrição', 'Dados do Registro']],
             body: [
-                ['Destinatário', i.dest], ['Unidade', `${i.apto} Bloco ${i.bloco}`],
-                ['Loja/Origem', i.loja], ['Rastreio/Transportadora', i.rastreio],
-                ['Data Entrada', new Date(i.dataEntrada).toLocaleString()],
-                ['Recebido por (Portaria)', i.recebidoPor],
-                ['Data Retirada', new Date(i.dataRetirada).toLocaleString()],
+                ['Destinatário / Unidade', `${i.dest} - Apto ${i.apto} Bloco ${i.bloco}`],
+                ['Empresa / Loja', i.loja],
+                ['Código de Rastreio', i.rastreio],
+                ['Data/Hora Entrada', new Date(i.dataEntrada).toLocaleString()],
+                ['Recebido Por', i.recebidoPor],
+                ['Data/Hora Retirada', new Date(i.dataRetirada).toLocaleString()],
                 ['Quem Retirou', i.quemRetirou]
-            ]
+            ],
+            styles: { textCase: 'normal' }
         });
 
-        docP.text("Assinatura do Morador:", 20, docP.lastAutoTable.finalY + 20);
-        docP.addImage(i.assinatura, 'PNG', 20, docP.lastAutoTable.finalY + 25, 60, 30);
-        docP.save(`protocolo_${i.dest}.pdf`);
+        const finalY = docP.lastAutoTable.finalY;
+        docP.text("Assinatura de Retirada:", 20, finalY + 15);
+        docP.addImage(i.assinatura, 'PNG', 20, finalY + 20, 70, 35);
+        docP.save(`Protocolo_${i.dest}.pdf`);
     }
 
     function gerarRelatorio() {
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF('l', 'mm', 'a4');
-        docP.text("Relatório Geral de Movimentação", 14, 10);
+        docP.text("Relatório de Portaria - Movimentação", 14, 10);
         
-        const rows = dados.map(i => [
-            new Date(i.dataEntrada).toLocaleDateString(), i.dest, `${i.apto}/${i.bloco}`,
-            i.rastreio, i.recebidoPor, i.quemRetirou || '-', 
-            i.status === 'ENTREGUE' ? 'Sim' : 'Não'
+        const rows = dados.filter(i => i.status === 'ENTREGUE').map(i => [
+            new Date(i.dataEntrada).toLocaleDateString(), 
+            `${i.dest} (${i.apto}/${i.bloco})`,
+            i.rastreio, i.loja, i.recebidoPor, i.quemRetirou,
+            new Date(i.dataRetirada).toLocaleString()
         ]);
 
         docP.autoTable({ 
-            head: [['Entrada', 'Destinatário', 'Apt/Bl', 'Rastreio', 'Porteiro', 'Retirado por', 'Entregue?']], 
+            head: [['Entrada', 'Destinatário/Unidade', 'Rastreio', 'Loja', 'Recebido Por', 'Retirado por', 'Data Saída']], 
             body: rows, startY: 15, styles: { fontSize: 8 }
         });
-        docP.save("relatorio_geral.pdf");
+        docP.save("Relatorio_Geral.pdf");
     }
 </script>
 </body>
