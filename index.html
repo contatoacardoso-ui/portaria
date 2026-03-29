@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v63</title>
-    <link rel="manifest" href="manifest.json?v=63">
+    <title>Portaria Digital v64</title>
+    <link rel="manifest" href="manifest.json?v=64">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v63</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v64</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v63</div>
+    <div class="header">Portaria Digital v64</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -187,19 +187,17 @@
                     pararScanner();
                 } else {
                     selecionarPorScan(text);
-                    // No modo saída, não para o scanner para permitir bipar vários em sequência
                 }
             });
         } else pararScanner();
     }
 
     function selecionarPorScan(codigo) {
-        // Tenta achar o item que contém o código bipado
         const item = dados.find(d => d.status === "PENDENTE" && d.rastreio.toLowerCase().includes(codigo.toLowerCase()));
         if(item) {
             if(!idsSelecionados.includes(item.id)) {
                 idsSelecionados.push(item.id);
-                render(); // Atualiza a lista para mostrar o check
+                render();
             }
         } else {
             alert("Encomenda não encontrada nos pendentes.");
@@ -255,7 +253,12 @@
         div.innerHTML = listaTemp.map((i, idx) => `
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small></div>
+                    <div>
+                        <b>${i.dest}</b><br>
+                        <small>Apto ${i.apto} / Bl ${i.bloco}</small><br>
+                        <small>Loja/Empresa: ${i.loja}</small><br>
+                        <small class="no-cap" style="color:blue;">${i.rastreio}</small>
+                    </div>
                     <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:18px;">×</button>
                 </div>
             </div>`).join('');
@@ -306,12 +309,17 @@
     }
 
     function verificarBotaoLote() {
-        document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
-        document.getElementById('btn-retirar-lote').innerText = `Dar Baixa Em ${idsSelecionados.length} Pacote(s)`;
+        const btn = document.getElementById('btn-retirar-lote');
+        if(idsSelecionados.length > 0) {
+            btn.style.display = 'block';
+            btn.innerText = `Dar Baixa Em ${idsSelecionados.length} Pacote(s)`;
+        } else {
+            btn.style.display = 'none';
+        }
     }
 
     function abrirModal() { 
-        pararScanner(); // Garante que a câmera fecha ao abrir o modal
+        pararScanner();
         document.getElementById('modal-assinatura').style.display='flex'; 
         pad.clear(); 
     }
@@ -342,7 +350,10 @@
                 status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: n, assinatura: imgTransparent
             });
         }
+        // SOLICITADO: Limpar seleção e esconder botão após baixa
         idsSelecionados = [];
+        verificarBotaoLote();
+        
         document.getElementById('quemRetirou').value = "";
         fecharModal();
     }
@@ -354,7 +365,7 @@
         docP.text("Recibo De Retirada", 105, 20, { align: 'center' });
         docP.autoTable({
             startY: 30,
-            body: [['Destinatário', i.dest], ['Unidade', `Apto: ${i.apto} / Bloco: ${i.bloco}`], ['Rastreio', i.rastreio], ['Entrada', new Date(i.dataEntrada).toLocaleString()], ['Saída', new Date(i.dataRetirada).toLocaleString()], ['Quem Retirou', i.quemRetirou]],
+            body: [['Destinatário', i.dest], ['Unidade', `Apto: ${i.apto} / Bloco: ${i.bloco}`], ['Loja/Empresa', i.loja], ['Rastreio', i.rastreio], ['Entrada', new Date(i.dataEntrada).toLocaleString()], ['Saída', new Date(i.dataRetirada).toLocaleString()], ['Quem Retirou', i.quemRetirou]],
             theme: 'grid'
         });
         docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 10, 60, 30);
