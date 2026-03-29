@@ -7,7 +7,6 @@
     <title>Portaria Digital v48</title>
     <link rel="manifest" href="manifest.json?v=48">
 
-    <!-- Configuração Firebase via Módulo -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -22,15 +21,11 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Exportando para o window para que as funções tradicionais alcancem o Firebase
-        window.db = db;
+        window.db = getFirestore(app);
         window.fb = { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, getDocs, where };
-        console.log("Firebase Pronto v48");
+        console.log("Firebase v48 Conectado");
     </script>
 
-    <!-- Bibliotecas Externas -->
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -38,82 +33,80 @@
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f0f2f5; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; }
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--primary); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .login-card { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-card { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; }
-        .tabs { display: flex; background: white; position: sticky; top: 50px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 12px; }
+        .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 11px; text-transform: uppercase; cursor: pointer; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-size: 16px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 5px; }
-        .item-row { background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
+        .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
-        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; }
-        canvas { border: 1px solid #000; background: #fff; width: 100%; height: 200px; margin-top: 10px; }
+        .rastreio-tag { color: var(--primary); font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px; }
+        #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
+        canvas { border: 2px solid #333; background: #fff; width: 100%; height: 200px; border-radius: 8px; touch-action: none; }
     </style>
 </head>
 <body>
 
 <div id="tela-login">
     <div class="login-card">
-        <h3>Sistema de Portaria</h3>
-        <input type="password" id="senha-login" placeholder="Senha de Acesso">
-        <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">ENTRAR</button>
+        <h2 style="color:var(--primary)">Portaria Digital</h2>
+        <input type="password" id="senha-login" placeholder="Senha de Acesso" style="text-align:center">
+        <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">ACESSAR SISTEMA</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
     <div class="header"><b>PORTARIA DIGITAL v48</b></div>
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('registro', this)">📥 ENTRADA</button>
-        <button class="tab-btn" onclick="switchTab('pendentes', this)">📤 SAÍDA</button>
-        <button class="tab-btn" onclick="switchTab('retiradas', this)">✅ HISTÓRICO</button>
+        <button class="tab-btn active" onclick="switchTab('registro', this)">📥 Entrada</button>
+        <button class="tab-btn" onclick="switchTab('pendentes', this)">📤 Saída</button>
+        <button class="tab-btn" onclick="switchTab('retiradas', this)">✅ Histórico</button>
     </div>
 
-    <!-- ABA 1: REGISTRO -->
     <div id="aba-registro" class="container">
         <div class="card">
-            <input type="text" id="rastreio" placeholder="Código de Rastreio">
+            <input type="text" id="rastreio" placeholder="Rastreio / Transportadora">
             <input type="text" id="destinatario" placeholder="Nome do Morador">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="apto" placeholder="Apto" style="flex:1;">
                 <input type="text" id="bloco" placeholder="Bloco" style="flex:1;">
             </div>
-            <input type="text" id="recebidoPor" placeholder="Funcionário que recebeu">
-            <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ ADICIONAR ITEM</button>
-            <div id="lista-pre-entrada"></div>
-            <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none;" onclick="salvarNoFirebase()">FINALIZAR ENTRADA</button>
+            <input type="text" id="recebidoPor" placeholder="Recebido por (Porteiro)">
+            <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ ADICIONAR À LISTA</button>
+            <div id="lista-pre-entrada" style="margin-top:15px"></div>
+            <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none; margin-top:10px;" onclick="salvarNoFirebase()">REGISTRAR TUDO NO BANCO</button>
         </div>
     </div>
 
-    <!-- ABA 2: PENDENTES -->
     <div id="aba-pendentes" class="container" style="display:none;">
-        <input type="text" id="busca-pen" placeholder="🔍 Buscar por nome ou apto..." oninput="render()">
-        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">RETIRAR SELECIONADOS</button>
+        <input type="text" id="busca-pen" placeholder="🔍 Buscar nome ou apto..." oninput="render()">
+        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none; margin-bottom:15px" onclick="abrirModal()">RETIRAR SELECIONADOS</button>
         <div id="lista-pendentes"></div>
     </div>
 
-    <!-- ABA 3: HISTÓRICO -->
     <div id="aba-retiradas" class="container" style="display:none;">
-        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">GERAR RELATÓRIO PDF</button>
+        <button class="btn" style="background:#333; margin-bottom:15px" onclick="gerarRelatorio()">📄 LIVRO DE PROTOCOLO (PDF)</button>
         <input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
 </div>
 
-<!-- MODAL DE ASSINATURA -->
 <div id="modal-assinatura">
     <div class="modal-content">
-        <h4>Confirmação de Retirada</h4>
-        <input type="text" id="quemRetirou" placeholder="Nome de quem está retirando">
+        <h3>Assinatura do Morador</h3>
+        <input type="text" id="quemRetirou" placeholder="Nome de quem está levando">
         <canvas id="signature-pad"></canvas>
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn" style="background:var(--danger); flex:1;" onclick="fecharModal()">CANCELAR</button>
-            <button class="btn" id="btn-confirm-final" style="background:var(--success); flex:1;" onclick="confirmarEntrega()">CONFIRMAR</button>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn" style="background:var(--danger); flex:1" onclick="fecharModal()">CANCELAR</button>
+            <button class="btn" id="btn-confirm-final" style="background:var(--success); flex:1" onclick="confirmarEntrega()">CONFIRMAR</button>
         </div>
     </div>
 </div>
@@ -125,8 +118,8 @@
         if(document.getElementById('senha-login').value === "1234") {
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
-            iniciarEscutaFirebase();
             pad = new SignaturePad(document.getElementById('signature-pad'));
+            iniciarEscuta();
         } else { alert("Senha incorreta!"); }
     }
 
@@ -139,7 +132,7 @@
         btn.classList.add('active');
     }
 
-    function iniciarEscutaFirebase() {
+    function iniciarEscuta() {
         const { collection, query, orderBy, onSnapshot } = window.fb;
         const q = query(collection(window.db, "encomendas"), orderBy("dataEntrada", "desc"));
         onSnapshot(q, (snap) => {
@@ -149,20 +142,20 @@
     }
 
     async function adicionarNaLista() {
-        const rastreio = document.getElementById('rastreio').value.toUpperCase() || "MANUAL";
+        const rast = document.getElementById('rastreio').value.toUpperCase() || "MANUAL";
         const nome = document.getElementById('destinatario').value.toUpperCase();
-        if(!nome) return alert("Nome do morador é obrigatório!");
+        if(!nome) return alert("Digite o nome do morador!");
 
-        // Verificação de duplicados (Pendente)
+        // Trava de duplicados
         const { collection, query, where, getDocs } = window.fb;
-        if(rastreio !== "MANUAL") {
-            const q = query(collection(window.db, "encomendas"), where("rastreio", "==", rastreio), where("status", "==", "PENDENTE"));
+        if(rast !== "MANUAL") {
+            const q = query(collection(window.db, "encomendas"), where("rastreio", "==", rast), where("status", "==", "PENDENTE"));
             const snapshot = await getDocs(q);
-            if(!snapshot.empty) return alert("⚠️ Este código de rastreio já está pendente na portaria!");
+            if(!snapshot.empty) return alert("ERRO: Este rastreio já está pendente na portaria!");
         }
 
         listaTemp.push({
-            rastreio,
+            rastreio: rast,
             dest: nome,
             local: `Apto ${document.getElementById('apto').value} Bl ${document.getElementById('bloco').value}`,
             dataEntrada: new Date().toISOString(),
@@ -176,90 +169,100 @@
 
     function atualizarPreview() {
         const div = document.getElementById('lista-pre-entrada');
-        div.innerHTML = listaTemp.map((item, idx) => `
-            <div style="background:#eee; padding:10px; margin-bottom:5px; border-radius:5px; font-size:12px;">
-                <b>${item.dest}</b> - ${item.rastreio} 
-                <span style="color:red; float:right;" onclick="listaTemp.splice(${idx},1); atualizarPreview();">remover</span>
+        div.innerHTML = listaTemp.map((i, idx) => `
+            <div style="background:#fffde7; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ffd54f; display:flex; justify-content:space-between;">
+                <span><b>${i.dest}</b><br><small>${i.rastreio}</small></span>
+                <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-weight:bold;">X</button>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
     }
 
     async function salvarNoFirebase() {
         const func = document.getElementById('recebidoPor').value.toUpperCase();
-        if(!func) return alert("Informe quem está recebendo.");
+        if(!func) return alert("Informe quem está recebendo a carga!");
         const { collection, addDoc } = window.fb;
         for(let item of listaTemp) {
             item.recebidoPor = func;
             await addDoc(collection(window.db, "encomendas"), item);
         }
-        listaTemp = []; atualizarPreview(); alert("Sucesso!");
+        listaTemp = []; atualizarPreview(); alert("Salvo com sucesso!");
     }
 
     function render() {
         const lp = document.getElementById('lista-pendentes');
         const lr = document.getElementById('lista-retiradas');
-        const buscaP = document.getElementById('busca-pen').value.toLowerCase();
-        const buscaH = document.getElementById('busca-his').value.toLowerCase();
+        const bP = document.getElementById('busca-pen').value.toLowerCase();
+        const bH = document.getElementById('busca-his').value.toLowerCase();
 
         lp.innerHTML = ""; lr.innerHTML = "";
 
         dados.forEach(i => {
-            const texto = `${i.dest} ${i.local} ${i.rastreio}`.toLowerCase();
-            if(i.status === "PENDENTE" && texto.includes(buscaP)) {
+            const txt = `${i.dest} ${i.local} ${i.rastreio}`.toLowerCase();
+            if(i.status === "PENDENTE" && txt.includes(bP)) {
                 lp.innerHTML += `
                     <div class="item-row">
-                        <input type="checkbox" style="width:25px; height:25px;" value="${i.id}" onchange="contarSelecionados()">
-                        <div><b>${i.dest}</b><br><small>${i.local} | ${i.rastreio}</small></div>
+                        <input type="checkbox" style="width:25px; height:25px" value="${i.id}" onchange="contar()">
+                        <div><span class="rastreio-tag">🏷️ ${i.rastreio}</span><b>${i.dest}</b><br><small>${i.local}</small></div>
                     </div>`;
-            } else if (i.status === "ENTREGUE" && texto.includes(buscaH)) {
+            } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
                 lr.innerHTML += `
-                    <div class="item-row entregue">
-                        <div><b>${i.dest}</b><br><small>Retirado por: ${i.quemRetirou}</small></div>
+                    <div class="item-row entregue" style="display:block">
+                        <span class="rastreio-tag">🏷️ ${i.rastreio}</span>
+                        <b>${i.dest}</b> (${i.local})<br>
+                        <small style="color:var(--success)">Saiu para: ${i.quemRetirou} às ${new Date(i.dataRetirada).toLocaleString()}</small>
                     </div>`;
             }
         });
     }
 
-    function contarSelecionados() {
+    function contar() {
         idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value);
         document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
     }
 
-    function abrirModal() { document.getElementById('modal-assinatura').style.display = 'flex'; pad.clear(); }
-    function fecharModal() { document.getElementById('modal-assinatura').style.display = 'none'; }
+    function abrirModal() { document.getElementById('modal-assinatura').style.display='flex'; pad.clear(); }
+    function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
     async function confirmarEntrega() {
-        const nomeRetirou = document.getElementById('quemRetirou').value.toUpperCase();
-        if(!nomeRetirou || pad.isEmpty()) return alert("Nome e Assinatura obrigatórios!");
-
+        const nome = document.getElementById('quemRetirou').value.toUpperCase();
+        if(!nome || pad.isEmpty()) return alert("Nome e Assinatura são obrigatórios!");
+        
         const btn = document.getElementById('btn-confirm-final');
-        btn.disabled = true; btn.innerText = "PROCESSANDO...";
+        btn.disabled = true; btn.innerText = "GRAVANDO...";
 
         const { doc, updateDoc } = window.fb;
-        const img = pad.toDataURL();
+        const assinaturaImg = pad.toDataURL();
 
         for(let id of idsSelecionados) {
             await updateDoc(doc(window.db, "encomendas", id), {
                 status: "ENTREGUE",
                 dataRetirada: new Date().toISOString(),
-                quemRetirou: nomeRetirou,
-                assinatura: img
+                quemRetirou: nome,
+                assinatura: assinaturaImg
             });
         }
-
+        
         btn.disabled = false; btn.innerText = "CONFIRMAR";
         document.getElementById('quemRetirou').value = "";
         fecharModal();
-        alert("Retirada concluída!");
     }
 
     function gerarRelatorio() {
         const { jsPDF } = window.jspdf;
-        const docPDF = new jsPDF('p', 'mm', 'a4');
-        docPDF.text("Relatório de Encomendas", 10, 10);
-        const rows = dados.map(i => [i.dest, i.local, i.rastreio, i.status]);
-        docPDF.autoTable({ head: [['Morador', 'Apto/Bl', 'Rastreio', 'Status']], body: rows, startY: 20 });
-        docPDF.save("relatorio.pdf");
+        const docP = new jsPDF('l', 'mm', 'a4');
+        docP.text("LIVRO DE PROTOCOLO - PORTARIA", 14, 10);
+        const rows = dados.map(i => [
+            new Date(i.dataEntrada).toLocaleDateString(), 
+            i.dest, i.local, i.rastreio, 
+            i.status === 'ENTREGUE' ? 'ENTREGUE' : 'PENDENTE',
+            i.quemRetirou || '-'
+        ]);
+        docP.autoTable({
+            head: [['DATA', 'MORADOR', 'UNIDADE', 'RASTREIO', 'STATUS', 'RETIRADO POR']],
+            body: rows, startY: 15, theme: 'grid', styles: { fontSize: 8 },
+            headStyles: { fillColor: [26, 115, 232], cellPadding: 1 }
+        });
+        docP.save("livro_protocolo.pdf");
     }
 </script>
 </body>
