@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v55</title>
-    <link rel="manifest" href="manifest.json?v=55">
+    <title>Portaria Digital v56</title>
+    <link rel="manifest" href="manifest.json?v=56">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -32,8 +32,11 @@
 
     <style>
         :root { --primary: #1a73e8; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f0f2f5; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        .cap { text-transform: capitalize; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; text-transform: capitalize; }
+        
+        /* Exceção para campos de rastreio não ficarem capitalizados se não desejar */
+        .no-cap { text-transform: none !important; }
+        
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; color: #333; }
 
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--primary); z-index: 2000; display: flex; justify-content: center; align-items: center; }
@@ -48,28 +51,32 @@
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-row.entregue { border-left-color: var(--success); }
+        
         #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 10px; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
-        .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; }
+        .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; text-transform: none; }
         canvas { width: 100%; height: 200px; touch-action: none; cursor: crosshair; }
-        .badge-info { background: #f8f9fa; padding: 5px 10px; border-radius: 6px; font-size: 12px; color: #333; border: 1px solid #eee; display: block; margin-top: 4px; }
-        .hist-img { width: 100px; height: 50px; object-fit: contain; border: 1px solid #ddd; background: white; margin-top: 8px; }
+        .badge-info { background: #f8f9fa; padding: 5px 10px; border-radius: 6px; font-size: 12px; color: #333; border: 1px solid #eee; display: block; margin-top: 4px; text-transform: none; }
+        
+        /* Ajuste solicitado: Fundo azul e traço branco na tela de histórico */
+        .hist-img-container { background: var(--primary); padding: 5px; border-radius: 8px; margin-top: 8px; display: inline-block; }
+        .hist-img { width: 120px; height: 60px; object-fit: contain; filter: brightness(0) invert(1); }
     </style>
 </head>
 <body>
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v55</h2>
-        <input type="password" id="senha-login" placeholder="Senha de acesso">
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v56</h2>
+        <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v55</div>
+    <div class="header">Portaria Digital v56</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -80,30 +87,29 @@
         <div class="card">
             <div id="reader"></div>
             <button class="btn" style="background:#6f42c1" onclick="alternarScanner()">📷 Escanear Código</button>
-            <input type="text" id="rastreio" placeholder="Rastreio" onblur="identificarTransportadora(this)">
-            <input type="text" id="loja" placeholder="Empresa/Loja" class="cap">
-            <input type="text" id="destinatario" placeholder="Nome do Destinatário" class="cap">
+            <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="identificarTransportadora(this)">
+            <input type="text" id="loja" placeholder="Empresa/Loja">
+            <input type="text" id="destinatario" placeholder="Nome Do Destinatário">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="apto" placeholder="Apto" style="flex:1;">
-                <input type="text" id="bloco" placeholder="Bloco" style="flex:1;" class="cap">
+                <input type="text" id="bloco" placeholder="Bloco" style="flex:1;">
             </div>
-            <!-- Campo Alterado conforme pedido -->
-            <input type="text" id="recebidoPor" placeholder="Recebido por (Funcionário)" class="cap">
-            <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ Adicionar à Lista</button>
+            <input type="text" id="recebidoPor" placeholder="Recebido Por (Funcionário)">
+            <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ Adicionar À Lista</button>
             <div id="lista-pre-entrada"></div>
             <button id="btn-salvar-tudo" class="btn" style="background:var(--success); display:none;" onclick="salvarNoFirebase()">Salvar Entrada</button>
         </div>
     </div>
 
     <div id="aba-pendentes" class="container" style="display:none;">
-        <input type="text" id="busca-pen" placeholder="🔍 Buscar encomendas..." oninput="render()">
-        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Dar Baixa nos Selecionados</button>
+        <input type="text" id="busca-pen" placeholder="🔍 Buscar Encomendas..." oninput="render()">
+        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Dar Baixa Nos Selecionados</button>
         <div id="lista-pendentes"></div>
     </div>
 
     <div id="aba-retiradas" class="container" style="display:none;">
-        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Relatório Geral com Assinaturas</button>
-        <input type="text" id="busca-his" placeholder="🔍 Filtrar histórico..." oninput="render()">
+        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Relatório Geral Com Assinaturas</button>
+        <input type="text" id="busca-his" placeholder="🔍 Filtrar Histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
 </div>
@@ -111,8 +117,7 @@
 <div id="modal-assinatura">
     <div class="modal-content">
         <h3>Confirmar Retirada</h3>
-        <!-- Campo Alterado conforme pedido -->
-        <input type="text" id="quemRetirou" placeholder="Retirado Por" class="cap">
+        <input type="text" id="quemRetirou" placeholder="Retirado Por">
         <div class="sig-wrapper"><canvas id="signature-pad"></canvas></div>
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn" style="background:var(--danger); flex:1" onclick="fecharModal()">Cancelar</button>
@@ -128,14 +133,14 @@
         if(document.getElementById('senha-login').value === "1234") {
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
-            pad = new SignaturePad(document.getElementById('signature-pad'), { backgroundColor: 'white' });
+            pad = new SignaturePad(document.getElementById('signature-pad'), { backgroundColor: 'white', penColor: 'black' });
             iniciarEscuta();
-        } else alert("Senha incorreta!");
+        } else alert("Senha Incorreta!");
     }
 
     async function resetarSistema() {
-        if(confirm("Deseja apagar TUDO?")) {
-            const s = prompt("Senha mestre:");
+        if(confirm("Deseja Apagar Tudo?")) {
+            const s = prompt("Senha Mestre:");
             if(s === "9988") {
                 const snap = await window.fb.getDocs(window.fb.collection(window.db, "encomendas"));
                 for (const d of snap.docs) await window.fb.deleteDoc(window.fb.doc(window.db, "encomendas", d.id));
@@ -192,23 +197,35 @@
 
     function adicionarNaLista() {
         const r = document.getElementById('rastreio').value, d = document.getElementById('destinatario').value, a = document.getElementById('apto').value;
-        if(!r || !d || !a) return alert("Preencha os campos!");
+        const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value;
+        
+        if(!r || !d || !a) return alert("Preencha Os Campos!");
+        
         listaTemp.push({
-            rastreio: r, loja: document.getElementById('loja').value || "Não informada",
-            dest: d, apto: a, bloco: document.getElementById('bloco').value || "-",
+            rastreio: r, loja: lo || "Não Informada",
+            dest: d, apto: a, bloco: bl || "-",
             dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
-        document.getElementById('rastreio').value = ""; document.getElementById('destinatario').value = ""; document.getElementById('loja').value = "";
+        
+        document.getElementById('rastreio').value = ""; 
+        document.getElementById('destinatario').value = ""; 
+        document.getElementById('loja').value = "";
         atualizarPreview();
     }
 
     function atualizarPreview() {
         const div = document.getElementById('lista-pre-entrada');
+        // Ajuste solicitado: Mostrar Bl, Apto e Empresa no Preview
         div.innerHTML = listaTemp.map((i, idx) => `
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div class="cap"><b>${i.dest}</b><br><small>${i.rastreio}</small></div>
-                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none;">×</button>
+                    <div>
+                        <b>${i.dest}</b><br>
+                        <small>Unidade: ${i.apto} | Bl: ${i.bloco}</small><br>
+                        <small>Loja: ${i.loja}</small><br>
+                        <small class="no-cap" style="color:blue;">${i.rastreio}</small>
+                    </div>
+                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:18px;">×</button>
                 </div>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
@@ -216,10 +233,8 @@
 
     async function salvarNoFirebase() {
         const f = document.getElementById('recebidoPor').value;
-        if(!f) return alert("Quem recebeu?");
+        if(!f) return alert("Quem Recebeu?");
         for(let item of listaTemp) { item.recebidoPor = f; await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
-        
-        // CORREÇÃO: Limpar dados e ir para tela Saída
         listaTemp = [];
         document.getElementById('recebidoPor').value = "";
         document.getElementById('apto').value = "";
@@ -239,23 +254,24 @@
                 lp.innerHTML += `
                     <div class="item-row">
                         <input type="checkbox" style="width:22px; height:22px" value="${i.id}" onchange="contar()">
-                        <div class="cap"><b>${i.dest}</b><br><small>${i.apto}/${i.bloco} | ${i.loja}</small><br><small style="text-transform:none; color:blue;">${i.rastreio}</small></div>
+                        <div><b>${i.dest}</b><br><small>${i.apto}/${i.bloco} | ${i.loja}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small></div>
                     </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
-                // CORREÇÃO: Histórico com quem retirou, data e hora
                 lr.innerHTML += `
                     <div class="item-row entregue" style="flex-direction:column; align-items:flex-start;">
                         <div style="width:100%; display:flex; justify-content:space-between;">
-                            <div class="cap">
+                            <div>
                                 <b>${i.dest}</b><br>
                                 <small>${i.apto}/${i.bloco} | ${i.loja}</small><br>
-                                <small style="text-transform:none; color:blue;">${i.rastreio}</small><br>
-                                <small style="color:green">Retirado por: ${i.quemRetirou}</small><br>
+                                <small class="no-cap" style="color:blue;">${i.rastreio}</small><br>
+                                <small style="color:green">Retirado Por: ${i.quemRetirou}</small><br>
                                 <small style="font-size:10px">${new Date(i.dataRetirada).toLocaleString()}</small>
                             </div>
                             <button class="btn" style="width:auto; padding:5px 10px; background:var(--primary); font-size:12px;" onclick="gerarProtocoloIndividual('${i.id}')">PDF</button>
                         </div>
-                        <img src="${i.assinatura}" class="hist-img" />
+                        <div class="hist-img-container">
+                            <img src="${i.assinatura}" class="hist-img" />
+                        </div>
                     </div>`;
             }
         });
@@ -272,7 +288,7 @@
 
     async function confirmarEntrega() {
         const n = document.getElementById('quemRetirou').value;
-        if(!n || pad.isEmpty()) return alert("Nome e Assinatura!");
+        if(!n || pad.isEmpty()) return alert("Nome E Assinatura!");
         const img = pad.toDataURL();
         for(let id of idsSelecionados) {
             await window.fb.updateDoc(window.fb.doc(window.db, "encomendas", id), {
@@ -284,38 +300,36 @@
         fecharModal();
     }
 
-    // CORREÇÃO: Protocolo Individual com TODOS os dados
     function gerarProtocoloIndividual(id) {
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.setFontSize(16); docP.text("Protocolo Detalhado de Encomenda", 105, 20, { align: 'center' });
+        docP.setFontSize(16); docP.text("Protocolo Detalhado De Encomenda", 105, 20, { align: 'center' });
         docP.autoTable({
             startY: 30,
             body: [
                 ['Destinatário', i.dest],
                 ['Unidade/Bloco', `Apto: ${i.apto} / Bloco: ${i.bloco}`],
                 ['Rastreio (Loja)', `${i.rastreio} (${i.loja})`],
-                ['Data de Entrada', new Date(i.dataEntrada).toLocaleString()],
-                ['Recebido por (Portaria)', i.recebidoPor],
-                ['Data de Retirada', new Date(i.dataRetirada).toLocaleString()],
+                ['Data De Entrada', new Date(i.dataEntrada).toLocaleString()],
+                ['Recebido Por (Funcionário)', i.recebidoPor], // Ajuste solicitado
+                ['Data De Retirada', new Date(i.dataRetirada).toLocaleString()],
                 ['Retirado Por (Morador/Terceiro)', i.quemRetirou]
             ],
             theme: 'grid'
         });
-        docP.text("Assinatura de Recebimento:", 15, docP.lastAutoTable.finalY + 15);
+        docP.text("Assinatura De Recebimento:", 15, docP.lastAutoTable.finalY + 15);
         docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 20, 60, 30);
         docP.save(`Recibo_${i.dest}_${i.apto}.pdf`);
     }
 
-    // CORREÇÃO: Relatório Geral Reorganizado conforme pedido
     async function gerarRelatorio() {
         const { jsPDF } = window.jspdf;
         const docR = new jsPDF('l', 'mm', 'a4');
-        docR.text("Relatório Geral de Movimentação", 14, 15);
+        docR.text("Relatório Geral De Movimentação", 14, 15);
         const entregues = dados.filter(d => d.status === "ENTREGUE");
         docR.autoTable({
-            head: [['Rastreio (Empresa/Loja)', 'Destinatário (Bloco/Apto)', 'Recebido por (Data/Hora)', 'Retirado Por (Data/Hora)', 'Assinatura']],
+            head: [['Rastreio (Empresa/Loja)', 'Destinatário (Bloco/Apto)', 'Recebido Por (Data/Hora)', 'Retirado Por (Data/Hora)', 'Assinatura']],
             body: entregues.map(i => [
                 `${i.rastreio}\n(${i.loja})`, 
                 `${i.dest}\n(Bl: ${i.bloco} / Ap: ${i.apto})`, 
