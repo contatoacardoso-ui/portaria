@@ -1,11 +1,15 @@
 {
-  "name": "Portaria Digital v45",
+  "name": "Portaria Digital v48",
   "short_name": "Portaria",
-  "start_url": "./index.html?v=45",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#1a73e8",
   "theme_color": "#1a73e8",
   "icons": [
-    { "src": "https://cdn-icons-png.flaticon.com/512/687/687259.png", "sizes": "192x192", "type": "image/png" }
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2304/2304226.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
