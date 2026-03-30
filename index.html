@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v75</title>
-    <link rel="manifest" href="manifest.json?v=75">
+    <title>Portaria Digital v76</title>
+    <link rel="manifest" href="manifest.json?v=76">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,8 +62,9 @@
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
         .detalhes-item { flex: 1; line-height: 1.4; }
-        .detalhes-item b { font-size: 16px; }
-        .detalhes-item small { color: #666; display: block; margin-top: 2px; }
+        .detalhes-item b { font-size: 16px; color: #000; }
+        .detalhes-item span { color: #555; display: block; font-size: 14px; margin-top: 2px; }
+        .detalhes-item small { color: #888; display: block; font-size: 12px; }
 
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
@@ -76,7 +77,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v75</h2>
+        <h2 class="no-cap">Portaria Digital v76</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -85,7 +86,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v75</div>
+    <div class="header">Portaria Digital v76</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -256,10 +257,12 @@
     function adicionarNaLista() {
         const r = document.getElementById('rastreio').value, d = document.getElementById('destinatario').value, a = document.getElementById('apto').value;
         const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value;
-        if(!r || !d || !a) return alert("Campos Vazios!");
+        const fun = document.getElementById('recebidoPor').value;
+        if(!r || !d || !a || !fun) return alert("Preencha todos os campos, incluindo quem recebeu!");
         listaTemp.push({
             rastreio: r, loja: caps(lo) || "Não Informada",
             dest: caps(d), apto: a, bloco: caps(bl) || "-",
+            recebidoPor: caps(fun),
             dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
         ['rastreio','destinatario','loja','apto','bloco'].forEach(id => document.getElementById(id).value = "");
@@ -272,9 +275,10 @@
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
                     <div class="detalhes-item no-cap">
-                        <b>${i.dest}</b><br>
-                        <small>${i.loja} - ${i.rastreio}</small>
-                        <small>Apto ${i.apto} / Bl ${i.bloco}</small>
+                        <b>${i.dest}</b>
+                        <span>Apto ${i.apto} - Bl ${i.bloco}</span>
+                        <span>${i.loja}</span>
+                        <small>${i.rastreio}</small>
                     </div>
                     <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:20px;">×</button>
                 </div>
@@ -283,9 +287,7 @@
     }
 
     async function salvarNoFirebase() {
-        const f = caps(document.getElementById('recebidoPor').value);
-        if(!f) return alert("Quem Recebeu?");
-        for(let item of listaTemp) { item.recebidoPor = f; await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
+        for(let item of listaTemp) { await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
         listaTemp = []; atualizarPreview();
     }
 
@@ -300,18 +302,22 @@
                 lp.innerHTML += `<div class="item-row">
                     <input type="checkbox" style="width:22px; height:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
                     <div class="detalhes-item no-cap">
-                        <b>${i.dest}</b><br>
-                        <small>${i.loja} - ${i.rastreio}</small>
-                        <small>Apto ${i.apto} / Bl ${i.bloco}</small>
+                        <b>${i.dest}</b>
+                        <span>Apto ${i.apto} - Bl ${i.bloco}</span>
+                        <span>${i.loja}</span>
+                        <small>${i.rastreio}</small>
+                        <small style="margin-top:5px; border-top:1px solid #eee; padding-top:3px;">Rec: ${new Date(i.dataEntrada).toLocaleString()} - Por: ${i.recebidoPor}</small>
                     </div>
                 </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
                 lr.innerHTML += `<div class="item-row entregue">
                     <div class="detalhes-item no-cap" style="flex:1">
-                        <b>${i.dest}</b><br>
-                        <small>${i.loja} - ${i.rastreio}</small>
-                        <small>Apto ${i.apto} / Bl ${i.bloco}</small>
-                        <small style="color:var(--success)"><b>Saída:</b> ${new Date(i.dataRetirada).toLocaleString()} - <b>Por:</b> ${i.quemRetirou}</small>
+                        <b>${i.dest}</b>
+                        <span>Apto ${i.apto} - Bl ${i.bloco}</span>
+                        <span>${i.loja}</span>
+                        <small>${i.rastreio}</small>
+                        <span style="color:var(--success); font-weight:bold; margin-top:5px;">Retirado: ${new Date(i.dataRetirada).toLocaleString()}</span>
+                        <small>Por: ${i.quemRetirou}</small>
                     </div>
                     <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')">📄</div>
                 </div>`;
@@ -341,16 +347,27 @@
         if(!window.jspdf) return alert("Erro ao carregar gerador de PDF.");
         const { jsPDF } = window.jspdf;
         const docR = new jsPDF('l', 'mm', 'a4');
+        docR.setFontSize(16);
         docR.text("Relatório Geral de Encomendas", 148, 15, { align: 'center' });
+        
+        const rows = dados.map(i => [
+            i.dest,
+            `Apto ${i.apto} - Bl ${i.bloco}`,
+            i.loja,
+            i.rastreio,
+            new Date(i.dataEntrada).toLocaleString(),
+            i.recebidoPor,
+            i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "Pendente",
+            i.status === "ENTREGUE" ? i.quemRetirou : "---"
+        ]);
+
         docR.autoTable({
             startY: 25,
-            head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário', 'Apto/Bl', 'Entrada', 'Saída/Quem']],
-            body: dados.map(i => [
-                i.status === "PENDENTE" ? "Pendente" : "Entregue",
-                i.loja, i.rastreio, i.dest, `${i.apto}/${i.bloco}`,
-                new Date(i.dataEntrada).toLocaleString(),
-                i.status === "ENTREGUE" ? `${new Date(i.dataRetirada).toLocaleString()}\n(${i.quemRetirou})` : "---"
-            ])
+            head: [['Destinatário', 'Apto/Bl', 'Empresa', 'Rastreio', 'Entrada', 'Rec. Por', 'Saída', 'Quem Retirou']],
+            body: rows,
+            theme: 'grid',
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [26, 115, 232] }
         });
         docR.save("Relatorio_Completo.pdf");
     }
@@ -359,16 +376,27 @@
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
+        docP.setFontSize(18);
         docP.text("Recibo de Entrega", 105, 20, { align: 'center' });
-        docP.autoTable({ startY: 30, body: [
-            ['Destinatário', i.dest], 
-            ['Apto/Bloco', `${i.apto} / ${i.bloco}`],
-            ['Empresa/Rastreio', `${i.loja} - ${i.rastreio}`],
-            ['Entrada', new Date(i.dataEntrada).toLocaleString()],
-            ['Saída', new Date(i.dataRetirada).toLocaleString()], 
-            ['Quem Retirou', i.quemRetirou]
-        ]});
-        docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 10, 60, 30);
+        
+        docP.autoTable({ 
+            startY: 30, 
+            body: [
+                ['Destinatário', i.dest], 
+                ['Apto/Bloco', `Apto ${i.apto} - Bl ${i.bloco}`],
+                ['Empresa/Loja', i.loja],
+                ['Código de Rastreio', i.rastreio],
+                ['Data de Entrada', new Date(i.dataEntrada).toLocaleString()],
+                ['Recebido Por', i.recebidoPor],
+                ['Data de Saída', new Date(i.dataRetirada).toLocaleString()], 
+                ['Quem Retirou', i.quemRetirou]
+            ],
+            theme: 'plain',
+            styles: { fontSize: 12, cellPadding: 3 }
+        });
+        
+        docP.text("Assinatura do Morador:", 15, docP.lastAutoTable.finalY + 15);
+        docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 20, 60, 25);
         docP.save(`Recibo_${i.dest}.pdf`);
     }
 </script>
