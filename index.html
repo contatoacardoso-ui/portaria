@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v71</title>
-    <link rel="manifest" href="manifest.json?v=71">
+    <title>Portaria Digital v72</title>
+    <link rel="manifest" href="manifest.json?v=72">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -35,9 +35,23 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; text-transform: capitalize; }
         .no-cap { text-transform: none !important; }
         
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; color: #333; }
-        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--primary); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .login-card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
+        
+        /* Ajustes Tela de Login */
+        #tela-login { 
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: white url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center;
+            background-size: 80%; /* Ícone grande ao fundo */
+            background-blend-mode: overlay;
+            background-color: rgba(255,255,255,0.92); /* Suaviza o ícone para leitura */
+            z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+        }
+        .login-card { background: white; padding: 40px 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .login-card h2 { margin-bottom: 40px; color: var(--primary); font-size: 24px; }
+        .login-card input { margin-bottom: 25px; }
+        .login-card .btn { margin-top: 10px; }
+        .btn-limpar-discreto { background: none; border: none; color: #ccc; font-size: 10px; margin-top: 50px; cursor: pointer; text-decoration: underline; }
+
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; font-weight: bold; }
         .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 13px; cursor: pointer; }
@@ -46,15 +60,16 @@
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
+        
+        .footer-logout { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; z-index: 102; }
+        .btn-logout { background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
-        
-        #reader, #reader-saida { width: 100%; background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 10px; }
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
         .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; text-transform: none; overflow: hidden; }
         canvas { width: 100%; height: 200px; touch-action: none; cursor: crosshair; display: block; }
-        
         .btn-pdf-small { background: #f1f3f4; color: #d93025; padding: 8px; border-radius: 6px; border: 1px solid #dadce0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
     </style>
 </head>
@@ -62,15 +77,15 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v71</h2>
+        <h2 class="no-cap">Portaria Digital v72</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
-        <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
+        <button class="btn-limpar-discreto" onclick="resetarSistema()">Limpar Banco de Dados</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v71</div>
+    <div class="header">Portaria Digital v72</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -108,8 +123,13 @@
         <input type="text" id="busca-his" placeholder="🔍 Filtrar Histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
+
+    <div class="footer-logout">
+        <button class="btn-logout" onclick="location.reload()">⬅ Sair do Sistema</button>
+    </div>
 </div>
 
+<!-- Modal Assinatura -->
 <div id="modal-assinatura">
     <div class="modal-content">
         <h3>Confirmar Retirada</h3>
@@ -125,10 +145,7 @@
 <script>
     let dados = [], listaTemp = [], idsSelecionados = [], pad, html5QrCode;
 
-    function caps(str) {
-        if (!str) return "";
-        return str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-    }
+    function caps(str) { return str ? str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()) : ""; }
 
     function ajustarCanvas() {
         const canvas = document.getElementById('signature-pad');
@@ -143,9 +160,7 @@
         if(document.getElementById('senha-login').value === "1234") {
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
-            pad = new SignaturePad(document.getElementById('signature-pad'), { 
-                penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7
-            });
+            pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
         } else alert("Senha Incorreta!");
@@ -165,12 +180,10 @@
     function processarRastreio(input) {
         let v = input.value.trim();
         if(!v) return;
-        const existeTemp = listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
-        const existeBanco = dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()));
-        if(existeTemp || existeBanco) {
+        if(listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase())) || 
+           dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()))) {
             alert("Esta encomenda já consta no sistema.");
             input.value = "";
-            setTimeout(() => input.focus(), 10);
             return;
         }
         identificarTransportadora(input);
@@ -193,27 +206,18 @@
             html5QrCode = new Html5Qrcode(idReader);
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
                 if(modo === 'entrada') {
-                    const inp = document.getElementById('rastreio');
-                    inp.value = text;
-                    processarRastreio(inp);
+                    document.getElementById('rastreio').value = text;
+                    processarRastreio(document.getElementById('rastreio'));
                     pararScanner();
-                } else {
-                    selecionarPorScan(text);
-                }
+                } else { selecionarPorScan(text); }
             });
         } else pararScanner();
     }
 
     function selecionarPorScan(codigo) {
         const item = dados.find(d => d.status === "PENDENTE" && d.rastreio.toLowerCase().includes(codigo.toLowerCase()));
-        if(item) {
-            if(!idsSelecionados.includes(item.id)) {
-                idsSelecionados.push(item.id);
-                render();
-            }
-        } else {
-            alert("Encomenda não encontrada nos pendentes.");
-        }
+        if(item) { if(!idsSelecionados.includes(item.id)) { idsSelecionados.push(item.id); render(); } }
+        else alert("Não encontrado.");
     }
 
     function pararScanner() {
@@ -246,17 +250,13 @@
     function adicionarNaLista() {
         const r = document.getElementById('rastreio').value, d = document.getElementById('destinatario').value, a = document.getElementById('apto').value;
         const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value;
-        if(!r || !d || !a) return alert("Preencha Os Campos!");
+        if(!r || !d || !a) return alert("Campos Vazios!");
         listaTemp.push({
             rastreio: r, loja: caps(lo) || "Não Informada",
             dest: caps(d), apto: a, bloco: caps(bl) || "-",
             dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
-        document.getElementById('rastreio').value = ""; 
-        document.getElementById('destinatario').value = ""; 
-        document.getElementById('loja').value = "";
-        document.getElementById('apto').value = "";
-        document.getElementById('bloco').value = "";
+        ['rastreio','destinatario','loja','apto','bloco'].forEach(id => document.getElementById(id).value = "");
         atualizarPreview();
     }
 
@@ -265,13 +265,8 @@
         div.innerHTML = listaTemp.map((i, idx) => `
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div>
-                        <b>${i.dest}</b><br>
-                        <small>Apto ${i.apto} / Bl ${i.bloco}</small><br>
-                        <small>Loja/Empresa: ${i.loja}</small><br>
-                        <small class="no-cap" style="color:blue;">${i.rastreio}</small>
-                    </div>
-                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:18px;">×</button>
+                    <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco}</small></div>
+                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none;">×</button>
                 </div>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
@@ -281,8 +276,7 @@
         const f = caps(document.getElementById('recebidoPor').value);
         if(!f) return alert("Quem Recebeu?");
         for(let item of listaTemp) { item.recebidoPor = f; await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
-        listaTemp = [];
-        atualizarPreview();
+        listaTemp = []; atualizarPreview();
     }
 
     function render() {
@@ -291,151 +285,74 @@
         lp.innerHTML = ""; lr.innerHTML = "";
         
         dados.forEach(i => {
-            const txt = `${i.dest} ${i.apto} ${i.rastreio} ${i.quemRetirou}`.toLowerCase();
+            const txt = `${i.dest} ${i.apto} ${i.rastreio}`.toLowerCase();
             if(i.status === "PENDENTE" && txt.includes(bP)) {
-                const isChecked = idsSelecionados.includes(i.id) ? "checked" : "";
-                lp.innerHTML += `
-                    <div class="item-row">
-                        <input type="checkbox" style="width:22px; height:22px" value="${i.id}" ${isChecked} onchange="contar()">
-                        <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco} | ${i.loja}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small></div>
-                    </div>`;
+                lp.innerHTML += `<div class="item-row">
+                    <input type="checkbox" style="width:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
+                    <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco}</small></div>
+                </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
-                lr.innerHTML += `
-                    <div class="item-row entregue" style="flex-direction:column; align-items:flex-start;">
-                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco} | ${i.loja}</small><br><small class="no-cap" style="color:blue;">${i.rastreio}</small><br>
-                                <small style="color:green">Retirado Por: ${i.quemRetirou}</small>
-                            </div>
-                            <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')">📄</div>
-                        </div>
-                    </div>`;
+                lr.innerHTML += `<div class="item-row entregue">
+                    <div style="flex:1"><b>${i.dest}</b><br><small>Retirado por: ${i.quemRetirou}</small></div>
+                    <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')">📄</div>
+                </div>`;
             }
         });
-        verificarBotaoLote();
+        document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
+        if(idsSelecionados.length > 0) document.getElementById('btn-retirar-lote').innerText = `Dar Baixa (${idsSelecionados.length})`;
     }
 
-    function contar() {
-        idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value);
-        verificarBotaoLote();
-    }
-
-    function verificarBotaoLote() {
-        const btn = document.getElementById('btn-retirar-lote');
-        if(idsSelecionados.length > 0) {
-            btn.style.display = 'block';
-            btn.innerText = `Dar Baixa Em ${idsSelecionados.length} Pacote(s)`;
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-
-    function abrirModal() { 
-        pararScanner();
-        document.getElementById('modal-assinatura').style.display='flex'; 
-        setTimeout(ajustarCanvas, 10);
-    }
-    
+    function contar() { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
+    function abrirModal() { pararScanner(); document.getElementById('modal-assinatura').style.display='flex'; setTimeout(ajustarCanvas, 10); }
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
-
-    function getTrimmedSignature() {
-        if (pad.isEmpty()) return null;
-        const originalCanvas = document.getElementById('signature-pad');
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = originalCanvas.width;
-        tempCanvas.height = originalCanvas.height;
-        const ctx = tempCanvas.getContext('2d');
-        ctx.drawImage(originalCanvas, 0, 0);
-        const imgData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) { if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i + 3] = 0; }
-        ctx.putImageData(imgData, 0, 0);
-        return tempCanvas.toDataURL('image/png');
-    }
 
     async function confirmarEntrega() {
         const n = caps(document.getElementById('quemRetirou').value);
-        const imgTransparent = getTrimmedSignature();
-        if(!n || !imgTransparent) return alert("Nome E Assinatura!");
+        if(!n || pad.isEmpty()) return alert("Nome e Assinatura!");
+        const img = document.getElementById('signature-pad').toDataURL();
         for(let id of idsSelecionados) {
             await window.fb.updateDoc(window.fb.doc(window.db, "encomendas", id), {
-                status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: n, assinatura: imgTransparent
+                status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: n, assinatura: img
             });
         }
-        idsSelecionados = [];
-        verificarBotaoLote();
-        document.getElementById('quemRetirou').value = "";
-        fecharModal();
+        idsSelecionados = []; document.getElementById('quemRetirou').value = ""; fecharModal();
+    }
+
+    async function gerarRelatorio() {
+        const { jsPDF } = window.jspdf;
+        const docR = new jsPDF('l', 'mm', 'a4');
+        docR.text("Relatório Geral", 148, 15, { align: 'center' });
+        docR.autoTable({
+            startY: 25,
+            head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário', 'Entrada', 'Saída', 'Assinatura']],
+            body: dados.map(i => [
+                i.status === "PENDENTE" ? "Aguardando" : "Retirado",
+                i.loja, i.rastreio, `${i.dest} (${i.apto})`,
+                new Date(i.dataEntrada).toLocaleString(),
+                i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "---",
+                ''
+            ]),
+            didDrawCell: (data) => {
+                if (data.column.index === 0 && data.cell.section === 'body') {
+                    docR.setTextColor(dados[data.row.index].status === "ENTREGUE" ? [40,167,69] : [220,53,69]);
+                }
+                if (data.column.index === 6 && data.cell.section === 'body') {
+                    const item = dados[data.row.index];
+                    if (item.status === "ENTREGUE") docR.addImage(item.assinatura, 'PNG', data.cell.x+2, data.cell.y+2, 20, 10);
+                }
+            }
+        });
+        docR.save("Relatorio.pdf");
     }
 
     function gerarProtocoloIndividual(id) {
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.text("Recibo De Retirada", 105, 20, { align: 'center' });
-        docP.autoTable({
-            startY: 30,
-            body: [
-                ['Destinatário', i.dest], 
-                ['Unidade', `Apto: ${i.apto} / Bloco: ${i.bloco}`], 
-                ['Loja/Empresa', i.loja], 
-                ['Rastreio', i.rastreio], 
-                ['Recebido Por', i.recebidoPor],
-                ['Entrada', new Date(i.dataEntrada).toLocaleString()], 
-                ['Saída', new Date(i.dataRetirada).toLocaleString()], 
-                ['Quem Retirou', i.quemRetirou]
-            ],
-            theme: 'grid'
-        });
+        docP.text("Recibo", 105, 20, { align: 'center' });
+        docP.autoTable({ startY: 30, body: [['Destinatário', i.dest], ['Apto', i.apto], ['Saída', new Date(i.dataRetirada).toLocaleString()], ['Quem Retirou', i.quemRetirou]] });
         docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 10, 60, 30);
         docP.save(`Recibo_${i.dest}.pdf`);
-    }
-
-    async function gerarRelatorio() {
-        const { jsPDF } = window.jspdf;
-        const docR = new jsPDF('l', 'mm', 'a4');
-        const agora = new Date().toLocaleString();
-
-        docR.setFontSize(16);
-        docR.text("Relatório Geral Completo", 148, 15, { align: 'center' });
-        docR.setFontSize(10);
-        docR.text(`Gerado em: ${agora}`, 148, 22, { align: 'center' });
-        
-        docR.autoTable({
-            startY: 30,
-            head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário (Apto / Bl)', 'Recebido Por (Data - Hora)', 'Retirado Por (Data - Hora)', 'Assinatura']],
-            body: dados.map(i => [
-                i.status === "PENDENTE" ? "Aguardando Retirada" : "Retirado",
-                i.loja, 
-                i.rastreio, 
-                `${i.dest}\n(Apto: ${i.apto} / Bl: ${i.bloco})`, 
-                `${i.recebidoPor}\n(${new Date(i.dataEntrada).toLocaleString()})`, 
-                i.status === "ENTREGUE" ? `${i.quemRetirou}\n(${new Date(i.dataRetirada).toLocaleString()})` : "---", 
-                ''
-            ]),
-            didDrawCell: (data) => {
-                // Lógica de cores para o campo Situação
-                if (data.column.index === 0 && data.cell.section === 'body') {
-                    const status = dados[data.row.index].status;
-                    if (status === "ENTREGUE") {
-                        docR.setTextColor(40, 167, 69); // Verde para Retirado
-                    } else {
-                        docR.setTextColor(220, 53, 69); // Vermelho para Aguardando
-                    }
-                }
-                
-                // Lógica da Assinatura (Coluna 6)
-                if (data.column.index === 6 && data.cell.section === 'body') {
-                    const item = dados[data.row.index];
-                    if (item.status === "ENTREGUE" && item.assinatura) {
-                        docR.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 2, 22, 10);
-                    }
-                }
-            },
-            headStyles: { minCellHeight: 6, valign: 'middle' },
-            styles: { minCellHeight: 18, fontSize: 8, valign: 'middle' }
-        });
-        docR.save("Relatorio_Geral_Completo.pdf");
     }
 </script>
 </body>
