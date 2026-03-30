@@ -199,13 +199,16 @@
         identificarTransportadora(input);
     }
 
-    function identificarTransportadora(input) {
+        function identificarTransportadora(input) {
         let v = input.value.trim();
         if(!v || v.includes(':')) return;
-        let emp = "Outros";
+        let emp = "NÃO IDENTIFICADO";
+        
+        // Regras de Identificação
         if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) emp = "Correios";
         else if(/^SMP\d+|^11\d{10}/i.test(v)) emp = "Loggi";
         else if(/^MLB\d+/i.test(v)) emp = "Mercado Livre";
+        else if(/^JT\d+|^888\d+/i.test(v)) emp = "J&T Express"; // Nova regra J&T
         input.value = `${emp}: ${v}`;
     }
 
