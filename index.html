@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v70</title>
-    <link rel="manifest" href="manifest.json?v=70">
+    <title>Portaria Digital v71</title>
+    <link rel="manifest" href="manifest.json?v=71">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -62,7 +62,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v70</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">Portaria Digital v71</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
         <button class="btn" style="background:none; color:var(--danger); font-size:11px; border:1px solid var(--danger); margin-top:15px;" onclick="resetarSistema()">Limpar Banco</button>
@@ -70,7 +70,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v70</div>
+    <div class="header">Portaria Digital v71</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -405,7 +405,7 @@
             startY: 30,
             head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário (Apto / Bl)', 'Recebido Por (Data - Hora)', 'Retirado Por (Data - Hora)', 'Assinatura']],
             body: dados.map(i => [
-                i.status === "PENDENTE" ? "Aguardando" : "Retirado",
+                i.status === "PENDENTE" ? "Aguardando Retirada" : "Retirado",
                 i.loja, 
                 i.rastreio, 
                 `${i.dest}\n(Apto: ${i.apto} / Bl: ${i.bloco})`, 
@@ -414,21 +414,16 @@
                 ''
             ]),
             didDrawCell: (data) => {
-                // Lógica dos símbolos de Situação (Coluna 0)
+                // Lógica de cores para o campo Situação
                 if (data.column.index === 0 && data.cell.section === 'body') {
                     const status = dados[data.row.index].status;
-                    docR.setFontSize(12);
                     if (status === "ENTREGUE") {
-                        docR.setTextColor(40, 167, 69); // Verde
-                        docR.text("✔", data.cell.x + 3, data.cell.y + 11);
+                        docR.setTextColor(40, 167, 69); // Verde para Retirado
                     } else {
-                        docR.setTextColor(218, 165, 32); // Dourado/Amarelo
-                        docR.text("⏳", data.cell.x + 3, data.cell.y + 11);
+                        docR.setTextColor(220, 53, 69); // Vermelho para Aguardando
                     }
-                    docR.setTextColor(0, 0, 0); // Reseta para preto
-                    docR.setFontSize(8);
                 }
-
+                
                 // Lógica da Assinatura (Coluna 6)
                 if (data.column.index === 6 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
@@ -438,10 +433,7 @@
                 }
             },
             headStyles: { minCellHeight: 6, valign: 'middle' },
-            styles: { minCellHeight: 18, fontSize: 8, valign: 'middle' },
-            columnStyles: {
-                0: { cellPadding: { left: 10 } } // Espaço para o ícone
-            }
+            styles: { minCellHeight: 18, fontSize: 8, valign: 'middle' }
         });
         docR.save("Relatorio_Geral_Completo.pdf");
     }
