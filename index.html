@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v77</title>
-    <link rel="manifest" href="manifest.json?v=77">
+    <title>Portaria Digital v78</title>
+    <link rel="manifest" href="manifest.json?v=78">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -39,13 +39,16 @@
         
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background-color: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         #tela-login::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center; background-size: 70%; opacity: 0.15; z-index: -1; }
-        .login-card { background: rgba(255, 255, 255, 0.9); padding: 40px 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .login-card h2 { margin-bottom: 45px; color: var(--primary); font-size: 26px; }
-        .login-card input { margin-bottom: 25px; border: 2px solid #eee; }
         
-        .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); margin-top: 15px; }
-        .btn-recuperar { background: none; border: none; color: var(--primary); font-size: 13px; margin-top: 20px; cursor: pointer; text-transform: none; display: block; width: 100%; }
-        .btn-limpar-discreto { background: none; border: none; color: #bbb; font-size: 11px; margin-top: 60px; cursor: pointer; text-decoration: underline; text-transform: none; }
+        .login-card { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .login-card h2 { margin-bottom: 25px; color: var(--primary); font-size: 26px; }
+        
+        /* Ajustes de proximidade no Login */
+        .login-card input { margin-bottom: 10px; border: 2px solid #eee; }
+        .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); }
+        .btn-recuperar { background: none; border: none; color: var(--primary); font-size: 13px; margin-top: 12px; cursor: pointer; text-transform: none; display: block; width: 100%; }
+        
+        .btn-limpar-discreto { background: none; border: none; color: #bbb; font-size: 11px; margin-top: 50px; cursor: pointer; text-decoration: underline; text-transform: none; }
 
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; font-weight: bold; }
         .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -77,7 +80,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v77</h2>
+        <h2 class="no-cap">Portaria Digital v78</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -86,7 +89,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v77</div>
+    <div class="header">Portaria Digital v78</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -174,7 +177,7 @@
     }
 
     async function resetarSistema() {
-        if(confirm("Deseja Apagar Tudo? (RESET SYSTEM)")) {
+        if(confirm("Deseja Apagar Tudo?")) {
             const s = prompt("Senha Mestre:");
             if(s === "9988") {
                 const snap = await window.fb.getDocs(window.fb.collection(window.db, "encomendas"));
@@ -324,7 +327,6 @@
             }
         });
         document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
-        if(idsSelecionados.length > 0) document.getElementById('btn-retirar-lote').innerText = `Dar Baixa (${idsSelecionados.length})`;
     }
 
     function contar() { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
@@ -344,10 +346,9 @@
     }
 
     async function gerarRelatorio() {
-        if(!window.jspdf) return alert("Erro ao carregar gerador de PDF.");
+        if(!window.jspdf) return alert("Erro no PDF.");
         const { jsPDF } = window.jspdf;
         const docR = new jsPDF('l', 'mm', 'a4');
-        docR.setFontSize(14);
         docR.text("Relatório Geral de Encomendas", 148, 12, { align: 'center' });
         
         const rows = dados.map(i => [
@@ -355,7 +356,7 @@
             `${i.dest}\n(Bl ${i.bloco} Apto ${i.apto})`,
             `${i.recebidoPor}\n(${new Date(i.dataEntrada).toLocaleString()})`,
             i.status === "ENTREGUE" ? `${i.quemRetirou}\n(${new Date(i.dataRetirada).toLocaleString()})` : "Pendente",
-            "" // Espaço para assinatura
+            "" 
         ]);
 
         docR.autoTable({
@@ -363,33 +364,18 @@
             head: [['Rastreio (Empresa)', 'Destinatário (Bl Apto)', 'Recebido Por (Data Hora)', 'Retirado Por (Data Hora)', 'Assinatura']],
             body: rows,
             theme: 'grid',
-            styles: { 
-                fontSize: 8, 
-                valign: 'middle', 
-                halign: 'left',
-                cellPadding: 2,
-                overflow: 'linebreak'
-            },
-            headStyles: { 
-                fillColor: [26, 115, 232], 
-                textColor: 255, 
-                fontStyle: 'bold',
-                cellPadding: 2 // Altura justa no cabeçalho
-            },
-            columnStyles: {
-                0: { cellWidth: 50 },
-                1: { cellWidth: 60 },
-                2: { cellWidth: 60 },
-                3: { cellWidth: 60 },
-                4: { cellWidth: 40, halign: 'center' }
-            },
+            styles: { fontSize: 8, valign: 'middle', cellPadding: 2 },
+            headStyles: { fillColor: [26, 115, 232], cellPadding: 2 },
+            columnStyles: { 4: { cellWidth: 35 } },
             didDrawCell: (data) => {
                 if (data.column.index === 4 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
                     if (item && item.status === "ENTREGUE" && item.assinatura) {
-                        const x = data.cell.x + 5;
-                        const y = data.cell.y + 2;
-                        docR.addImage(item.assinatura, 'PNG', x, y, 30, 10);
+                        // Cálculo para enquadrar assinatura no centro da célula sem vazar
+                        const padding = 1.5;
+                        const cellW = data.cell.width - (padding * 2);
+                        const cellH = data.cell.height - (padding * 2);
+                        docR.addImage(item.assinatura, 'PNG', data.cell.x + padding, data.cell.y + padding, cellW, cellH);
                     }
                 }
             }
@@ -401,27 +387,24 @@
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.setFontSize(18);
         docP.text("Recibo de Entrega", 105, 20, { align: 'center' });
-        
         docP.autoTable({ 
             startY: 30, 
             body: [
                 ['Destinatário', i.dest], 
                 ['Apto/Bloco', `Apto ${i.apto} - Bl ${i.bloco}`],
                 ['Empresa/Loja', i.loja],
-                ['Código de Rastreio', i.rastreio],
-                ['Data de Entrada', new Date(i.dataEntrada).toLocaleString()],
+                ['Rastreio', i.rastreio],
+                ['Entrada', new Date(i.dataEntrada).toLocaleString()],
                 ['Recebido Por', i.recebidoPor],
-                ['Data de Saída', new Date(i.dataRetirada).toLocaleString()], 
+                ['Saída', new Date(i.dataRetirada).toLocaleString()], 
                 ['Quem Retirou', i.quemRetirou]
             ],
             theme: 'plain',
             styles: { fontSize: 12, cellPadding: 3, valign: 'middle' }
         });
-        
         docP.text("Assinatura do Morador:", 15, docP.lastAutoTable.finalY + 15);
-        docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 20, 60, 25);
+        docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 20, 50, 20);
         docP.save(`Recibo_${i.dest}.pdf`);
     }
 </script>
