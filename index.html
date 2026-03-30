@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v74</title>
-    <link rel="manifest" href="manifest.json?v=74">
+    <title>Portaria Digital v75</title>
+    <link rel="manifest" href="manifest.json?v=75">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -37,25 +37,12 @@
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
         
-        #tela-login { 
-            position: fixed; top:0; left:0; width:100%; height:100%; 
-            background-color: white;
-            z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-        }
-        #tela-login::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center;
-            background-size: 70%;
-            opacity: 0.15;
-            z-index: -1;
-        }
+        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background-color: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #tela-login::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center; background-size: 70%; opacity: 0.15; z-index: -1; }
         .login-card { background: rgba(255, 255, 255, 0.9); padding: 40px 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .login-card h2 { margin-bottom: 45px; color: var(--primary); font-size: 26px; }
         .login-card input { margin-bottom: 25px; border: 2px solid #eee; }
         
-        /* Botões Login */
         .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); margin-top: 15px; }
         .btn-recuperar { background: none; border: none; color: var(--primary); font-size: 13px; margin-top: 20px; cursor: pointer; text-transform: none; display: block; width: 100%; }
         .btn-limpar-discreto { background: none; border: none; color: #bbb; font-size: 11px; margin-top: 60px; cursor: pointer; text-decoration: underline; text-transform: none; }
@@ -74,9 +61,13 @@
 
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
+        .detalhes-item { flex: 1; line-height: 1.4; }
+        .detalhes-item b { font-size: 16px; }
+        .detalhes-item small { color: #666; display: block; margin-top: 2px; }
+
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
-        .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; text-transform: none; overflow: hidden; }
+        .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; overflow: hidden; }
         canvas { width: 100%; height: 200px; touch-action: none; cursor: crosshair; display: block; }
         .btn-pdf-small { background: #f1f3f4; color: #d93025; padding: 8px; border-radius: 6px; border: 1px solid #dadce0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
     </style>
@@ -85,7 +76,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v74</h2>
+        <h2 class="no-cap">Portaria Digital v75</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -94,7 +85,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v74</div>
+    <div class="header">Portaria Digital v75</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -159,6 +150,7 @@
 
     function ajustarCanvas() {
         const canvas = document.getElementById('signature-pad');
+        if(!canvas) return;
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
@@ -178,7 +170,6 @@
 
     function recuperarSenha() {
         alert(`Solicitação enviada!\n\nA senha de acesso foi encaminhada para o e-mail: ${EMAIL_ADMIN}`);
-        console.log(`Email de recuperação enviado para ${EMAIL_ADMIN}`);
     }
 
     async function resetarSistema() {
@@ -280,8 +271,12 @@
         div.innerHTML = listaTemp.map((i, idx) => `
             <div class="card" style="background:#fffde7; border:1px solid #ffd54f; padding:10px;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco}</small></div>
-                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none;">×</button>
+                    <div class="detalhes-item no-cap">
+                        <b>${i.dest}</b><br>
+                        <small>${i.loja} - ${i.rastreio}</small>
+                        <small>Apto ${i.apto} / Bl ${i.bloco}</small>
+                    </div>
+                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:20px;">×</button>
                 </div>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
@@ -303,12 +298,21 @@
             const txt = `${i.dest} ${i.apto} ${i.rastreio}`.toLowerCase();
             if(i.status === "PENDENTE" && txt.includes(bP)) {
                 lp.innerHTML += `<div class="item-row">
-                    <input type="checkbox" style="width:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
-                    <div><b>${i.dest}</b><br><small>Apto ${i.apto} / Bl ${i.bloco}</small></div>
+                    <input type="checkbox" style="width:22px; height:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
+                    <div class="detalhes-item no-cap">
+                        <b>${i.dest}</b><br>
+                        <small>${i.loja} - ${i.rastreio}</small>
+                        <small>Apto ${i.apto} / Bl ${i.bloco}</small>
+                    </div>
                 </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
                 lr.innerHTML += `<div class="item-row entregue">
-                    <div style="flex:1"><b>${i.dest}</b><br><small>Retirado por: ${i.quemRetirou}</small></div>
+                    <div class="detalhes-item no-cap" style="flex:1">
+                        <b>${i.dest}</b><br>
+                        <small>${i.loja} - ${i.rastreio}</small>
+                        <small>Apto ${i.apto} / Bl ${i.bloco}</small>
+                        <small style="color:var(--success)"><b>Saída:</b> ${new Date(i.dataRetirada).toLocaleString()} - <b>Por:</b> ${i.quemRetirou}</small>
+                    </div>
                     <div class="btn-pdf-small" onclick="gerarProtocoloIndividual('${i.id}')">📄</div>
                 </div>`;
             }
@@ -330,42 +334,40 @@
                 status: "ENTREGUE", dataRetirada: new Date().toISOString(), quemRetirou: n, assinatura: img
             });
         }
-        idsSelecionados = []; document.getElementById('quemRetirou').value = ""; fecharModal();
+        idsSelecionados = []; document.getElementById('quemRetirou').value = ""; fecharModal(); render();
     }
 
     async function gerarRelatorio() {
+        if(!window.jspdf) return alert("Erro ao carregar gerador de PDF.");
         const { jsPDF } = window.jspdf;
         const docR = new jsPDF('l', 'mm', 'a4');
-        docR.text("Relatório Geral", 148, 15, { align: 'center' });
+        docR.text("Relatório Geral de Encomendas", 148, 15, { align: 'center' });
         docR.autoTable({
             startY: 25,
-            head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário', 'Entrada', 'Saída', 'Assinatura']],
+            head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário', 'Apto/Bl', 'Entrada', 'Saída/Quem']],
             body: dados.map(i => [
-                i.status === "PENDENTE" ? "Aguardando Retirada" : "Retirado",
-                i.loja, i.rastreio, `${i.dest} (${i.apto})`,
+                i.status === "PENDENTE" ? "Pendente" : "Entregue",
+                i.loja, i.rastreio, i.dest, `${i.apto}/${i.bloco}`,
                 new Date(i.dataEntrada).toLocaleString(),
-                i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "---",
-                ''
-            ]),
-            didDrawCell: (data) => {
-                if (data.column.index === 0 && data.cell.section === 'body') {
-                    docR.setTextColor(dados[data.row.index].status === "ENTREGUE" ? [40,167,69] : [220,53,69]);
-                }
-                if (data.column.index === 6 && data.cell.section === 'body') {
-                    const item = dados[data.row.index];
-                    if (item.status === "ENTREGUE") docR.addImage(item.assinatura, 'PNG', data.cell.x+2, data.cell.y+2, 20, 10);
-                }
-            }
+                i.status === "ENTREGUE" ? `${new Date(i.dataRetirada).toLocaleString()}\n(${i.quemRetirou})` : "---"
+            ])
         });
-        docR.save("Relatorio.pdf");
+        docR.save("Relatorio_Completo.pdf");
     }
 
     function gerarProtocoloIndividual(id) {
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        docP.text("Recibo", 105, 20, { align: 'center' });
-        docP.autoTable({ startY: 30, body: [['Destinatário', i.dest], ['Apto', i.apto], ['Saída', new Date(i.dataRetirada).toLocaleString()], ['Quem Retirou', i.quemRetirou]] });
+        docP.text("Recibo de Entrega", 105, 20, { align: 'center' });
+        docP.autoTable({ startY: 30, body: [
+            ['Destinatário', i.dest], 
+            ['Apto/Bloco', `${i.apto} / ${i.bloco}`],
+            ['Empresa/Rastreio', `${i.loja} - ${i.rastreio}`],
+            ['Entrada', new Date(i.dataEntrada).toLocaleString()],
+            ['Saída', new Date(i.dataRetirada).toLocaleString()], 
+            ['Quem Retirou', i.quemRetirou]
+        ]});
         docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 10, 60, 30);
         docP.save(`Recibo_${i.dest}.pdf`);
     }
