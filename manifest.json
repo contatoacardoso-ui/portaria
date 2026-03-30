@@ -1,9 +1,9 @@
 {
-  "name": "Portaria Digital v71",
-  "short_name": "Portaria v71",
-  "start_url": "index.html?v=71",
+  "name": "Portaria Digital v72",
+  "short_name": "Portaria v72",
+  "start_url": "index.html?v=72",
   "display": "standalone",
-  "background_color": "#1a73e8",
+  "background_color": "#ffffff",
   "theme_color": "#1a73e8",
   "icons": [
     {
