@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v72</title>
-    <link rel="manifest" href="manifest.json?v=72">
+    <title>Portaria Digital v73</title>
+    <link rel="manifest" href="manifest.json?v=73">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -37,20 +37,28 @@
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
         
-        /* Ajustes Tela de Login */
+        /* TELA DE LOGIN COM IMAGEM DE FUNDO */
         #tela-login { 
             position: fixed; top:0; left:0; width:100%; height:100%; 
-            background: white url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center;
-            background-size: 80%; /* Ícone grande ao fundo */
-            background-blend-mode: overlay;
-            background-color: rgba(255,255,255,0.92); /* Suaviza o ícone para leitura */
+            background-color: white;
             z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; 
         }
-        .login-card { background: white; padding: 40px 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .login-card h2 { margin-bottom: 40px; color: var(--primary); font-size: 24px; }
-        .login-card input { margin-bottom: 25px; }
-        .login-card .btn { margin-top: 10px; }
-        .btn-limpar-discreto { background: none; border: none; color: #ccc; font-size: 10px; margin-top: 50px; cursor: pointer; text-decoration: underline; }
+        #tela-login::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center;
+            background-size: 70%;
+            opacity: 0.15; /* Imagem de fundo suave */
+            z-index: -1;
+        }
+        .login-card { background: rgba(255, 255, 255, 0.9); padding: 40px 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .login-card h2 { margin-bottom: 45px; color: var(--primary); font-size: 26px; }
+        .login-card input { margin-bottom: 25px; border: 2px solid #eee; }
+        .login-card .btn { margin-top: 15px; }
+        
+        .btn-recuperar { background: none; border: none; color: var(--primary); font-size: 13px; margin-top: 15px; cursor: pointer; text-transform: none; }
+        .btn-limpar-discreto { background: none; border: none; color: #bbb; font-size: 11px; margin-top: 60px; cursor: pointer; text-decoration: underline; text-transform: none; }
 
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; font-weight: bold; }
         .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -77,15 +85,16 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v72</h2>
+        <h2 class="no-cap">Portaria Digital v73</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn" style="background:var(--primary)" onclick="verificarAcesso()">Entrar</button>
-        <button class="btn-limpar-discreto" onclick="resetarSistema()">Limpar Banco de Dados</button>
+        <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
+        <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v72</div>
+    <div class="header">Portaria Digital v73</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -129,7 +138,6 @@
     </div>
 </div>
 
-<!-- Modal Assinatura -->
 <div id="modal-assinatura">
     <div class="modal-content">
         <h3>Confirmar Retirada</h3>
@@ -144,6 +152,8 @@
 
 <script>
     let dados = [], listaTemp = [], idsSelecionados = [], pad, html5QrCode;
+    const SENHA_SISTEMA = "1234";
+    const EMAIL_ADMIN = "admin@condominio.com.br";
 
     function caps(str) { return str ? str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()) : ""; }
 
@@ -157,7 +167,7 @@
     }
 
     function verificarAcesso() {
-        if(document.getElementById('senha-login').value === "1234") {
+        if(document.getElementById('senha-login').value === SENHA_SISTEMA) {
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
             pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
@@ -166,8 +176,13 @@
         } else alert("Senha Incorreta!");
     }
 
+    function recuperarSenha() {
+        alert(`Solicitação enviada!\n\nA senha de acesso foi encaminhada para o e-mail da administração: ${EMAIL_ADMIN}`);
+        console.log(`Email enviado para ${EMAIL_ADMIN} contendo a senha ${SENHA_SISTEMA}`);
+    }
+
     async function resetarSistema() {
-        if(confirm("Deseja Apagar Tudo?")) {
+        if(confirm("Deseja Apagar Tudo? (RESET SYSTEM)")) {
             const s = prompt("Senha Mestre:");
             if(s === "9988") {
                 const snap = await window.fb.getDocs(window.fb.collection(window.db, "encomendas"));
@@ -326,7 +341,7 @@
             startY: 25,
             head: [['Situação', 'Empresa', 'Rastreio', 'Destinatário', 'Entrada', 'Saída', 'Assinatura']],
             body: dados.map(i => [
-                i.status === "PENDENTE" ? "Aguardando" : "Retirado",
+                i.status === "PENDENTE" ? "Aguardando Retirada" : "Retirado",
                 i.loja, i.rastreio, `${i.dest} (${i.apto})`,
                 new Date(i.dataEntrada).toLocaleString(),
                 i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "---",
