@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v87</title>
-    <link rel="manifest" href="manifest.json?v=87">
+    <title>Portaria Digital v89</title>
+    <link rel="manifest" href="manifest.json?v=89">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -63,15 +63,22 @@
 
         #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
 
-        /* Ajuste fino dos containers da câmera para evitar bordas pretas ociosas */
+        /* AJUSTE RADICAL DA CÂMERA: FORÇA ALTURA DE FAIXA */
         #reader, #reader-saida { 
             background: #000; 
             border-radius: 8px; 
             overflow: hidden; 
             margin-bottom: 10px; 
             width: 100%;
+            height: 160px !important; /* Limita a altura real visível */
         }
         #reader-saida { position: sticky; top: 105px; z-index: 98; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        /* Força o vídeo interno a centralizar e preencher o espaço cortado */
+        #reader video, #reader-saida video {
+            object-fit: cover !important;
+            height: 160px !important;
+        }
 
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
@@ -91,7 +98,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v87</h2>
+        <h2 class="no-cap">Portaria Digital v89</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -100,7 +107,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v87</div>
+    <div class="header">Portaria Digital v89</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -140,7 +147,7 @@
     </div>
 
     <div class="footer-logout">
-        <button class="btn-logout" onclick="localStorage.removeItem('auth_portaria'); localStorage.removeItem('aba_ativa'); location.reload()">⬅ Sair do Sistema</button>
+        <button class="btn-logout" onclick="localStorage.clear(); location.reload()">⬅ Sair do Sistema</button>
     </div>
 </div>
 
@@ -194,24 +201,26 @@
     function verificarAcesso() {
         if(document.getElementById('senha-login').value === SENHA_SISTEMA) {
             localStorage.setItem('auth_portaria', 'true');
-            document.getElementById('tela-login').style.display = 'none';
-            document.getElementById('conteudo-sistema').style.display = 'block';
-            pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
-            window.addEventListener("resize", ajustarCanvas);
-            iniciarEscuta();
-            
-            const abaSalva = localStorage.getItem('aba_ativa');
-            if(abaSalva) {
-                const btn = document.getElementById('btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'pendentes' : 'retiradas')));
-                if(btn) switchTab(abaSalva, btn);
-            }
-
-            history.pushState(null, null, window.location.href);
-            window.addEventListener('popstate', function () {
-                history.pushState(null, null, window.location.href);
-            });
-            
+            exibirSistema();
         } else alert("Senha Incorreta!");
+    }
+
+    function exibirSistema() {
+        document.getElementById('tela-login').style.display = 'none';
+        document.getElementById('conteudo-sistema').style.display = 'block';
+        pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
+        window.addEventListener("resize", ajustarCanvas);
+        iniciarEscuta();
+        
+        const abaSalva = localStorage.getItem('aba_ativa') || 'registro';
+        const btnId = 'btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'pendentes' : 'retiradas'));
+        const btn = document.getElementById(btnId);
+        if(btn) switchTab(abaSalva, btn);
+
+        history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, window.location.href);
+        });
     }
 
     function recuperarSenha() {
@@ -270,10 +279,9 @@
         if (!html5QrCode) {
             document.getElementById(idReader).style.display = 'block';
             html5QrCode = new Html5Qrcode(idReader);
-            // Configuração refinada: Proporção 1.77 (16:9 padrão) para evitar inversões e qrbox retangular justa
             html5QrCode.start(
                 { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 280, height: 140 }, aspectRatio: 1.77 }, 
+                { fps: 20, qrbox: { width: 280, height: 130 }, aspectRatio: 1.77 }, 
                 (text) => {
                     tocarBip();
                     if(modo === 'entrada') {
@@ -310,7 +318,9 @@
         pararScanner();
         localStorage.setItem('aba_ativa', aba);
         document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
-        document.getElementById('aba-' + (aba === 'registro' ? 'registro' : (aba === 'pendentes' ? 'pendentes' : 'retiradas'))).style.display = 'block';
+        const containerId = 'aba-' + (aba === 'registro' ? 'registro' : (aba === 'pendentes' ? 'pendentes' : 'retiradas'));
+        const container = document.getElementById(containerId);
+        if(container) container.style.display = 'block';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         render();
@@ -364,6 +374,7 @@
     function render() {
         const lp = document.getElementById('lista-pendentes'), lr = document.getElementById('lista-retiradas');
         const bP = document.getElementById('busca-pen').value.toLowerCase(), bH = document.getElementById('busca-his').value.toLowerCase();
+        if(!lp || !lr) return;
         lp.innerHTML = ""; lr.innerHTML = "";
         
         dados.forEach(i => {
@@ -495,22 +506,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         if(localStorage.getItem('auth_portaria') === 'true') {
-            document.getElementById('tela-login').style.display = 'none';
-            document.getElementById('conteudo-sistema').style.display = 'block';
-            pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
-            window.addEventListener("resize", ajustarCanvas);
-            iniciarEscuta();
-
-            const abaSalva = localStorage.getItem('aba_ativa');
-            if(abaSalva) {
-                const btn = document.getElementById('btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'pendentes' : 'retiradas')));
-                if(btn) switchTab(abaSalva, btn);
-            }
-
-            history.pushState(null, null, window.location.href);
-            window.addEventListener('popstate', function () {
-                history.pushState(null, null, window.location.href);
-            });
+            exibirSistema();
         }
     });
 </script>
