@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v86</title>
-    <link rel="manifest" href="manifest.json?v=86">
+    <title>Portaria Digital v87</title>
+    <link rel="manifest" href="manifest.json?v=87">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -63,8 +63,15 @@
 
         #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
 
-        #reader { border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
-        #reader-saida { position: sticky; top: 105px; z-index: 98; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; margin-bottom: 10px; }
+        /* Ajuste fino dos containers da câmera para evitar bordas pretas ociosas */
+        #reader, #reader-saida { 
+            background: #000; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            margin-bottom: 10px; 
+            width: 100%;
+        }
+        #reader-saida { position: sticky; top: 105px; z-index: 98; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
@@ -84,7 +91,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v86</h2>
+        <h2 class="no-cap">Portaria Digital v87</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -93,7 +100,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v86</div>
+    <div class="header">Portaria Digital v87</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -193,10 +200,9 @@
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
             
-            // Restaura a aba se existir
             const abaSalva = localStorage.getItem('aba_ativa');
             if(abaSalva) {
-                const btn = document.getElementById('btn-tab-' + abaSalva);
+                const btn = document.getElementById('btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'pendentes' : 'retiradas')));
                 if(btn) switchTab(abaSalva, btn);
             }
 
@@ -264,14 +270,19 @@
         if (!html5QrCode) {
             document.getElementById(idReader).style.display = 'block';
             html5QrCode = new Html5Qrcode(idReader);
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 300, height: 120 }, aspectRatio: 2.5 }, (text) => {
-                tocarBip();
-                if(modo === 'entrada') {
-                    document.getElementById('rastreio').value = text;
-                    processarRastreio(document.getElementById('rastreio'));
-                    pararScanner();
-                } else { selecionarPorScan(text); }
-            });
+            // Configuração refinada: Proporção 1.77 (16:9 padrão) para evitar inversões e qrbox retangular justa
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 15, qrbox: { width: 280, height: 140 }, aspectRatio: 1.77 }, 
+                (text) => {
+                    tocarBip();
+                    if(modo === 'entrada') {
+                        document.getElementById('rastreio').value = text;
+                        processarRastreio(document.getElementById('rastreio'));
+                        pararScanner();
+                    } else { selecionarPorScan(text); }
+                }
+            );
         } else pararScanner();
     }
 
@@ -297,7 +308,7 @@
 
     function switchTab(aba, btn) {
         pararScanner();
-        localStorage.setItem('aba_ativa', aba); // Salva aba atual
+        localStorage.setItem('aba_ativa', aba);
         document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
         document.getElementById('aba-' + (aba === 'registro' ? 'registro' : (aba === 'pendentes' ? 'pendentes' : 'retiradas'))).style.display = 'block';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -482,7 +493,6 @@
         docP.save(`Recibo_${i.dest}.pdf`);
     }
 
-    // Verificação Automática ao Carregar a Página
     window.addEventListener('DOMContentLoaded', () => {
         if(localStorage.getItem('auth_portaria') === 'true') {
             document.getElementById('tela-login').style.display = 'none';
@@ -491,10 +501,9 @@
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
 
-            // Restaura aba
             const abaSalva = localStorage.getItem('aba_ativa');
             if(abaSalva) {
-                const btn = document.getElementById('btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'saida' : 'retiradas')));
+                const btn = document.getElementById('btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'pendentes' : 'retiradas')));
                 if(btn) switchTab(abaSalva, btn);
             }
 
