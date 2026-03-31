@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v91</title>
-    <link rel="manifest" href="manifest.json?v=91">
+    <title>Portaria Digital v92</title>
+    <link rel="manifest" href="manifest.json?v=92">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -38,15 +38,11 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 140px; color: #333; }
         
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background-color: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        #tela-login::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center; background-size: 70%; opacity: 0.15; z-index: -1; }
-        
         .login-card { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .login-card h2 { margin-bottom: 25px; color: var(--primary); font-size: 26px; }
-        .login-card input { margin-bottom: 10px; border: 2px solid #eee; }
         .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); }
         
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 101; font-weight: bold; }
-        .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 110; font-weight: bold; }
+        .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 110; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 13px; cursor: pointer; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         
@@ -55,35 +51,32 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        .footer-logout { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; z-index: 102; }
-        .btn-logout { background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-
-        #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-
-        /* AJUSTE RESTRITO DA CAMERA */
+        /* AJUSTE CAMERA: Sticky para não sobrepor itens na rolagem */
         #reader, #reader-saida { 
             display: none; 
             background: #000; 
             border-radius: 8px; 
             overflow: hidden; 
             width: 100%;
-            height: 150px !important; /* Tamanho do campo de leitura */
+            height: 150px !important;
             margin: 5px 0 15px 0;
         }
-        #reader-saida { position: sticky; top: 105px; z-index: 98; }
-        
-        /* Força o vídeo a caber exatamente no campo cortado */
-        #reader video, #reader-saida video {
-            height: 150px !important;
-            object-fit: cover !important;
-        }
+        #reader-saida { position: sticky; top: 105px; z-index: 100; margin-bottom: 20px; }
+        #reader video, #reader-saida video { height: 150px !important; object-fit: cover !important; }
 
-        .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
-        .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
-        .detalhes-item { flex: 1; line-height: 1.4; }
-        .detalhes-item b { font-size: 16px; color: #000; }
-        .detalhes-item span { color: #555; display: block; font-size: 14px; margin-top: 2px; }
-        .detalhes-item small { color: #888; display: block; font-size: 12px; }
+        /* LISTA COMPACTA */
+        .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
+        .detalhes-item { flex: 1; line-height: 1.2; }
+        .detalhes-item b { font-size: 15px; color: #000; display: block; margin-bottom: 2px; }
+        .detalhes-item span { color: #444; display: block; font-size: 13px; }
+        .detalhes-item small { color: #777; display: block; font-size: 12px; }
+        
+        /* Linha separadora para informações de recebimento */
+        .info-rec { border-top: 1px solid #eee; margin-top: 6px; padding-top: 6px; color: #888 !important; font-size: 11px !important; }
+
+        .footer-logout { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; z-index: 102; }
+        .btn-logout { background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
@@ -95,14 +88,14 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v91</h2>
+        <h2 class="no-cap">Portaria Digital v92</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v91</div>
+    <div class="header">Portaria Digital v92</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -136,7 +129,6 @@
     </div>
 
     <div id="aba-retiradas" class="container" style="display:none;">
-        <button class="btn" style="background:#333;" onclick="gerarRelatorio()">📄 Relatório Geral Completo</button>
         <input type="text" id="busca-his" placeholder="🔍 Filtrar Histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
@@ -163,16 +155,6 @@
     const SENHA_SISTEMA = "1234";
 
     function caps(str) { return str ? str.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()) : ""; }
-
-    function ajustarCanvas() {
-        const canvas = document.getElementById('signature-pad');
-        if(!canvas) return;
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        canvas.getContext("2d").scale(ratio, ratio);
-        if (pad) pad.clear();
-    }
 
     function tocarBip() {
         try {
@@ -201,9 +183,7 @@
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('conteudo-sistema').style.display = 'block';
         pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black' });
-        window.addEventListener("resize", ajustarCanvas);
         iniciarEscuta();
-        
         const abaSalva = localStorage.getItem('aba_ativa') || 'registro';
         const btn = document.getElementById('btn-tab-' + abaSalva);
         if(btn) switchTab(abaSalva, btn);
@@ -241,7 +221,7 @@
             html5QrCode = new Html5Qrcode(idReader);
             html5QrCode.start(
                 { facingMode: "environment" }, 
-                { fps: 20, qrbox: { width: 280, height: 120 } }, 
+                { fps: 20, qrbox: { width: 260, height: 120 } }, 
                 (text) => {
                     tocarBip();
                     if(modo === 'entrada') {
@@ -294,7 +274,7 @@
     function adicionarNaLista() {
         const r = document.getElementById('rastreio').value, d = document.getElementById('destinatario').value, a = document.getElementById('apto').value;
         const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value, fun = document.getElementById('recebidoPor').value;
-        if(!r || !d || !a || !fun) return alert("Preencha os campos obrigatórios!");
+        if(!r || !d || !a || !fun) return alert("Preencha os campos!");
         listaTemp.push({
             rastreio: r, loja: caps(lo) || "Não Informada",
             dest: caps(d), apto: a, bloco: caps(bl) || "-",
@@ -308,9 +288,9 @@
     function atualizarPreview() {
         const div = document.getElementById('lista-pre-entrada');
         div.innerHTML = listaTemp.map((i, idx) => `
-            <div class="card" style="background:#fffde7; padding:10px;">
+            <div class="card" style="background:#fffde7; padding:10px; margin-bottom:5px;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div class="detalhes-item no-cap"><b>${i.dest}</b> - Apto ${i.apto}<br><small>${i.rastreio}</small></div>
+                    <div class="detalhes-item no-cap"><b>${i.dest}</b> - Apto ${i.apto}</div>
                     <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none;">×</button>
                 </div>
             </div>`).join('');
@@ -331,13 +311,22 @@
         dados.forEach(i => {
             const txt = `${i.dest} ${i.apto} ${i.rastreio}`.toLowerCase();
             if(i.status === "PENDENTE" && txt.includes(bP)) {
-                lp.innerHTML += `<div class="item-row" id="item-${i.id}">
-                    <input type="checkbox" style="width:22px; height:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar('${i.id}')">
-                    <div class="detalhes-item no-cap"><b>${i.dest}</b><br><span>Apto ${i.apto} - Bl ${i.bloco}</span><br><small>${i.rastreio}</small><br><small>Rec: ${new Date(i.dataEntrada).toLocaleString()}<br>Por: ${i.recebidoPor}</small></div>
+                lp.innerHTML += `
+                <div class="item-row" id="item-${i.id}">
+                    <input type="checkbox" style="width:20px; height:20px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
+                    <div class="detalhes-item no-cap">
+                        <b>${i.dest}</b>
+                        <span>Apto ${i.apto} - Bl ${i.bloco}</span>
+                        <small>${i.loja} | ${i.rastreio}</small>
+                        <div class="info-rec">
+                            Rec: ${new Date(i.dataEntrada).toLocaleString()}<br>
+                            Por: ${i.recebidoPor}
+                        </div>
+                    </div>
                 </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
-                lr.innerHTML += `<div class="item-row entregue">
-                    <div class="detalhes-item no-cap" style="flex:1"><b>${i.dest}</b><br><span>Apto ${i.apto}</span><br><small>${i.rastreio}</small><br><span style="color:var(--success)">Retirado: ${new Date(i.dataRetirada).toLocaleString()}</span></div>
+                lr.innerHTML += `<div class="item-row" style="border-left-color:var(--success)">
+                    <div class="detalhes-item no-cap"><b>${i.dest}</b><span>Apto ${i.apto}</span><small>${i.rastreio}</small></div>
                 </div>`;
             }
         });
@@ -345,6 +334,7 @@
         const btnLote = document.getElementById('btn-retirar-lote');
         btnLote.style.display = idsSelecionados.length > 0 ? 'block' : 'none';
         if(idsSelecionados.length > 0) btnLote.innerText = `Baixar Encomendas (${idsSelecionados.length})`;
+        
         if (ultimoSelecionado) {
             const el = document.getElementById('item-' + ultimoSelecionado);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -352,8 +342,8 @@
         }
     }
 
-    function contar(id) { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
-    function abrirModal() { pararScanner(); document.getElementById('modal-assinatura').style.display='flex'; setTimeout(ajustarCanvas, 10); }
+    function contar() { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
+    function abrirModal() { pararScanner(); document.getElementById('modal-assinatura').style.display='flex'; }
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
     async function confirmarEntrega() {
