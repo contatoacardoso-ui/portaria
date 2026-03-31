@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v85</title>
-    <link rel="manifest" href="manifest.json?v=85">
+    <title>Portaria Digital v86</title>
+    <link rel="manifest" href="manifest.json?v=86">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -84,7 +84,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v85</h2>
+        <h2 class="no-cap">Portaria Digital v86</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -93,11 +93,11 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v85</div>
+    <div class="header">Portaria Digital v86</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
-        <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
-        <button class="tab-btn" onclick="switchTab('retiradas', this)">Histórico</button>
+        <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
+        <button id="btn-tab-retiradas" class="tab-btn" onclick="switchTab('retiradas', this)">Histórico</button>
     </div>
 
     <div id="aba-registro" class="container">
@@ -133,7 +133,7 @@
     </div>
 
     <div class="footer-logout">
-        <button class="btn-logout" onclick="localStorage.removeItem('auth_portaria'); location.reload()">⬅ Sair do Sistema</button>
+        <button class="btn-logout" onclick="localStorage.removeItem('auth_portaria'); localStorage.removeItem('aba_ativa'); location.reload()">⬅ Sair do Sistema</button>
     </div>
 </div>
 
@@ -193,6 +193,13 @@
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
             
+            // Restaura a aba se existir
+            const abaSalva = localStorage.getItem('aba_ativa');
+            if(abaSalva) {
+                const btn = document.getElementById('btn-tab-' + abaSalva);
+                if(btn) switchTab(abaSalva, btn);
+            }
+
             history.pushState(null, null, window.location.href);
             window.addEventListener('popstate', function () {
                 history.pushState(null, null, window.location.href);
@@ -257,8 +264,6 @@
         if (!html5QrCode) {
             document.getElementById(idReader).style.display = 'block';
             html5QrCode = new Html5Qrcode(idReader);
-            
-            // Configuração Ajustada: Proporção 2.5 (Retangular/Faixa) - Remove totalmente as margens quadradas
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 300, height: 120 }, aspectRatio: 2.5 }, (text) => {
                 tocarBip();
                 if(modo === 'entrada') {
@@ -292,8 +297,9 @@
 
     function switchTab(aba, btn) {
         pararScanner();
+        localStorage.setItem('aba_ativa', aba); // Salva aba atual
         document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
-        document.getElementById('aba-' + aba).style.display = 'block';
+        document.getElementById('aba-' + (aba === 'registro' ? 'registro' : (aba === 'pendentes' ? 'pendentes' : 'retiradas'))).style.display = 'block';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         render();
@@ -484,6 +490,14 @@
             pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
+
+            // Restaura aba
+            const abaSalva = localStorage.getItem('aba_ativa');
+            if(abaSalva) {
+                const btn = document.getElementById('btn-tab-' + (abaSalva === 'registro' ? 'registro' : (abaSalva === 'pendentes' ? 'saida' : 'retiradas')));
+                if(btn) switchTab(abaSalva, btn);
+            }
+
             history.pushState(null, null, window.location.href);
             window.addEventListener('popstate', function () {
                 history.pushState(null, null, window.location.href);
