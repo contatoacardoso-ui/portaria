@@ -1,4 +1,4 @@
-const CACHE_NAME = 'portaria-v90';
+const CACHE_NAME = 'portaria-v91';
 const assets = ['/', 'index.html'];
 
 self.addEventListener('install', (e) => {
