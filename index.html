@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v92</title>
-    <link rel="manifest" href="manifest.json?v=92">
+    <title>Portaria Digital v93</title>
+    <link rel="manifest" href="manifest.json?v=93">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -41,6 +41,9 @@
         .login-card { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); }
         
+        /* Botão Reset System Resturado */
+        .btn-limpar-discreto { background: none; border: none; color: #bbb; font-size: 11px; margin-top: 50px; cursor: pointer; text-decoration: underline; text-transform: none; }
+
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 110; font-weight: bold; }
         .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 110; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 13px; cursor: pointer; }
@@ -51,27 +54,17 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        /* AJUSTE CAMERA: Sticky para não sobrepor itens na rolagem */
-        #reader, #reader-saida { 
-            display: none; 
-            background: #000; 
-            border-radius: 8px; 
-            overflow: hidden; 
-            width: 100%;
-            height: 150px !important;
-            margin: 5px 0 15px 0;
-        }
+        #reader, #reader-saida { display: none; background: #000; border-radius: 8px; overflow: hidden; width: 100%; height: 150px !important; margin: 5px 0 15px 0; }
         #reader-saida { position: sticky; top: 105px; z-index: 100; margin-bottom: 20px; }
         #reader video, #reader-saida video { height: 150px !important; object-fit: cover !important; }
 
-        /* LISTA COMPACTA */
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
+        .item-row.entregue { border-left-color: var(--success); }
         .detalhes-item { flex: 1; line-height: 1.2; }
         .detalhes-item b { font-size: 15px; color: #000; display: block; margin-bottom: 2px; }
         .detalhes-item span { color: #444; display: block; font-size: 13px; }
         .detalhes-item small { color: #777; display: block; font-size: 12px; }
         
-        /* Linha separadora para informações de recebimento */
         .info-rec { border-top: 1px solid #eee; margin-top: 6px; padding-top: 6px; color: #888 !important; font-size: 11px !important; }
 
         .footer-logout { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; z-index: 102; }
@@ -88,14 +81,15 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v92</h2>
+        <h2 class="no-cap">Portaria Digital v93</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
+        <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v92</div>
+    <div class="header">Portaria Digital v93</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -161,21 +155,17 @@
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
             const gainNode = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
             gainNode.gain.setValueAtTime(1, ctx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-            osc.connect(gainNode);
-            gainNode.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.1);
-        } catch (e) { console.log("Erro áudio"); }
+            osc.connect(gainNode); gainNode.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 0.1);
+        } catch (e) {}
     }
 
     function verificarAcesso() {
         if(document.getElementById('senha-login').value === SENHA_SISTEMA) {
-            localStorage.setItem('auth_portaria', 'true');
-            exibirSistema();
+            localStorage.setItem('auth_portaria', 'true'); exibirSistema();
         } else alert("Senha Incorreta!");
     }
 
@@ -189,27 +179,34 @@
         if(btn) switchTab(abaSalva, btn);
     }
 
+    async function resetarSistema() {
+        if(confirm("Deseja Apagar Tudo?")) {
+            const s = prompt("Senha Mestre:");
+            if(s === "9988") {
+                const snap = await window.fb.getDocs(window.fb.collection(window.db, "encomendas"));
+                for (const d of snap.docs) await window.fb.deleteDoc(window.fb.doc(window.db, "encomendas", d.id));
+                location.reload();
+            }
+        }
+    }
+
     function processarRastreio(input) {
-        let v = input.value.trim();
-        if(!v) return;
+        let v = input.value.trim(); if(!v) return;
         if(listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase())) || 
            dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()))) {
-            alert("Encomenda já cadastrada.");
-            input.value = ""; return;
+            alert("Encomenda já cadastrada."); input.value = ""; return;
         }
         identificarTransportadora(input);
     }
 
     function identificarTransportadora(input) {
-        let v = input.value.trim();
-        if(!v || v.includes(':')) return;
+        let v = input.value.trim(); if(!v || v.includes(':')) return;
         let emp = "Outros";
         if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) emp = "Correios";
         else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) emp = "Mercado Livre";
         else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) emp = "J&T Express";
         else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) emp = "SPX Express / Shopee";
         else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) emp = "Amazon Logistics";
-        else if(/^\d{14}$/.test(v)) emp = "Jadlog";
         input.value = `${emp}: ${v}`;
     }
 
@@ -217,57 +214,41 @@
         const idReader = modo === 'entrada' ? 'reader' : 'reader-saida';
         const el = document.getElementById(idReader);
         if (!html5QrCode) {
-            el.style.display = 'block';
-            html5QrCode = new Html5Qrcode(idReader);
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 20, qrbox: { width: 260, height: 120 } }, 
-                (text) => {
-                    tocarBip();
-                    if(modo === 'entrada') {
-                        document.getElementById('rastreio').value = text;
-                        processarRastreio(document.getElementById('rastreio'));
-                        pararScanner();
-                    } else { selecionarPorScan(text); }
-                }
-            ).catch(() => { el.style.display = 'none'; });
+            el.style.display = 'block'; html5QrCode = new Html5Qrcode(idReader);
+            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 260, height: 120 } }, (text) => {
+                tocarBip();
+                if(modo === 'entrada') {
+                    document.getElementById('rastreio').value = text;
+                    processarRastreio(document.getElementById('rastreio')); pararScanner();
+                } else { selecionarPorScan(text); }
+            }).catch(() => { el.style.display = 'none'; });
         } else pararScanner();
     }
 
     function selecionarPorScan(codigo) {
         const item = dados.find(d => d.status === "PENDENTE" && d.rastreio.toLowerCase().includes(codigo.toLowerCase()));
-        if(item) { 
-            if(!idsSelecionados.includes(item.id)) idsSelecionados.push(item.id);
-            ultimoSelecionado = item.id;
-            render(); 
-        }
+        if(item) { if(!idsSelecionados.includes(item.id)) idsSelecionados.push(item.id); ultimoSelecionado = item.id; render(); }
     }
 
     function pararScanner() {
         if (html5QrCode) {
             html5QrCode.stop().then(() => { 
-                html5QrCode = null; 
-                document.getElementById('reader').style.display = 'none'; 
-                document.getElementById('reader-saida').style.display = 'none'; 
+                html5QrCode = null; document.getElementById('reader').style.display = 'none'; document.getElementById('reader-saida').style.display = 'none'; 
             });
         }
     }
 
     function switchTab(aba, btn) {
-        pararScanner();
-        localStorage.setItem('aba_ativa', aba);
+        pararScanner(); localStorage.setItem('aba_ativa', aba);
         document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
         document.getElementById('aba-' + (aba === 'registro' ? 'registro' : (aba === 'pendentes' ? 'pendentes' : 'retiradas'))).style.display = 'block';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        render();
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render();
     }
 
     function iniciarEscuta() {
         const q = window.fb.query(window.fb.collection(window.db, "encomendas"), window.fb.orderBy("dataEntrada", "desc"));
         window.fb.onSnapshot(q, (snap) => {
-            dados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            render();
+            dados = snap.docs.map(d => ({ id: d.id, ...d.data() })); render();
         });
     }
 
@@ -276,10 +257,8 @@
         const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value, fun = document.getElementById('recebidoPor').value;
         if(!r || !d || !a || !fun) return alert("Preencha os campos!");
         listaTemp.push({
-            rastreio: r, loja: caps(lo) || "Não Informada",
-            dest: caps(d), apto: a, bloco: caps(bl) || "-",
-            recebidoPor: caps(fun),
-            dataEntrada: new Date().toISOString(), status: "PENDENTE"
+            rastreio: r, loja: caps(lo) || "Não Informada", dest: caps(d), apto: a, bloco: caps(bl) || "-",
+            recebidoPor: caps(fun), dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
         ['rastreio','destinatario','loja','apto','bloco'].forEach(id => document.getElementById(id).value = "");
         atualizarPreview();
@@ -305,8 +284,7 @@
     function render() {
         const lp = document.getElementById('lista-pendentes'), lr = document.getElementById('lista-retiradas');
         const bP = document.getElementById('busca-pen').value.toLowerCase(), bH = document.getElementById('busca-his').value.toLowerCase();
-        if(!lp || !lr) return;
-        lp.innerHTML = ""; lr.innerHTML = "";
+        if(!lp || !lr) return; lp.innerHTML = ""; lr.innerHTML = "";
         
         dados.forEach(i => {
             const txt = `${i.dest} ${i.apto} ${i.rastreio}`.toLowerCase();
@@ -318,15 +296,22 @@
                         <b>${i.dest}</b>
                         <span>Apto ${i.apto} - Bl ${i.bloco}</span>
                         <small>${i.loja} | ${i.rastreio}</small>
-                        <div class="info-rec">
-                            Rec: ${new Date(i.dataEntrada).toLocaleString()}<br>
-                            Por: ${i.recebidoPor}
-                        </div>
+                        <div class="info-rec">Rec: ${new Date(i.dataEntrada).toLocaleString()}<br>Por: ${i.recebidoPor}</div>
                     </div>
                 </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
-                lr.innerHTML += `<div class="item-row" style="border-left-color:var(--success)">
-                    <div class="detalhes-item no-cap"><b>${i.dest}</b><span>Apto ${i.apto}</span><small>${i.rastreio}</small></div>
+                lr.innerHTML += `
+                <div class="item-row entregue">
+                    <div class="detalhes-item no-cap">
+                        <b>${i.dest}</b>
+                        <span>Apto ${i.apto} / Bl ${i.bloco}</span>
+                        <span>${i.loja}</span>
+                        <small>${i.rastreio}</small>
+                        <div class="info-rec">
+                            Data Hora: ${new Date(i.dataRetirada).toLocaleString()}<br>
+                            Retirado Por: ${i.quemRetirou}
+                        </div>
+                    </div>
                 </div>`;
             }
         });
@@ -334,11 +319,9 @@
         const btnLote = document.getElementById('btn-retirar-lote');
         btnLote.style.display = idsSelecionados.length > 0 ? 'block' : 'none';
         if(idsSelecionados.length > 0) btnLote.innerText = `Baixar Encomendas (${idsSelecionados.length})`;
-        
         if (ultimoSelecionado) {
             const el = document.getElementById('item-' + ultimoSelecionado);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            ultimoSelecionado = null;
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); ultimoSelecionado = null;
         }
     }
 
