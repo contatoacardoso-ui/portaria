@@ -199,19 +199,31 @@
         identificarTransportadora(input);
     }
 
-        function identificarTransportadora(input) {
+function identificarTransportadora(input) {
         let v = input.value.trim();
         if(!v || v.includes(':')) return;
-        let emp = "NÃO IDENTIFICADO";
+        let emp = "";
         
-        // Regras de Identificação
+        // REGRAS DE IDENTIFICAÇÃO AUTOMÁTICA (Nacionais e Focadas no RJ)
         if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) emp = "Correios";
-        else if(/^SMP\d+|^11\d{10}/i.test(v)) emp = "Loggi";
         else if(/^MLB\d+/i.test(v)) emp = "Mercado Livre";
-        else if(/^JT\d+|^888\d+/i.test(v)) emp = "J&T Express"; // Nova regra J&T
+        else if(/^JT\d+|^888\d+/i.test(v)) emp = "J&T Express";
+        else if(/^3320\d+|^UP\d+/i.test(v)) emp = "iMile";
+        else if(/^SMP\d+|^11\d{10}/i.test(v)) emp = "Loggi";
+        else if(/^BR\d{13}[A-Z]$/i.test(v) || /^SPX\d+/i.test(v)) emp = "Shopee Xpress";
+        else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v)) emp = "Amazon Logistics";
+        else if(/^\d{14}$/.test(v)) emp = "Jadlog";
+        else if(/^SQ\d{9}/i.test(v) || /^SF\d{9}/i.test(v)) emp = "Sequoia";
+        else if(/^MA\d{9}/i.test(v)) emp = "Mandaê";
+        else if(/^TEX\d+/i.test(v)) emp = "Total Express";
+        else if(/^DIR\d+/i.test(v) || /^DC\d+/i.test(v)) emp = "Direct (B2W)";
+        else if(/^TF\d+/i.test(v)) emp = "Transfolha";
+        else if(/^AZC\d+/i.test(v) || /^\d{11}$/.test(v)) emp = "Azul Cargo";
+        else if(/^KG\d+/i.test(v) || /^PGK\d+/i.test(v)) emp = "Kangu/Pegaki";
+        
         input.value = `${emp}: ${v}`;
     }
-
+    
     function alternarScanner(modo) {
         const idReader = modo === 'entrada' ? 'reader' : 'reader-saida';
         if (!html5QrCode) {
