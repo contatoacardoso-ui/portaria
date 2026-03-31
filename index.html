@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v83</title>
-    <link rel="manifest" href="manifest.json?v=83">
+    <title>Portaria Digital v84</title>
+    <link rel="manifest" href="manifest.json?v=84">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -63,7 +63,6 @@
 
         #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
 
-        /* Ajustes das bordas das câmeras */
         #reader { border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
         #reader-saida { position: sticky; top: 105px; z-index: 98; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; margin-bottom: 10px; }
 
@@ -85,7 +84,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v83</h2>
+        <h2 class="no-cap">Portaria Digital v84</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -94,7 +93,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v83</div>
+    <div class="header">Portaria Digital v84</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -134,7 +133,7 @@
     </div>
 
     <div class="footer-logout">
-        <button class="btn-logout" onclick="location.reload()">⬅ Sair do Sistema</button>
+        <button class="btn-logout" onclick="localStorage.removeItem('auth_portaria'); location.reload()">⬅ Sair do Sistema</button>
     </div>
 </div>
 
@@ -187,6 +186,7 @@
 
     function verificarAcesso() {
         if(document.getElementById('senha-login').value === SENHA_SISTEMA) {
+            localStorage.setItem('auth_portaria', 'true');
             document.getElementById('tela-login').style.display = 'none';
             document.getElementById('conteudo-sistema').style.display = 'block';
             pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
@@ -257,7 +257,6 @@
         if (!html5QrCode) {
             document.getElementById(idReader).style.display = 'block';
             html5QrCode = new Html5Qrcode(idReader);
-            // Configuração ajustada: aspecto 1:1 e caixa retangular 260x150 para reduzir margens ociosas
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 260, height: 150 }, aspectRatio: 1 }, (text) => {
                 tocarBip();
                 if(modo === 'entrada') {
@@ -474,6 +473,21 @@
         docP.addImage(i.assinatura, 'PNG', 15, docP.lastAutoTable.finalY + 20, 50, 20);
         docP.save(`Recibo_${i.dest}.pdf`);
     }
+
+    // Verificação Automática ao Carregar a Página
+    window.addEventListener('DOMContentLoaded', () => {
+        if(localStorage.getItem('auth_portaria') === 'true') {
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('conteudo-sistema').style.display = 'block';
+            pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
+            window.addEventListener("resize", ajustarCanvas);
+            iniciarEscuta();
+            history.pushState(null, null, window.location.href);
+            window.addEventListener('popstate', function () {
+                history.pushState(null, null, window.location.href);
+            });
+        }
+    });
 </script>
 </body>
 </html>
