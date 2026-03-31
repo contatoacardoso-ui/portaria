@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v79</title>
-    <link rel="manifest" href="manifest.json?v=79">
+    <title>Portaria Digital v80</title>
+    <link rel="manifest" href="manifest.json?v=80">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -35,7 +35,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; text-transform: capitalize; }
         .no-cap { text-transform: none !important; }
         
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 140px; color: #333; }
         
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background-color: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         #tela-login::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://cdn-icons-png.flaticon.com/512/2304/2304226.png') no-repeat center; background-size: 70%; opacity: 0.15; z-index: -1; }
@@ -61,6 +61,8 @@
         .footer-logout { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; z-index: 102; }
         .btn-logout { background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 
+        #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
         .detalhes-item { flex: 1; line-height: 1.4; }
@@ -79,7 +81,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v79</h2>
+        <h2 class="no-cap">Portaria Digital v80</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -88,7 +90,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v79</div>
+    <div class="header">Portaria Digital v80</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -117,8 +119,8 @@
         <div id="reader-saida"></div>
         <button class="btn" style="background:#6f42c1" onclick="alternarScanner('saida')">📷 Escanear Para Saída</button>
         <input type="text" id="busca-pen" placeholder="🔍 Buscar Encomendas..." oninput="render()">
-        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Dar Baixa Nos Selecionados</button>
         <div id="lista-pendentes"></div>
+        <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Baixar Encomendas</button>
     </div>
 
     <div id="aba-retiradas" class="container" style="display:none;">
@@ -145,7 +147,7 @@
 </div>
 
 <script>
-    let dados = [], listaTemp = [], idsSelecionados = [], pad, html5QrCode;
+    let dados = [], listaTemp = [], idsSelecionados = [], pad, html5QrCode, ultimoSelecionado = null;
     const SENHA_SISTEMA = "1234";
     const EMAIL_ADMIN = "contato.acardoso@gmail.com";
 
@@ -169,7 +171,6 @@
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
             
-            // BLOQUEIO DO BOTÃO VOLTAR DO CELULAR
             history.pushState(null, null, window.location.href);
             window.addEventListener('popstate', function () {
                 history.pushState(null, null, window.location.href);
@@ -246,7 +247,11 @@
 
     function selecionarPorScan(codigo) {
         const item = dados.find(d => d.status === "PENDENTE" && d.rastreio.toLowerCase().includes(codigo.toLowerCase()));
-        if(item) { if(!idsSelecionados.includes(item.id)) { idsSelecionados.push(item.id); render(); } }
+        if(item) { 
+            if(!idsSelecionados.includes(item.id)) idsSelecionados.push(item.id);
+            ultimoSelecionado = item.id;
+            render(); 
+        }
         else alert("Não encontrado.");
     }
 
@@ -322,14 +327,17 @@
         dados.forEach(i => {
             const txt = `${i.dest} ${i.apto} ${i.rastreio}`.toLowerCase();
             if(i.status === "PENDENTE" && txt.includes(bP)) {
-                lp.innerHTML += `<div class="item-row">
-                    <input type="checkbox" style="width:22px; height:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
+                lp.innerHTML += `<div class="item-row" id="item-${i.id}">
+                    <input type="checkbox" style="width:22px; height:22px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar('${i.id}')">
                     <div class="detalhes-item no-cap">
                         <b>${i.dest}</b>
                         <span>Apto ${i.apto} - Bl ${i.bloco}</span>
                         <span>${i.loja}</span>
                         <small>${i.rastreio}</small>
-                        <small style="margin-top:5px; border-top:1px solid #eee; padding-top:3px;">Rec: ${new Date(i.dataEntrada).toLocaleString()} - Por: ${i.recebidoPor}</small>
+                        <small style="margin-top:5px; border-top:1px solid #eee; padding-top:3px;">
+                            Rec: ${new Date(i.dataEntrada).toLocaleString()}<br>
+                            Por: ${i.recebidoPor}
+                        </small>
                     </div>
                 </div>`;
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
@@ -346,10 +354,27 @@
                 </div>`;
             }
         });
-        document.getElementById('btn-retirar-lote').style.display = idsSelecionados.length > 0 ? 'block' : 'none';
+        
+        const btnLote = document.getElementById('btn-retirar-lote');
+        btnLote.style.display = idsSelecionados.length > 0 ? 'block' : 'none';
+        if(idsSelecionados.length > 0) btnLote.innerText = `Baixar Encomendas (${idsSelecionados.length})`;
+
+        // Rolar até o item selecionado
+        if (ultimoSelecionado) {
+            setTimeout(() => {
+                const el = document.getElementById('item-' + ultimoSelecionado);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                ultimoSelecionado = null;
+            }, 50);
+        }
     }
 
-    function contar() { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
+    function contar(idClicado) { 
+        idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); 
+        if(idClicado && idsSelecionados.includes(idClicado)) ultimoSelecionado = idClicado;
+        render(); 
+    }
+    
     function abrirModal() { pararScanner(); document.getElementById('modal-assinatura').style.display='flex'; setTimeout(ajustarCanvas, 10); }
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
