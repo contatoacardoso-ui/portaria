@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v80</title>
-    <link rel="manifest" href="manifest.json?v=80">
+    <title>Portaria Digital v81</title>
+    <link rel="manifest" href="manifest.json?v=81">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -81,7 +81,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v80</h2>
+        <h2 class="no-cap">Portaria Digital v81</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -90,7 +90,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v80</div>
+    <div class="header">Portaria Digital v81</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -161,6 +161,24 @@
         canvas.height = canvas.offsetHeight * ratio;
         canvas.getContext("2d").scale(ratio, ratio);
         if (pad) pad.clear();
+    }
+
+    function tocarBip() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            gainNode.gain.setValueAtTime(1, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+        } catch (e) {
+            console.log("Áudio não suportado");
+        }
     }
 
     function verificarAcesso() {
@@ -236,6 +254,7 @@
             document.getElementById(idReader).style.display = 'block';
             html5QrCode = new Html5Qrcode(idReader);
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                tocarBip();
                 if(modo === 'entrada') {
                     document.getElementById('rastreio').value = text;
                     processarRastreio(document.getElementById('rastreio'));
@@ -359,7 +378,6 @@
         btnLote.style.display = idsSelecionados.length > 0 ? 'block' : 'none';
         if(idsSelecionados.length > 0) btnLote.innerText = `Baixar Encomendas (${idsSelecionados.length})`;
 
-        // Rolar até o item selecionado
         if (ultimoSelecionado) {
             setTimeout(() => {
                 const el = document.getElementById('item-' + ultimoSelecionado);
