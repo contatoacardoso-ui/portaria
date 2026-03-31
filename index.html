@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v78</title>
-    <link rel="manifest" href="manifest.json?v=78">
+    <title>Portaria Digital v79</title>
+    <link rel="manifest" href="manifest.json?v=79">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -43,7 +43,6 @@
         .login-card { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .login-card h2 { margin-bottom: 25px; color: var(--primary); font-size: 26px; }
         
-        /* Ajustes de proximidade no Login */
         .login-card input { margin-bottom: 10px; border: 2px solid #eee; }
         .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); }
         .btn-recuperar { background: none; border: none; color: var(--primary); font-size: 13px; margin-top: 12px; cursor: pointer; text-transform: none; display: block; width: 100%; }
@@ -80,7 +79,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v78</h2>
+        <h2 class="no-cap">Portaria Digital v79</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -89,7 +88,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v78</div>
+    <div class="header">Portaria Digital v79</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -169,6 +168,13 @@
             pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black', minDistance: 0, velocityFilterWeight: 0.7 });
             window.addEventListener("resize", ajustarCanvas);
             iniciarEscuta();
+            
+            // BLOQUEIO DO BOTÃO VOLTAR DO CELULAR
+            history.pushState(null, null, window.location.href);
+            window.addEventListener('popstate', function () {
+                history.pushState(null, null, window.location.href);
+            });
+            
         } else alert("Senha Incorreta!");
     }
 
@@ -199,25 +205,21 @@
         identificarTransportadora(input);
     }
 
-function identificarTransportadora(input) {
+    function identificarTransportadora(input) {
         let v = input.value.trim();
         if(!v || v.includes(':')) return;
         let emp = "Outros";
         
-        // REGRAS DE IDENTIFICAÇÃO AUTOMÁTICA (Nacionais e Focadas no RJ)
         if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) emp = "Correios";
         else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) emp = "Mercado Livre";
         else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) emp = "J&T Express";
         else if(/^3320\d+|^UP\d+/i.test(v)) emp = "iMile";
         else if(/^SMP\d+|^11\d{10}/i.test(v)) emp = "Loggi";
         else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) emp = "SPX Express / Shopee";
-        // Adicionado o padrão ^TBR\d+ para a Amazon Logistics
         else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) emp = "Amazon Logistics";
         else if(/^\d{14}$/.test(v)) emp = "Jadlog";
         else if(/^SQ\d{9}/i.test(v) || /^SF\d{9}/i.test(v)) emp = "Sequoia";
         else if(/^MA\d{9}/i.test(v)) emp = "Mandaê";
-        
-        // Novas Inclusões (Forte volume no RJ)
         else if(/^TEX\d+/i.test(v)) emp = "Total Express"; 
         else if(/^DIR\d+/i.test(v) || /^DC\d+/i.test(v)) emp = "Direct (B2W)"; 
         else if(/^TF\d+/i.test(v)) emp = "Transfolha"; 
@@ -225,7 +227,8 @@ function identificarTransportadora(input) {
         else if(/^KG\d+/i.test(v) || /^PGK\d+/i.test(v)) emp = "Kangu/Pegaki"; 
         
         input.value = `${emp}: ${v}`;
-    }    
+    }
+
     function alternarScanner(modo) {
         const idReader = modo === 'entrada' ? 'reader' : 'reader-saida';
         if (!html5QrCode) {
@@ -388,7 +391,6 @@ function identificarTransportadora(input) {
                 if (data.column.index === 4 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
                     if (item && item.status === "ENTREGUE" && item.assinatura) {
-                        // Cálculo para enquadrar assinatura no centro da célula sem vazar
                         const padding = 1.5;
                         const cellW = data.cell.width - (padding * 2);
                         const cellH = data.cell.height - (padding * 2);
