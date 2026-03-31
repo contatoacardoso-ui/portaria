@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v82</title>
-    <link rel="manifest" href="manifest.json?v=82">
+    <title>Portaria Digital v83</title>
+    <link rel="manifest" href="manifest.json?v=83">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -63,7 +63,8 @@
 
         #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
 
-        /* CÂMERA FLUTUANTE NA TELA DE SAÍDA */
+        /* Ajustes das bordas das câmeras */
+        #reader { border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
         #reader-saida { position: sticky; top: 105px; z-index: 98; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; margin-bottom: 10px; }
 
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
@@ -84,7 +85,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v82</h2>
+        <h2 class="no-cap">Portaria Digital v83</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-recuperar" onclick="recuperarSenha()">Esqueci minha senha</button>
@@ -93,7 +94,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v82</div>
+    <div class="header">Portaria Digital v83</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-saida" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -120,7 +121,7 @@
 
     <div id="aba-pendentes" class="container" style="display:none;">
         <button class="btn" style="background:#6f42c1" onclick="alternarScanner('saida')">📷 Escanear Para Saída</button>
-        <div id="reader-saida"></div> <!-- Posição invertida para o botão não rolar junto com a câmera -->
+        <div id="reader-saida"></div> 
         <input type="text" id="busca-pen" placeholder="🔍 Buscar Encomendas..." oninput="render()">
         <div id="lista-pendentes"></div>
         <button id="btn-retirar-lote" class="btn" style="background:var(--warning); color:#000; display:none;" onclick="abrirModal()">Baixar Encomendas</button>
@@ -256,7 +257,8 @@
         if (!html5QrCode) {
             document.getElementById(idReader).style.display = 'block';
             html5QrCode = new Html5Qrcode(idReader);
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            // Configuração ajustada: aspecto 1:1 e caixa retangular 260x150 para reduzir margens ociosas
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 260, height: 150 }, aspectRatio: 1 }, (text) => {
                 tocarBip();
                 if(modo === 'entrada') {
                     document.getElementById('rastreio').value = text;
