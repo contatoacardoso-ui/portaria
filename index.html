@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v90</title>
-    <link rel="manifest" href="manifest.json?v=90">
+    <title>Portaria Digital v91</title>
+    <link rel="manifest" href="manifest.json?v=91">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -42,7 +42,6 @@
         
         .login-card { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .login-card h2 { margin-bottom: 25px; color: var(--primary); font-size: 26px; }
-        
         .login-card input { margin-bottom: 10px; border: 2px solid #eee; }
         .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); }
         
@@ -50,6 +49,7 @@
         .tabs { display: flex; background: white; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 13px; cursor: pointer; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
@@ -58,18 +58,25 @@
         .footer-logout { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; z-index: 102; }
         .btn-logout { background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 
-        #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        #btn-retirar-lote { position: fixed; bottom: 65px; left: 5%; width: 90%; z-index: 105; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-        /* Ajuste dos leitores: Começam ocultos e sem fundo preto */
+        /* AJUSTE RESTRITO DA CAMERA */
         #reader, #reader-saida { 
             display: none; 
             background: #000; 
             border-radius: 8px; 
             overflow: hidden; 
             width: 100%;
-            margin: 0 0 10px 0;
+            height: 150px !important; /* Tamanho do campo de leitura */
+            margin: 5px 0 15px 0;
         }
         #reader-saida { position: sticky; top: 105px; z-index: 98; }
+        
+        /* Força o vídeo a caber exatamente no campo cortado */
+        #reader video, #reader-saida video {
+            height: 150px !important;
+            object-fit: cover !important;
+        }
 
         .item-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); background: var(--card-gray); }
@@ -88,14 +95,14 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v90</h2>
+        <h2 class="no-cap">Portaria Digital v91</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
     </div>
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v90</div>
+    <div class="header">Portaria Digital v91</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -234,7 +241,7 @@
             html5QrCode = new Html5Qrcode(idReader);
             html5QrCode.start(
                 { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 260, height: 140 } }, 
+                { fps: 20, qrbox: { width: 280, height: 120 } }, 
                 (text) => {
                     tocarBip();
                     if(modo === 'entrada') {
