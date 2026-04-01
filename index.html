@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v93</title>
-    <link rel="manifest" href="manifest.json?v=93">
+    <title>Portaria Digital v94</title>
+    <link rel="manifest" href="manifest.json?v=94">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -40,8 +40,6 @@
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background-color: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .login-card { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .btn-entrar { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; background: var(--primary); }
-        
-        /* Botão Reset System Resturado */
         .btn-limpar-discreto { background: none; border: none; color: #bbb; font-size: 11px; margin-top: 50px; cursor: pointer; text-decoration: underline; text-transform: none; }
 
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 110; font-weight: bold; }
@@ -56,7 +54,6 @@
         
         #reader, #reader-saida { display: none; background: #000; border-radius: 8px; overflow: hidden; width: 100%; height: 150px !important; margin: 5px 0 15px 0; }
         #reader-saida { position: sticky; top: 105px; z-index: 100; margin-bottom: 20px; }
-        #reader video, #reader-saida video { height: 150px !important; object-fit: cover !important; }
 
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); }
@@ -74,14 +71,16 @@
         #modal-assinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; }
         .sig-wrapper { background: #FFFFFF; border: 2px solid #ccc; border-radius: 8px; margin-top: 10px; overflow: hidden; }
-        canvas { width: 100%; height: 200px; touch-action: none; cursor: crosshair; display: block; }
+        canvas { width: 100%; height: 200px; touch-action: none; display: block; }
+        
+        .btn-pdf-icon { background: none; border: none; cursor: pointer; padding: 5px; font-size: 24px; vertical-align: middle; }
     </style>
 </head>
 <body>
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v93</h2>
+        <h2 class="no-cap">Portaria Digital v94</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -89,7 +88,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v93</div>
+    <div class="header">Portaria Digital v94</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -123,6 +122,10 @@
     </div>
 
     <div id="aba-retiradas" class="container" style="display:none;">
+        <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 15px;">
+            <span style="font-weight: bold; font-size: 14px;">Registro Geral:</span>
+            <button class="btn-pdf-icon" onclick="gerarRelatorioGeral()">📄</button>
+        </div>
         <input type="text" id="busca-his" placeholder="🔍 Filtrar Histórico..." oninput="render()">
         <div id="lista-retiradas"></div>
     </div>
@@ -137,10 +140,11 @@
         <h3>Confirmar Retirada</h3>
         <input type="text" id="quemRetirou" placeholder="Retirado Por">
         <div class="sig-wrapper"><canvas id="signature-pad"></canvas></div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn" style="background:var(--danger); flex:1" onclick="fecharModal()">Cancelar</button>
-            <button class="btn" id="btn-confirm-final" style="background:var(--success); flex:1" onclick="confirmarEntrega()">Confirmar Saída</button>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn" style="background:var(--warning); color:#000; flex:1; padding:10px;" onclick="pad.clear()">Limpar</button>
+            <button class="btn" style="background:var(--danger); flex:1; padding:10px;" onclick="fecharModal()">Cancelar</button>
         </div>
+        <button class="btn" id="btn-confirm-final" style="background:var(--success); width:100%; margin-top:10px;" onclick="confirmarEntrega()">Confirmar Saída</button>
     </div>
 </div>
 
@@ -172,7 +176,15 @@
     function exibirSistema() {
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('conteudo-sistema').style.display = 'block';
-        pad = new SignaturePad(document.getElementById('signature-pad'), { penColor: 'black' });
+        
+        const canvas = document.getElementById('signature-pad');
+        pad = new SignaturePad(canvas, { 
+            penColor: 'black',
+            throttle: 0,
+            minWidth: 1,
+            maxWidth: 2.5
+        });
+
         iniciarEscuta();
         const abaSalva = localStorage.getItem('aba_ativa') || 'registro';
         const btn = document.getElementById('btn-tab-' + abaSalva);
@@ -196,18 +208,24 @@
            dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()))) {
             alert("Encomenda já cadastrada."); input.value = ""; return;
         }
-        identificarTransportadora(input);
-    }
-
-    function identificarTransportadora(input) {
-        let v = input.value.trim(); if(!v || v.includes(':')) return;
+        
         let emp = "Outros";
         if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) emp = "Correios";
         else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) emp = "Mercado Livre";
         else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) emp = "J&T Express";
+        else if(/^3320\d+|^UP\d+/i.test(v)) emp = "iMile";
+        else if(/^SMP\d+|^11\d{10}/i.test(v)) emp = "Loggi";
         else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) emp = "SPX Express / Shopee";
         else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) emp = "Amazon Logistics";
-        input.value = `${emp}: ${v}`;
+        else if(/^\d{14}$/.test(v)) emp = "Jadlog";
+        else if(/^SQ\d{9}/i.test(v) || /^SF\d{9}/i.test(v)) emp = "Sequoia";
+        else if(/^MA\d{9}/i.test(v)) emp = "Mandaê";
+        else if(/^TEX\d+/i.test(v)) emp = "Total Express"; 
+        
+        if(emp !== "Outros") {
+            document.getElementById('loja').value = emp;
+            input.value = v;
+        }
     }
 
     function alternarScanner(modo) {
@@ -267,10 +285,14 @@
     function atualizarPreview() {
         const div = document.getElementById('lista-pre-entrada');
         div.innerHTML = listaTemp.map((i, idx) => `
-            <div class="card" style="background:#fffde7; padding:10px; margin-bottom:5px;">
+            <div class="card" style="background:#fffde7; padding:12px; margin-bottom:5px; border:1px solid #ffd54f;">
                 <div style="display:flex; justify-content:space-between;">
-                    <div class="detalhes-item no-cap"><b>${i.dest}</b> - Apto ${i.apto}</div>
-                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none;">×</button>
+                    <div class="detalhes-item no-cap">
+                        <b>${i.dest}</b>
+                        <span>Apto ${i.apto} / Bl ${i.bloco}</span>
+                        <small>${i.loja} | ${i.rastreio}</small>
+                    </div>
+                    <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:20px;">×</button>
                 </div>
             </div>`).join('');
         document.getElementById('btn-salvar-tudo').style.display = listaTemp.length > 0 ? 'block' : 'none';
@@ -302,16 +324,14 @@
             } else if(i.status === "ENTREGUE" && txt.includes(bH)) {
                 lr.innerHTML += `
                 <div class="item-row entregue">
-                    <div class="detalhes-item no-cap">
+                    <div class="detalhes-item no-cap" style="flex:1">
                         <b>${i.dest}</b>
                         <span>Apto ${i.apto} / Bl ${i.bloco}</span>
                         <span>${i.loja}</span>
                         <small>${i.rastreio}</small>
-                        <div class="info-rec">
-                            Data Hora: ${new Date(i.dataRetirada).toLocaleString()}<br>
-                            Retirado Por: ${i.quemRetirou}
-                        </div>
+                        <div class="info-rec">Saída: ${new Date(i.dataRetirada).toLocaleString()}<br>Retirado: ${i.quemRetirou}</div>
                     </div>
+                    <button class="btn-pdf-icon" onclick="gerarProtocoloIndividual('${i.id}')">📄</button>
                 </div>`;
             }
         });
@@ -319,6 +339,7 @@
         const btnLote = document.getElementById('btn-retirar-lote');
         btnLote.style.display = idsSelecionados.length > 0 ? 'block' : 'none';
         if(idsSelecionados.length > 0) btnLote.innerText = `Baixar Encomendas (${idsSelecionados.length})`;
+        
         if (ultimoSelecionado) {
             const el = document.getElementById('item-' + ultimoSelecionado);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); ultimoSelecionado = null;
@@ -326,12 +347,24 @@
     }
 
     function contar() { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
-    function abrirModal() { pararScanner(); document.getElementById('modal-assinatura').style.display='flex'; }
+    
+    function abrirModal() { 
+        pararScanner(); 
+        document.getElementById('modal-assinatura').style.display='flex';
+        // Garante que o canvas esteja no tamanho certo ao abrir
+        const canvas = document.getElementById('signature-pad');
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+        pad.clear();
+    }
+    
     function fecharModal() { document.getElementById('modal-assinatura').style.display='none'; }
 
     async function confirmarEntrega() {
         const n = caps(document.getElementById('quemRetirou').value);
-        if(!n || pad.isEmpty()) return alert("Assinatura obrigatória!");
+        if(!n || pad.isEmpty()) return alert("Assinatura e nome obrigatórios!");
         const img = document.getElementById('signature-pad').toDataURL();
         for(let id of idsSelecionados) {
             await window.fb.updateDoc(window.fb.doc(window.db, "encomendas", id), {
@@ -339,6 +372,74 @@
             });
         }
         idsSelecionados = []; document.getElementById('quemRetirou').value = ""; fecharModal(); render();
+    }
+
+    function gerarRelatorioGeral() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        doc.setFontSize(16);
+        doc.text("Registro Geral de Encomendas", 148, 15, { align: "center" });
+
+        const columns = ["Destinatário", "Unidade", "Empresa: Rastreio", "Entrada", "Recebido Por", "Saída", "Retirado Por", "Assinatura Retirada"];
+        const rows = dados.map(i => [
+            i.dest,
+            `Bl ${i.bloco} Apto ${i.apto}`,
+            `${i.loja}\n${i.rastreio}`,
+            new Date(i.dataEntrada).toLocaleString(),
+            i.recebidoPor,
+            i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "",
+            i.status === "ENTREGUE" ? i.quemRetirou : "Retirada Pendente",
+            "" // Espaço para assinatura
+        ]);
+
+        doc.autoTable({
+            startY: 25,
+            head: [columns],
+            body: rows,
+            theme: 'grid',
+            styles: { fontSize: 8, valign: 'middle', cellPadding: 2 },
+            headStyles: { fillColor: [26, 115, 232] },
+            columnStyles: { 7: { cellWidth: 30 } },
+            didDrawCell: (data) => {
+                if (data.column.index === 7 && data.cell.section === 'body') {
+                    const item = dados[data.row.index];
+                    if (item.status === "ENTREGUE" && item.assinatura) {
+                        doc.addImage(item.assinatura, 'PNG', data.cell.x + 2, data.cell.y + 1, 26, 10);
+                    }
+                }
+            }
+        });
+        doc.save("Registro_Geral_Portaria.pdf");
+    }
+
+    function gerarProtocoloIndividual(id) {
+        const i = dados.find(d => d.id === id);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Recibo de Retirada", 105, 20, { align: "center" });
+
+        const body = [
+            ["Destinatário", i.dest],
+            ["Unidade", `Bl ${i.bloco} Apto ${i.apto}`],
+            ["Empresa: Rastreio", `${i.loja}: ${i.rastreio}`],
+            ["Entrada", new Date(i.dataEntrada).toLocaleString()],
+            ["Recebido Por", i.recebidoPor],
+            ["Saída", new Date(i.dataRetirada).toLocaleString()],
+            ["Retirado Por", i.quemRetirou]
+        ];
+
+        doc.autoTable({
+            startY: 35,
+            body: body,
+            theme: 'plain',
+            styles: { fontSize: 12, cellPadding: 4 }
+        });
+
+        doc.text("Assinatura Retirada:", 15, doc.lastAutoTable.finalY + 20);
+        if(i.assinatura) doc.addImage(i.assinatura, 'PNG', 15, doc.lastAutoTable.finalY + 25, 60, 25);
+
+        doc.save(`Recibo_${i.dest}.pdf`);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
