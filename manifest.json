@@ -1,15 +1,18 @@
 {
-  "name": "Portaria Digital v93",
-  "short_name": "Portaria v93",
-  "start_url": "index.html?v=93",
+  "name": "Portaria Digital v94",
+  "short_name": "Portaria v94",
+  "description": "Sistema de Gestão de Encomendas Condominial",
+  "start_url": "index.html?v=94",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2304/2304226.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
