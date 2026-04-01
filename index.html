@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v95</title>
-    <link rel="manifest" href="manifest.json?v=95">
+    <title>Portaria Digital v96</title>
+    <link rel="manifest" href="manifest.json?v=96">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -52,21 +52,9 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        /* AJUSTE CAMERA: Centralização vertical da mira */
-        #reader, #reader-saida { 
-            display: none; 
-            background: #000; 
-            border-radius: 8px; 
-            overflow: hidden; 
-            width: 100%; 
-            height: 180px !important; 
-            margin: 5px 0 15px 0; 
-        }
+        #reader, #reader-saida { display: none; background: #000; border-radius: 8px; overflow: hidden; width: 100%; height: 180px !important; margin: 5px 0 15px 0; }
         #reader-saida { position: sticky; top: 105px; z-index: 100; margin-bottom: 20px; }
-        
-        /* Centraliza o vídeo e a marcação de leitura */
         #reader video, #reader-saida video { height: 180px !important; object-fit: cover !important; }
-        #reader__scan_region, #reader-saida__scan_region { display: flex; align-items: center; justify-content: center; height: 100%; }
 
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); }
@@ -93,7 +81,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v95</h2>
+        <h2 class="no-cap">Portaria Digital v96</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -101,7 +89,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v95</div>
+    <div class="header">Portaria Digital v96</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -113,11 +101,11 @@
             <button class="btn" style="background:#6f42c1" onclick="alternarScanner('entrada')">📷 Escanear Código</button>
             <div id="reader"></div>
             <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="processarRastreio(this)">
-            <input type="text" id="loja" placeholder="Empresa/Loja (Quem Enviou)">
+            <input type="text" id="loja" placeholder="Loja">
             <input type="text" id="destinatario" placeholder="Nome Do Destinatário">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="apto" placeholder="Apto" style="flex:1;">
-                <input type="text" id="bloco" placeholder="Bloco" style="flex:1;">
+                <input type="text" id="bloco" placeholder="Bl" style="flex:1;">
             </div>
             <input type="text" id="recebidoPor" placeholder="Recebido Por (Funcionário)">
             <button class="btn" style="background:var(--primary)" onclick="adicionarNaLista()">+ Adicionar À Lista</button>
@@ -189,10 +177,8 @@
     function exibirSistema() {
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('conteudo-sistema').style.display = 'block';
-        
         const canvas = document.getElementById('signature-pad');
         pad = new SignaturePad(canvas, { penColor: 'black', throttle: 0, minWidth: 1, maxWidth: 2.5 });
-
         iniciarEscuta();
         const abaSalva = localStorage.getItem('aba_ativa') || 'registro';
         const btn = document.getElementById('btn-tab-' + abaSalva);
@@ -216,7 +202,6 @@
            dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()))) {
             alert("Encomenda já cadastrada."); input.value = ""; return;
         }
-        
         let trans = "Outra";
         if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) trans = "Correios";
         else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) trans = "Mercado Livre";
@@ -226,7 +211,6 @@
         else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) trans = "SPX Express";
         else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) trans = "Amazon Logistics";
         else if(/^\d{14}$/.test(v)) trans = "Jadlog";
-        
         input.value = `${trans}: ${v}`;
     }
 
@@ -235,7 +219,6 @@
         const el = document.getElementById(idReader);
         if (!html5QrCode) {
             el.style.display = 'block'; html5QrCode = new Html5Qrcode(idReader);
-            // Mira centralizada verticalmente com qrbox
             html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 280, height: 140 } }, (text) => {
                 tocarBip();
                 if(modo === 'entrada') {
@@ -281,7 +264,6 @@
             rastreio: r, loja: caps(lo) || "Não Informada", dest: caps(d), apto: a, bloco: caps(bl) || "-",
             recebidoPor: caps(fun), dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
-        // Limpa campos para nova inserção na pré-lista (exceto o funcionário se for adicionar vários de uma vez)
         ['rastreio','destinatario','loja','apto','bloco'].forEach(id => document.getElementById(id).value = "");
         atualizarPreview();
     }
@@ -293,9 +275,9 @@
                 <div style="display:flex; justify-content:space-between;">
                     <div class="detalhes-item no-cap">
                         <b>${i.dest}</b>
-                        <span>Apto ${i.apto} / Bl ${i.bloco}</span>
-                        <small>Empresa: ${i.loja}</small>
-                        <small>Rastreio: ${i.rastreio}</small>
+                        <span>Apto ${i.apto} | Bl ${i.bloco}</span>
+                        <small>${i.loja}</small>
+                        <small>${i.rastreio}</small>
                     </div>
                     <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:20px;">×</button>
                 </div>
@@ -306,7 +288,6 @@
     async function salvarNoFirebase() {
         for(let item of listaTemp) { await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
         listaTemp = []; 
-        // APAGAR TUDO APÓS SALVAR
         ['rastreio','destinatario','loja','apto','bloco','recebidoPor'].forEach(id => document.getElementById(id).value = "");
         atualizarPreview();
     }
@@ -324,7 +305,7 @@
                     <input type="checkbox" style="width:20px; height:20px;" value="${i.id}" ${idsSelecionados.includes(i.id)?"checked":""} onchange="contar()">
                     <div class="detalhes-item no-cap">
                         <b>${i.dest}</b>
-                        <span>Apto ${i.apto} - Bl ${i.bloco}</span>
+                        <span>Apto ${i.apto} | Bl ${i.bloco}</span>
                         <small>${i.loja} | ${i.rastreio}</small>
                         <div class="info-rec">Rec: ${new Date(i.dataEntrada).toLocaleString()}<br>Por: ${i.recebidoPor}</div>
                     </div>
@@ -334,7 +315,7 @@
                 <div class="item-row entregue">
                     <div class="detalhes-item no-cap" style="flex:1">
                         <b>${i.dest}</b>
-                        <span>Apto ${i.apto} / Bl ${i.bloco}</span>
+                        <span>Apto ${i.apto} | Bl ${i.bloco}</span>
                         <span>${i.loja}</span>
                         <small>${i.rastreio}</small>
                         <div class="info-rec">Data Hora: ${new Date(i.dataRetirada).toLocaleString()}<br>Retirado Por: ${i.quemRetirou}</div>
@@ -384,15 +365,13 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4');
         doc.text("Registro Geral de Encomendas", 148, 15, { align: "center" });
-
         const columns = ["Destinatário", "Unidade", "Empresa: Rastreio", "Entrada", "Recebido Por", "Saída", "Retirado Por", "Assinatura Retirada"];
         const rows = dados.map(i => [
-            i.dest, `Bl ${i.bloco} Apto ${i.apto}`, `${i.loja}\n${i.rastreio}`,
+            i.dest, `Apto ${i.apto} | Bl ${i.bloco}`, `${i.loja}\n${i.rastreio}`,
             new Date(i.dataEntrada).toLocaleString(), i.recebidoPor,
             i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "",
             i.status === "ENTREGUE" ? i.quemRetirou : "Retirada Pendente", ""
         ]);
-
         doc.autoTable({
             startY: 25, head: [columns], body: rows, theme: 'grid',
             styles: { fontSize: 8, valign: 'middle', cellPadding: 2 },
@@ -415,8 +394,8 @@
         const doc = new jsPDF();
         doc.text("Recibo de Retirada", 105, 20, { align: "center" });
         const body = [
-            ["Destinatário", i.dest], ["Unidade", `Bl ${i.bloco} Apto ${i.apto}`],
-            ["Empresa: Rastreio", `${i.loja}: ${i.rastreio}`], ["Entrada", new Date(i.dataEntrada).toLocaleString()],
+            ["Destinatário", i.dest], ["Unidade", `Apto ${i.apto} | Bl ${i.bloco}`],
+            ["Loja", i.loja], ["Rastreio", i.rastreio], ["Entrada", new Date(i.dataEntrada).toLocaleString()],
             ["Recebido Por", i.recebidoPor], ["Saída", new Date(i.dataRetirada).toLocaleString()], ["Retirado Por", i.quemRetirou]
         ];
         doc.autoTable({ startY: 35, body: body, theme: 'plain', styles: { fontSize: 12, cellPadding: 4 } });
