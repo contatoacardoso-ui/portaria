@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v94</title>
-    <link rel="manifest" href="manifest.json?v=94">
+    <title>Portaria Digital v95</title>
+    <link rel="manifest" href="manifest.json?v=95">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -52,8 +52,21 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        #reader, #reader-saida { display: none; background: #000; border-radius: 8px; overflow: hidden; width: 100%; height: 150px !important; margin: 5px 0 15px 0; }
+        /* AJUSTE CAMERA: Centralização vertical da mira */
+        #reader, #reader-saida { 
+            display: none; 
+            background: #000; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            width: 100%; 
+            height: 180px !important; 
+            margin: 5px 0 15px 0; 
+        }
         #reader-saida { position: sticky; top: 105px; z-index: 100; margin-bottom: 20px; }
+        
+        /* Centraliza o vídeo e a marcação de leitura */
+        #reader video, #reader-saida video { height: 180px !important; object-fit: cover !important; }
+        #reader__scan_region, #reader-saida__scan_region { display: flex; align-items: center; justify-content: center; height: 100%; }
 
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); }
@@ -80,7 +93,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v94</h2>
+        <h2 class="no-cap">Portaria Digital v95</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -88,7 +101,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v94</div>
+    <div class="header">Portaria Digital v95</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -100,7 +113,7 @@
             <button class="btn" style="background:#6f42c1" onclick="alternarScanner('entrada')">📷 Escanear Código</button>
             <div id="reader"></div>
             <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="processarRastreio(this)">
-            <input type="text" id="loja" placeholder="Empresa/Loja">
+            <input type="text" id="loja" placeholder="Empresa/Loja (Quem Enviou)">
             <input type="text" id="destinatario" placeholder="Nome Do Destinatário">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="apto" placeholder="Apto" style="flex:1;">
@@ -178,12 +191,7 @@
         document.getElementById('conteudo-sistema').style.display = 'block';
         
         const canvas = document.getElementById('signature-pad');
-        pad = new SignaturePad(canvas, { 
-            penColor: 'black',
-            throttle: 0,
-            minWidth: 1,
-            maxWidth: 2.5
-        });
+        pad = new SignaturePad(canvas, { penColor: 'black', throttle: 0, minWidth: 1, maxWidth: 2.5 });
 
         iniciarEscuta();
         const abaSalva = localStorage.getItem('aba_ativa') || 'registro';
@@ -209,23 +217,17 @@
             alert("Encomenda já cadastrada."); input.value = ""; return;
         }
         
-        let emp = "Outros";
-        if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) emp = "Correios";
-        else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) emp = "Mercado Livre";
-        else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) emp = "J&T Express";
-        else if(/^3320\d+|^UP\d+/i.test(v)) emp = "iMile";
-        else if(/^SMP\d+|^11\d{10}/i.test(v)) emp = "Loggi";
-        else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) emp = "SPX Express / Shopee";
-        else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) emp = "Amazon Logistics";
-        else if(/^\d{14}$/.test(v)) emp = "Jadlog";
-        else if(/^SQ\d{9}/i.test(v) || /^SF\d{9}/i.test(v)) emp = "Sequoia";
-        else if(/^MA\d{9}/i.test(v)) emp = "Mandaê";
-        else if(/^TEX\d+/i.test(v)) emp = "Total Express"; 
+        let trans = "Outra";
+        if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) trans = "Correios";
+        else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) trans = "Mercado Livre";
+        else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) trans = "J&T Express";
+        else if(/^3320\d+|^UP\d+/i.test(v)) trans = "iMile";
+        else if(/^SMP\d+|^11\d{10}/i.test(v)) trans = "Loggi";
+        else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) trans = "SPX Express";
+        else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) trans = "Amazon Logistics";
+        else if(/^\d{14}$/.test(v)) trans = "Jadlog";
         
-        if(emp !== "Outros") {
-            document.getElementById('loja').value = emp;
-            input.value = v;
-        }
+        input.value = `${trans}: ${v}`;
     }
 
     function alternarScanner(modo) {
@@ -233,7 +235,8 @@
         const el = document.getElementById(idReader);
         if (!html5QrCode) {
             el.style.display = 'block'; html5QrCode = new Html5Qrcode(idReader);
-            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 260, height: 120 } }, (text) => {
+            // Mira centralizada verticalmente com qrbox
+            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 280, height: 140 } }, (text) => {
                 tocarBip();
                 if(modo === 'entrada') {
                     document.getElementById('rastreio').value = text;
@@ -278,6 +281,7 @@
             rastreio: r, loja: caps(lo) || "Não Informada", dest: caps(d), apto: a, bloco: caps(bl) || "-",
             recebidoPor: caps(fun), dataEntrada: new Date().toISOString(), status: "PENDENTE"
         });
+        // Limpa campos para nova inserção na pré-lista (exceto o funcionário se for adicionar vários de uma vez)
         ['rastreio','destinatario','loja','apto','bloco'].forEach(id => document.getElementById(id).value = "");
         atualizarPreview();
     }
@@ -290,7 +294,8 @@
                     <div class="detalhes-item no-cap">
                         <b>${i.dest}</b>
                         <span>Apto ${i.apto} / Bl ${i.bloco}</span>
-                        <small>${i.loja} | ${i.rastreio}</small>
+                        <small>Empresa: ${i.loja}</small>
+                        <small>Rastreio: ${i.rastreio}</small>
                     </div>
                     <button onclick="listaTemp.splice(${idx},1); atualizarPreview();" style="color:red; border:none; background:none; font-size:20px;">×</button>
                 </div>
@@ -300,7 +305,10 @@
 
     async function salvarNoFirebase() {
         for(let item of listaTemp) { await window.fb.addDoc(window.fb.collection(window.db, "encomendas"), item); }
-        listaTemp = []; atualizarPreview();
+        listaTemp = []; 
+        // APAGAR TUDO APÓS SALVAR
+        ['rastreio','destinatario','loja','apto','bloco','recebidoPor'].forEach(id => document.getElementById(id).value = "");
+        atualizarPreview();
     }
 
     function render() {
@@ -329,7 +337,7 @@
                         <span>Apto ${i.apto} / Bl ${i.bloco}</span>
                         <span>${i.loja}</span>
                         <small>${i.rastreio}</small>
-                        <div class="info-rec">Saída: ${new Date(i.dataRetirada).toLocaleString()}<br>Retirado: ${i.quemRetirou}</div>
+                        <div class="info-rec">Data Hora: ${new Date(i.dataRetirada).toLocaleString()}<br>Retirado Por: ${i.quemRetirou}</div>
                     </div>
                     <button class="btn-pdf-icon" onclick="gerarProtocoloIndividual('${i.id}')">📄</button>
                 </div>`;
@@ -349,9 +357,7 @@
     function contar() { idsSelecionados = Array.from(document.querySelectorAll('#lista-pendentes input:checked')).map(el => el.value); render(); }
     
     function abrirModal() { 
-        pararScanner(); 
-        document.getElementById('modal-assinatura').style.display='flex';
-        // Garante que o canvas esteja no tamanho certo ao abrir
+        pararScanner(); document.getElementById('modal-assinatura').style.display='flex';
         const canvas = document.getElementById('signature-pad');
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
@@ -377,29 +383,20 @@
     function gerarRelatorioGeral() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4');
-        doc.setFontSize(16);
         doc.text("Registro Geral de Encomendas", 148, 15, { align: "center" });
 
         const columns = ["Destinatário", "Unidade", "Empresa: Rastreio", "Entrada", "Recebido Por", "Saída", "Retirado Por", "Assinatura Retirada"];
         const rows = dados.map(i => [
-            i.dest,
-            `Bl ${i.bloco} Apto ${i.apto}`,
-            `${i.loja}\n${i.rastreio}`,
-            new Date(i.dataEntrada).toLocaleString(),
-            i.recebidoPor,
+            i.dest, `Bl ${i.bloco} Apto ${i.apto}`, `${i.loja}\n${i.rastreio}`,
+            new Date(i.dataEntrada).toLocaleString(), i.recebidoPor,
             i.status === "ENTREGUE" ? new Date(i.dataRetirada).toLocaleString() : "",
-            i.status === "ENTREGUE" ? i.quemRetirou : "Retirada Pendente",
-            "" // Espaço para assinatura
+            i.status === "ENTREGUE" ? i.quemRetirou : "Retirada Pendente", ""
         ]);
 
         doc.autoTable({
-            startY: 25,
-            head: [columns],
-            body: rows,
-            theme: 'grid',
+            startY: 25, head: [columns], body: rows, theme: 'grid',
             styles: { fontSize: 8, valign: 'middle', cellPadding: 2 },
             headStyles: { fillColor: [26, 115, 232] },
-            columnStyles: { 7: { cellWidth: 30 } },
             didDrawCell: (data) => {
                 if (data.column.index === 7 && data.cell.section === 'body') {
                     const item = dados[data.row.index];
@@ -409,36 +406,22 @@
                 }
             }
         });
-        doc.save("Registro_Geral_Portaria.pdf");
+        doc.save("Registro_Geral.pdf");
     }
 
     function gerarProtocoloIndividual(id) {
         const i = dados.find(d => d.id === id);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFontSize(18);
         doc.text("Recibo de Retirada", 105, 20, { align: "center" });
-
         const body = [
-            ["Destinatário", i.dest],
-            ["Unidade", `Bl ${i.bloco} Apto ${i.apto}`],
-            ["Empresa: Rastreio", `${i.loja}: ${i.rastreio}`],
-            ["Entrada", new Date(i.dataEntrada).toLocaleString()],
-            ["Recebido Por", i.recebidoPor],
-            ["Saída", new Date(i.dataRetirada).toLocaleString()],
-            ["Retirado Por", i.quemRetirou]
+            ["Destinatário", i.dest], ["Unidade", `Bl ${i.bloco} Apto ${i.apto}`],
+            ["Empresa: Rastreio", `${i.loja}: ${i.rastreio}`], ["Entrada", new Date(i.dataEntrada).toLocaleString()],
+            ["Recebido Por", i.recebidoPor], ["Saída", new Date(i.dataRetirada).toLocaleString()], ["Retirado Por", i.quemRetirou]
         ];
-
-        doc.autoTable({
-            startY: 35,
-            body: body,
-            theme: 'plain',
-            styles: { fontSize: 12, cellPadding: 4 }
-        });
-
+        doc.autoTable({ startY: 35, body: body, theme: 'plain', styles: { fontSize: 12, cellPadding: 4 } });
         doc.text("Assinatura Retirada:", 15, doc.lastAutoTable.finalY + 20);
         if(i.assinatura) doc.addImage(i.assinatura, 'PNG', 15, doc.lastAutoTable.finalY + 25, 60, 25);
-
         doc.save(`Recibo_${i.dest}.pdf`);
     }
 
