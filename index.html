@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v96</title>
-    <link rel="manifest" href="manifest.json?v=96">
+    <title>Portaria Digital v97</title>
+    <link rel="manifest" href="manifest.json?v=97">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -52,8 +52,20 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        #reader, #reader-saida { display: none; background: #000; border-radius: 8px; overflow: hidden; width: 100%; height: 180px !important; margin: 5px 0 15px 0; }
-        #reader-saida { position: sticky; top: 105px; z-index: 100; margin-bottom: 20px; }
+        /* ESCANER PADRONIZADO (Entrada e Saída iguais) */
+        #reader, #reader-saida { 
+            display: none; 
+            background: #000; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            width: 100%; 
+            height: 180px !important; 
+            margin: 5px 0 15px 0; 
+            position: sticky; 
+            top: 105px; 
+            z-index: 100; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
         #reader video, #reader-saida video { height: 180px !important; object-fit: cover !important; }
 
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
@@ -81,7 +93,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v96</h2>
+        <h2 class="no-cap">Portaria Digital v97</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -89,7 +101,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v96</div>
+    <div class="header">Portaria Digital v97</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -365,7 +377,7 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4');
         doc.text("Registro Geral de Encomendas", 148, 15, { align: "center" });
-        const columns = ["Destinatário", "Unidade", "Empresa: Rastreio", "Entrada", "Recebido Por", "Saída", "Retirado Por", "Assinatura Retirada"];
+        const columns = ["Destinatário", "Unidade", "Empresa | Rastreio", "Entrada", "Recebido Por", "Saída", "Retirado Por", "Assinatura Retirada"];
         const rows = dados.map(i => [
             i.dest, `Apto ${i.apto} | Bl ${i.bloco}`, `${i.loja}\n${i.rastreio}`,
             new Date(i.dataEntrada).toLocaleString(), i.recebidoPor,
