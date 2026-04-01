@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v100</title>
-    <link rel="manifest" href="manifest.json?v=100">
+    <title>Portaria Digital v101</title>
+    <link rel="manifest" href="manifest.json?v=101">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -52,6 +52,7 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
+        /* ESCANER: ESTRUTURA REFORÇADA PARA O ENQUADRAMENTO */
         #reader, #reader-saida { 
             display: none; 
             background: #000; 
@@ -61,36 +62,35 @@
             height: 180px !important; 
             margin: 5px 0 15px 0; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            position: relative;
+            position: relative !important;
         }
         
         #reader video, #reader-saida video { height: 180px !important; object-fit: cover !important; }
-        
-        /* Ajuste reforçado do Enquadramento Verde */
-        #reader__scan_region, #reader-saida__scan_region { 
-            position: relative !important; 
-            display: block !important;
-        }
-        
-        #reader__scan_region::after, #reader-saida__scan_region::after {
-            content: ''; position: absolute; 
-            top: 15%; left: 10%; right: 10%; bottom: 15%;
-            border: 2px solid var(--success); border-radius: 5px;
-            animation: piscar 1s infinite alternate; 
+
+        /* Camada da Mira Verde: Forçando visibilidade sobre o vídeo */
+        #reader::before, #reader-saida::before {
+            content: '';
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            z-index: 100;
             pointer-events: none;
-            z-index: 5;
-            transition: all 0.2s ease;
+            animation: piscar 1s infinite alternate;
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
         }
 
-        .scan-sucesso #reader__scan_region::after, 
-        .scan-sucesso #reader-saida__scan_region::after {
-            border-width: 5px;
+        /* Efeito de Leitura com Sucesso */
+        .scan-sucesso #reader::before, 
+        .scan-sucesso #reader-saida::before {
+            border-width: 4px;
             border-color: #00ff00;
-            background: rgba(0, 255, 0, 0.1);
+            background: rgba(0, 255, 0, 0.15);
             animation: none;
+            box-shadow: 0 0 25px #00ff00;
         }
 
-        @keyframes piscar { from { opacity: 0.3; } to { opacity: 1; } }
+        @keyframes piscar { from { opacity: 0.2; } to { opacity: 1; } }
 
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
         .item-row.entregue { border-left-color: var(--success); }
@@ -117,7 +117,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v100</h2>
+        <h2 class="no-cap">Portaria Digital v101</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -125,7 +125,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v100</div>
+    <div class="header">Portaria Digital v101</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
