@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v98</title>
-    <link rel="manifest" href="manifest.json?v=98">
+    <title>Portaria Digital v99</title>
+    <link rel="manifest" href="manifest.json?v=99">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -52,7 +52,6 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        /* ESCANER: ESTILO FIXO (Não Sobreposto) */
         #reader, #reader-saida { 
             display: none; 
             background: #000; 
@@ -64,16 +63,26 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         
-        /* Ajuste do vídeo e da marcação de leitura animada */
         #reader video, #reader-saida video { height: 180px !important; object-fit: cover !important; }
         
-        /* Estilo da Mira Verde Piscante */
+        /* Enquadramento com animação de sucesso no CSS */
         #reader__scan_region, #reader-saida__scan_region { position: relative; }
         #reader__scan_region::after, #reader-saida__scan_region::after {
             content: ''; position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px;
             border: 2px solid var(--success); border-radius: 5px;
             animation: piscar 1s infinite alternate; pointer-events: none;
+            transition: all 0.2s ease;
         }
+
+        /* Classe disparada via JS no momento da leitura */
+        .scan-sucesso #reader__scan_region::after, 
+        .scan-sucesso #reader-saida__scan_region::after {
+            border-width: 5px;
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+            animation: none;
+        }
+
         @keyframes piscar { from { opacity: 0.3; } to { opacity: 1; } }
 
         .item-row { background: white; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 12px; }
@@ -101,7 +110,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v98</h2>
+        <h2 class="no-cap">Portaria Digital v99</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -109,7 +118,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v98</div>
+    <div class="header">Portaria Digital v99</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -185,6 +194,10 @@
             gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
             osc.connect(gainNode); gainNode.connect(ctx.destination);
             osc.start(); osc.stop(ctx.currentTime + 0.1);
+            
+            // Ativa animação visual de sucesso
+            document.body.classList.add('scan-sucesso');
+            setTimeout(() => document.body.classList.remove('scan-sucesso'), 400);
         } catch (e) {}
     }
 
