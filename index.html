@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v104</title>
-    <link rel="manifest" href="manifest.json?v=104">
+    <title>Portaria Digital v107</title>
+    <link rel="manifest" href="manifest.json?v=107">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -52,7 +52,6 @@
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 16px; outline: none; }
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; margin-bottom: 10px; }
         
-        /* ESCANER UNIFICADO: ENTRADA E SAÍDA */
         #reader, #reader-saida { 
             display: none; 
             background: #000; 
@@ -67,13 +66,11 @@
         
         #reader video, #reader-saida video { height: 180px !important; object-fit: cover !important; }
 
-        /* Moldura de Cantos Unificada (Cinza por padrão) */
         .mira-escaner {
             position: absolute;
             top: 25px; left: 25px; right: 25px; bottom: 25px;
             z-index: 100;
             pointer-events: none;
-            /* Desenha os cantos grossos cinzas */
             background: 
                 linear-gradient(to right, #666 20px, transparent 20px) 0 0,
                 linear-gradient(to bottom, #666 20px, transparent 20px) 0 0,
@@ -88,7 +85,6 @@
             transition: 0.1s;
         }
 
-        /* Animação Verde ao Sucesso Unificada */
         .scan-sucesso .mira-escaner {
             background: 
                 linear-gradient(to right, #00ff00 20px, transparent 20px) 0 0,
@@ -131,7 +127,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v104</h2>
+        <h2 class="no-cap">Portaria Digital v107</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -139,7 +135,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v104</div>
+    <div class="header">Portaria Digital v107</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -255,15 +251,23 @@
            dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()))) {
             alert("Encomenda já cadastrada."); input.value = ""; return;
         }
+        
         let trans = "Outra";
-        if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) trans = "Correios";
-        else if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^466\d{8}$/i.test(v)) trans = "Mercado Livre";
+        // Mercado Livre (Prefixos MLB, 2000, 46, 47)
+        if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^46\d{9}$/.test(v) || /^47\d{9}$/.test(v)) trans = "Mercado Livre";
+        // Shopee (Padrões BR... e pedidos UP...)
+        else if(/^BR\d{12}[A-Z]$/i.test(v) || /^UP\d{10}/i.test(v) || /^SPX\d+/i.test(v)) trans = "Shopee";
+        // Correios
+        else if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) trans = "Correios";
+        // J&T Express
         else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) trans = "J&T Express";
-        else if(/^3320\d+|^UP\d+/i.test(v)) trans = "iMile";
-        else if(/^SMP\d+|^11\d{10}/i.test(v)) trans = "Loggi";
-        else if(/^BR\d{13}/i.test(v) || /^SPX\d+/i.test(v)) trans = "SPX Express";
+        // Loggi
+        else if(/^SMP\d+|^11\d{10}/i.test(v) || /^\d{10}$/.test(v)) trans = "Loggi";
+        // Amazon
         else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) trans = "Amazon Logistics";
+        // Jadlog
         else if(/^\d{14}$/.test(v)) trans = "Jadlog";
+        
         input.value = `${trans}: ${v}`;
     }
 
