@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a73e8">
-    <title>Portaria Digital v107</title>
-    <link rel="manifest" href="manifest.json?v=107">
+    <title>Portaria Digital v108</title>
+    <link rel="manifest" href="manifest.json?v=108">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -127,7 +127,7 @@
 
 <div id="tela-login">
     <div class="login-card">
-        <h2 class="no-cap">Portaria Digital v107</h2>
+        <h2 class="no-cap">Portaria Digital v108</h2>
         <input type="password" id="senha-login" placeholder="Senha De Acesso">
         <button class="btn-entrar" onclick="verificarAcesso()">Entrar</button>
         <button class="btn-limpar-discreto" onclick="resetarSistema()">Reset System</button>
@@ -135,7 +135,7 @@
 </div>
 
 <div id="conteudo-sistema" style="display:none;">
-    <div class="header">Portaria Digital v107</div>
+    <div class="header">Portaria Digital v108</div>
     <div class="tabs">
         <button id="btn-tab-registro" class="tab-btn active" onclick="switchTab('registro', this)">Entrada</button>
         <button id="btn-tab-pendentes" class="tab-btn" onclick="switchTab('pendentes', this)">Saída</button>
@@ -146,7 +146,7 @@
         <div class="card">
             <button class="btn" style="background:#6f42c1" onclick="alternarScanner('entrada')">📷 Escanear Código</button>
             <div id="reader"><div class="mira-escaner"></div></div>
-            <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap" onblur="processarRastreio(this)">
+            <input type="text" id="rastreio" placeholder="Rastreio" class="no-cap">
             <input type="text" id="loja" placeholder="Loja">
             <input type="text" id="destinatario" placeholder="Nome Do Destinatário">
             <div style="display:flex; gap:10px;">
@@ -245,30 +245,14 @@
         }
     }
 
-    function processarRastreio(input) {
-        let v = input.value.trim(); if(!v) return;
+    // Função de processamento simplificada (Removida identificação de transportadora)
+    function processarRastreio(v) {
+        if(!v) return;
         if(listaTemp.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase())) || 
            dados.some(i => i.rastreio.toLowerCase().includes(v.toLowerCase()))) {
-            alert("Encomenda já cadastrada."); input.value = ""; return;
+            alert("Encomenda já cadastrada.");
+            document.getElementById('rastreio').value = "";
         }
-        
-        let trans = "Outra";
-        // Mercado Livre (Prefixos MLB, 2000, 46, 47)
-        if(/^MLB\d+/i.test(v) || /^20000\d+/i.test(v) || /^46\d{9}$/.test(v) || /^47\d{9}$/.test(v)) trans = "Mercado Livre";
-        // Shopee (Padrões BR... e pedidos UP...)
-        else if(/^BR\d{12}[A-Z]$/i.test(v) || /^UP\d{10}/i.test(v) || /^SPX\d+/i.test(v)) trans = "Shopee";
-        // Correios
-        else if(/^[A-Z]{2}\d{9}[A-Z]{2}$/i.test(v)) trans = "Correios";
-        // J&T Express
-        else if(/^JT\d+|^888\d+|^999\d+/i.test(v)) trans = "J&T Express";
-        // Loggi
-        else if(/^SMP\d+|^11\d{10}/i.test(v) || /^\d{10}$/.test(v)) trans = "Loggi";
-        // Amazon
-        else if(/^TBC\d{12}/i.test(v) || /^AM\d{12}/i.test(v) || /^TBR\d+/i.test(v)) trans = "Amazon Logistics";
-        // Jadlog
-        else if(/^\d{14}$/.test(v)) trans = "Jadlog";
-        
-        input.value = `${trans}: ${v}`;
     }
 
     function alternarScanner(modo) {
@@ -281,7 +265,7 @@
                 tocarBip();
                 if(modo === 'entrada') {
                     document.getElementById('rastreio').value = text;
-                    processarRastreio(document.getElementById('rastreio')); pararScanner();
+                    processarRastreio(text); pararScanner();
                 } else { selecionarPorScan(text); }
             }).catch(() => { el.style.display = 'none'; });
         } else pararScanner();
@@ -318,6 +302,13 @@
         const r = document.getElementById('rastreio').value, d = document.getElementById('destinatario').value, a = document.getElementById('apto').value;
         const bl = document.getElementById('bloco').value, lo = document.getElementById('loja').value, fun = document.getElementById('recebidoPor').value;
         if(!r || !d || !a || !fun) return alert("Preencha os campos!");
+        
+        // Verifica duplicidade no momento da adição manual
+        if(listaTemp.some(i => i.rastreio.toLowerCase().includes(r.toLowerCase())) || 
+           dados.some(i => i.rastreio.toLowerCase().includes(r.toLowerCase()))) {
+            return alert("Encomenda já cadastrada.");
+        }
+
         listaTemp.push({
             rastreio: r, loja: caps(lo) || "Não Informada", dest: caps(d), apto: a, bloco: caps(bl) || "-",
             recebidoPor: caps(fun), dataEntrada: new Date().toISOString(), status: "PENDENTE"
